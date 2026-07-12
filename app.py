@@ -28,6 +28,8 @@ DB_CONFIG = {
 
 IMGUR_CLIENT_ID = os.getenv("IMGUR_CLIENT_ID", "")
 
+TAXA_LEAD_PADRAO = float(os.getenv("TAXA_LEAD_PADRAO", 20.00))
+
 TEMPLATES_DISPONIVEIS = {
     "classic": "love/index.html",
     "stitch": "love/stitch.html",
@@ -162,7 +164,7 @@ def gerar_timeline_events(pagina):
 # --- ROTA RAIZ ---
 @app.route('/')
 def index():
-    return render_template('home.html')
+    return render_template('home.html', current_year=datetime.now().year)
 
 
 # --- GERAR QR CODE (criação de página) ---
@@ -357,6 +359,96 @@ def painel_pagina(slug):
         total_scans=total_scans['total'] if total_scans else 0,
         qr_url=f"/{slug}/qr.png",
     )
+
+
+# =====================================================================
+#  CATÁLOGO E DIRETÓRIO — páginas públicas
+# =====================================================================
+
+@app.route('/ocasiao/<slug>')
+def ocasiao_publica(slug):
+    ocasiao = query_one("SELECT * FROM brindes_ocasioes WHERE slug = %s AND ativo = TRUE", (slug,))
+    if not ocasiao:
+        abort(404)
+
+    brindes = query_all("""
+        SELECT b.*, t.nome as tipo_nome
+        FROM brindes_brindes b
+        LEFT JOIN brindes_tipos_impressao t ON t.id = b.tipo_impressao_id
+        WHERE b.ocasiao_id = %s AND b.ativo = TRUE
+        ORDER BY b.nome
+    """, (ocasiao['id'],))
+
+    return render_template('ocasiao.html', ocasiao=ocasiao, brindes=brindes)
+
+
+@app.route('/brinde/<slug>')
+def brinde_publico(slug):
+    brinde = query_one("""
+        SELECT b.*, o.nome as ocasiao_nome, o.slug as ocasiao_slug, t.nome as tipo_nome
+        FROM brindes_brindes b
+        LEFT JOIN brindes_ocasioes o ON o.id = b.ocasiao_id
+        LEFT JOIN brindes_tipos_impressao t ON t.id = b.tipo_impressao_id
+        WHERE b.slug = %s AND b.ativo = TRUE
+    """, (slug,))
+    if not brinde:
+        abort(404)
+
+    return render_template('brinde.html', brinde=brinde)
+
+
+@app.route('/brinde/<slug>/orcamento', methods=['POST'])
+def brinde_orcamento(slug):
+    if not check_limit(f"orcamento_{get_ip()}", 5, 300):
+        flash("Muitas tentativas. Aguarde um pouco.", "error")
+        return redirect(f'/brinde/{slug}')
+
+    brinde = query_one("SELECT * FROM brindes_brindes WHERE slug = %s AND ativo = TRUE", (slug,))
+    if not brinde:
+        abort(404)
+
+    nome = request.form.get('nome', '').strip()
+    email = request.form.get('email', '').strip()
+    telefone = request.form.get('telefone', '').strip()
+    mensagem = request.form.get('mensagem', '').strip()
+
+    if not nome or (not email and not telefone):
+        flash('Preencha seu nome e pelo menos um contato (e-mail ou telefone).', 'error')
+        return redirect(f'/brinde/{slug}')
+
+    empresas_destaque = []
+    if brinde['ocasiao_id']:
+        empresas_destaque = query_all("""
+            SELECT e.id FROM brindes_empresas e
+            JOIN brindes_empresa_ocasioes eo ON eo.empresa_id = e.id
+            WHERE eo.ocasiao_id = %s AND e.plano = 'destaque' AND e.ativo = TRUE
+        """, (brinde['ocasiao_id'],))
+
+    if empresas_destaque:
+        for emp in empresas_destaque:
+            execute("""
+                INSERT INTO brindes_leads (brinde_id, empresa_id, nome, email, telefone, mensagem, valor_taxa, status)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, 'pendente')
+            """, (brinde['id'], emp['id'], nome, email or None, telefone or None, mensagem or None, TAXA_LEAD_PADRAO))
+    else:
+        # Nenhuma empresa em destaque pra essa ocasião ainda — cai pro admin encaminhar manualmente
+        execute("""
+            INSERT INTO brindes_leads (brinde_id, empresa_id, nome, email, telefone, mensagem, valor_taxa, status)
+            VALUES (%s, NULL, %s, %s, %s, %s, %s, 'pendente')
+        """, (brinde['id'], nome, email or None, telefone or None, mensagem or None, TAXA_LEAD_PADRAO))
+
+    flash('Pedido de orçamento enviado! Você vai ser contatado em breve.', 'success')
+    return redirect(f'/brinde/{slug}')
+
+
+@app.route('/diretorio')
+def diretorio_publico():
+    empresas = query_all("""
+        SELECT * FROM brindes_empresas
+        WHERE ativo = TRUE
+        ORDER BY (plano = 'destaque') DESC, nome
+    """)
+    return render_template('diretorio.html', empresas=empresas)
 
 
 # =====================================================================
