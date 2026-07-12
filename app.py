@@ -12,18 +12,31 @@ import qrcode
 
 load_dotenv()
 
+
+def _env_obrigatoria(nome):
+    """Lê uma variável de ambiente obrigatória. Derruba o app na subida se faltar,
+    em vez de cair silenciosamente em uma credencial hardcoded no código."""
+    valor = os.getenv(nome)
+    if not valor:
+        raise RuntimeError(
+            f"Variável de ambiente obrigatória '{nome}' não foi definida. "
+            f"Configure-a no .env (local) ou nas envs do Dokploy (produção)."
+        )
+    return valor
+
+
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "chave_secreta_qrcodebrindes")
+app.secret_key = _env_obrigatoria("SECRET_KEY")
 
 # --- CONFIGURAÇÕES ---
 BASE_URL = os.getenv("BASE_URL", "https://qrcodebrindes.com")
 
 DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "213.199.56.207"),
-    "port": int(os.getenv("DB_PORT", 5462)),
-    "dbname": os.getenv("DB_NAME", "metro"),
-    "user": os.getenv("DB_USER", "leanttro"),
-    "password": os.getenv("DB_PASSWORD", "Fin@2021"),
+    "host": _env_obrigatoria("DB_HOST"),
+    "port": int(os.getenv("DB_PORT", 5432)),
+    "dbname": _env_obrigatoria("DB_NAME"),
+    "user": _env_obrigatoria("DB_USER"),
+    "password": _env_obrigatoria("DB_PASSWORD"),
 }
 
 IMGUR_CLIENT_ID = os.getenv("IMGUR_CLIENT_ID", "")
