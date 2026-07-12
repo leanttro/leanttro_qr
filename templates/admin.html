@@ -1,490 +1,935 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Admin | QRCodeBrindes</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .tab-btn.active { background-color: #facc15; color: #000; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QRCodeBrindes — Admin</title>
+<link rel="icon" type="image/png" href="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f7f5f0;
+  --surface: #ffffff;
+  --surface2: #f1ece1;
+  --border: #e7e0d1;
+  --border2: #d9d0ba;
+  --text: #211f1a;
+  --text2: #6c6555;
+  --text3: #a09884;
+
+  --accent: #d9694c;
+  --accent-light: #fbe7e0;
+  --accent-dark: #b8503a;
+
+  --green: #1f6b4a;
+  --green-light: #e3f2ea;
+  --red: #c0392b;
+  --red-light: #fcecea;
+  --amber: #b45309;
+  --amber-light: #fef3c7;
+
+  --sidebar-w: 234px;
+  --sidebar-bg: #12271f;
+  --sidebar-bg2: #1a3329;
+  --sidebar-text: #d3ddd6;
+  --sidebar-text-dim: #86a294;
+  --sidebar-active-bg: rgba(217,105,76,0.22);
+  --sidebar-active-text: #f2b199;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+  --shadow-md: 0 8px 32px rgba(0,0,0,0.14);
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+  --transition: 0.18s ease;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ── Sidebar ── */
+#sidebar {
+  width: var(--sidebar-w);
+  background: linear-gradient(180deg, var(--sidebar-bg), var(--sidebar-bg2));
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  transition: transform var(--transition);
+}
+
+.sidebar-logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sidebar-logo img { width: 40px; height: 40px; flex-shrink: 0; }
+.logo-text { font-size: 13.5px; font-weight: 600; color: #fff; letter-spacing: -0.2px; line-height: 1.25; }
+.logo-text span { display: block; font-size: 11px; font-weight: 400; color: var(--sidebar-text-dim); }
+
+.sidebar-nav {
+  flex: 1;
+  padding: 14px 10px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.nav-section {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--sidebar-text-dim);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 14px 10px 6px;
+}
+.nav-section:first-child { padding-top: 4px; }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--sidebar-text);
+  font-size: 13.5px;
+  font-weight: 400;
+  transition: background var(--transition), color var(--transition);
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+.nav-item.active { background: var(--sidebar-active-bg); color: var(--sidebar-active-text); font-weight: 500; }
+.nav-item .nav-icon { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.75; }
+.nav-item.active .nav-icon { opacity: 1; }
+
+.sidebar-footer { padding: 16px 14px; border-top: 1px solid rgba(255,255,255,0.08); }
+.logout-link {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--sidebar-text-dim); text-decoration: none;
+  font-size: 12.5px; font-weight: 500;
+  transition: color var(--transition);
+}
+.logout-link:hover { color: #f2a58e; }
+.logout-link svg { width: 15px; height: 15px; }
+
+/* ── Main ── */
+#main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  height: 58px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+.topbar-title { font-size: 15.5px; font-weight: 600; letter-spacing: -0.2px; }
+.topbar-actions { display: flex; align-items: center; gap: 14px; }
+.topbar-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12.5px; font-weight: 500; color: var(--text2);
+  text-decoration: none; transition: color var(--transition);
+}
+.topbar-link:hover { color: var(--accent); }
+.topbar-link svg { width: 14px; height: 14px; }
+
+.content { padding: 28px; flex: 1; }
+
+/* ── Flash messages ── */
+.flash { padding: 13px 16px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 500; margin-bottom: 20px; }
+.flash-success { background: var(--green-light); color: var(--green); }
+.flash-error { background: var(--red-light); color: var(--red); }
+
+/* ── Sections ── */
+.section { display: none; animation: fadeIn 0.18s ease; }
+.section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Cards ── */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; }
+.card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.card-title { font-size: 13.5px; font-weight: 600; letter-spacing: -0.1px; }
+.card-body { padding: 20px; }
+
+/* ── Dashboard ── */
+.stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+.stat-label { font-size: 11.5px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+.stat-value { font-size: 28px; font-weight: 600; letter-spacing: -1px; line-height: 1; font-family: var(--mono); }
+.stat-value.accent { color: var(--accent); }
+
+/* ── Buttons ── */
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: var(--radius-sm); font-family: var(--font); font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: all var(--transition); text-decoration: none; line-height: 1.4; white-space: nowrap; }
+.btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn-primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+.btn-secondary { background: var(--surface); color: var(--text2); border-color: var(--border2); }
+.btn-secondary:hover { background: var(--surface2); color: var(--text); }
+.btn-danger { background: var(--red-light); color: var(--red); border-color: #f5c6c2; }
+.btn-danger:hover { background: #f9d7d4; }
+.btn-link { background: none; border: none; padding: 0; font-weight: 600; font-size: 12.5px; cursor: pointer; text-decoration: none; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+/* ── Table ── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+thead th { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; padding: 10px 16px; background: var(--surface2); text-align: left; white-space: nowrap; }
+thead th:first-child { border-radius: 8px 0 0 8px; }
+thead th:last-child { border-radius: 0 8px 8px 0; }
+tbody tr { border-bottom: 1px solid var(--border); transition: background var(--transition); }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--surface2); }
+tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
+.td-muted { color: var(--text3); font-size: 12.5px; }
+.td-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.td-actions form { display: inline; }
+.td-img { width: 38px; height: 38px; border-radius: 6px; object-fit: cover; background: var(--surface2); display: block; }
+
+/* ── Badges ── */
+.badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 20px; font-size: 11.5px; font-weight: 500; line-height: 1.6; }
+.badge-green { background: var(--green-light); color: var(--green); }
+.badge-red { background: var(--red-light); color: var(--red); }
+.badge-amber { background: var(--amber-light); color: var(--amber); }
+.badge-gray { background: var(--surface2); color: var(--text2); }
+
+/* ── Forms ── */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: end; }
+.form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+.form-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+.form-full { grid-column: 1 / -1; }
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field label { font-size: 12px; font-weight: 500; color: var(--text2); }
+.field input, .field select, .field textarea {
+  padding: 9px 12px; border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--text); font-family: var(--font); font-size: 13.5px;
+  transition: border-color var(--transition), box-shadow var(--transition); outline: none; width: 100%;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(217,105,76,0.12); }
+.field textarea { resize: vertical; min-height: 70px; }
+.checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; padding: 9px 12px; border: 1px solid var(--border2); border-radius: var(--radius-sm); background: var(--surface); }
+.checkbox-label input { width: 15px; height: 15px; accent-color: var(--accent); }
+
+.form-actions { display: flex; gap: 10px; justify-content: flex-end; padding-top: 16px; border-top: 1px solid var(--border); margin-top: 20px; }
+
+/* ── Modal / Drawer ── */
+.modal-overlay { position: fixed; inset: 0; background: rgba(18,39,31,0.4); backdrop-filter: blur(2px); z-index: 200; display: none; align-items: flex-start; justify-content: flex-end; }
+.modal-overlay.open { display: flex; }
+.drawer { background: var(--surface); width: 520px; max-width: 95vw; height: 100vh; overflow-y: auto; box-shadow: var(--shadow-md); animation: slideIn 0.22s ease; }
+@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+.drawer-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--surface); z-index: 10; }
+.drawer-title { font-size: 15px; font-weight: 600; letter-spacing: -0.2px; }
+.drawer-close { background: none; border: none; cursor: pointer; color: var(--text3); padding: 4px; border-radius: 4px; display: flex; align-items: center; }
+.drawer-close:hover { color: var(--text); background: var(--surface2); }
+.drawer-body { padding: 24px; }
+
+/* ── Toast ── */
+.toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+.toast { padding: 12px 16px; border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 500; background: var(--text); color: #fff; box-shadow: var(--shadow-md); animation: toastIn 0.2s ease; }
+.toast.success { background: var(--green); }
+.toast.error { background: var(--red); }
+@keyframes toastIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Search bar ── */
+.search-bar { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border: 1px solid var(--border2); border-radius: var(--radius-sm); background: var(--surface); }
+.search-bar svg { width: 15px; height: 15px; color: var(--text3); flex-shrink: 0; }
+.search-bar input { border: none; outline: none; background: none; font-family: var(--font); font-size: 13px; color: var(--text); width: 190px; }
+
+/* ── Empty / loading ── */
+.empty-state { text-align: center; padding: 50px 20px; color: var(--text3); font-size: 13.5px; }
+.loading { display: flex; align-items: center; justify-content: center; padding: 50px; color: var(--text3); font-size: 13px; }
+.spinner { width: 18px; height: 18px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin-right: 10px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Mobile ── */
+.hamburger { display: none; background: none; border: none; color: var(--text); cursor: pointer; padding: 6px; }
+.hamburger svg { width: 22px; height: 22px; }
+@media (max-width: 980px) {
+  :root { --sidebar-w: 0px; }
+  #sidebar { transform: translateX(-234px); width: 234px; }
+  #sidebar.open { transform: translateX(0); }
+  .hamburger { display: flex; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .form-grid, .form-grid.cols-3, .form-grid.cols-4 { grid-template-columns: 1fr; }
+}
+</style>
 </head>
-<body class="bg-gray-50 pb-20">
+<body>
 
-    <nav class="bg-black text-white p-4">
-        <div class="container mx-auto flex justify-between items-center flex-wrap gap-3">
-            <span class="font-bold text-yellow-400">ADMIN QRCODEBRINDES</span>
-            <a href="/admin/logout" class="text-sm font-bold text-gray-400 hover:text-red-400 transition">Sair</a>
+<div id="sidebar">
+  <div class="sidebar-logo">
+    <img src="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png" alt="QRCodeBrindes">
+    <div class="logo-text">QRCodeBrindes<span>Painel administrativo</span></div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section">Geral</div>
+    <button class="nav-item active" data-section="dashboard">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </button>
+
+    <div class="nav-section">Catálogo</div>
+    <button class="nav-item" data-section="ocasioes">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Ocasiões
+    </button>
+    <button class="nav-item" data-section="tipos">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+      Tipos de impressão
+    </button>
+    <button class="nav-item" data-section="brindes">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 0 1 0 5"/></svg>
+      Brindes
+    </button>
+
+    <div class="nav-section">Diretório &amp; vendas</div>
+    <button class="nav-item" data-section="empresas">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="1"/><line x1="9" y1="6" x2="9" y2="6.01"/><line x1="15" y1="6" x2="15" y2="6.01"/><line x1="9" y1="10" x2="9" y2="10.01"/><line x1="15" y1="10" x2="15" y2="10.01"/><line x1="9" y1="14" x2="9" y2="14.01"/><line x1="15" y1="14" x2="15" y2="14.01"/><path d="M9 22v-4h6v4"/></svg>
+      Empresas
+    </button>
+    <button class="nav-item" data-section="leads">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+      Leads
+    </button>
+
+    <div class="nav-section">QR codes</div>
+    <button class="nav-item" data-section="paginas">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><line x1="17.5" y1="14" x2="17.5" y2="21"/><line x1="14" y1="17.5" x2="21" y2="17.5"/></svg>
+      Páginas (usuários)
+    </button>
+
+    <div class="nav-section">Monetização</div>
+    <button class="nav-item" data-section="anuncios">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="2" y1="17" x2="22" y2="17"/><line x1="6" y1="20" x2="6" y2="23"/><line x1="10" y1="20" x2="10" y2="23"/><line x1="14" y1="20" x2="14" y2="23"/><line x1="18" y1="20" x2="18" y2="23"/></svg>
+      Anúncios
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <a href="/admin/logout" class="logout-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sair
+    </a>
+  </div>
+</div>
+
+<div id="main">
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="topbar-title" id="topbarTitle">Dashboard</span>
+    </div>
+    <div class="topbar-actions">
+      <a href="/" target="_blank" class="topbar-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Ver site
+      </a>
+    </div>
+  </div>
+
+  <div class="content">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+        <div class="flash {{ 'flash-error' if category == 'error' else 'flash-success' }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- ═══════════════ DASHBOARD ═══════════════ -->
+    <div class="section active" id="sec-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Páginas / QR criados</div>
+          <div class="stat-value">{{ stats.total_paginas }}</div>
         </div>
-    </nav>
-
-    <div class="container mx-auto px-4 mt-6 max-w-6xl">
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                <div class="mb-6 p-4 rounded-lg {{ 'bg-red-100 text-red-800 border border-red-200' if category == 'error' else 'bg-green-100 text-green-800 border border-green-200' }} font-bold">
-                    {{ message }}
-                </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <div class="flex gap-2 mb-6 flex-wrap">
-            <button class="tab-btn active px-4 py-2 rounded-lg font-bold text-sm bg-white border" data-tab="dashboard">Dashboard</button>
-            <button class="tab-btn px-4 py-2 rounded-lg font-bold text-sm bg-white border" data-tab="ocasioes">Ocasiões</button>
-            <button class="tab-btn px-4 py-2 rounded-lg font-bold text-sm bg-white border" data-tab="tipos">Tipos de Impressão</button>
-            <button class="tab-btn px-4 py-2 rounded-lg font-bold text-sm bg-white border" data-tab="brindes">Brindes</button>
-            <button class="tab-btn px-4 py-2 rounded-lg font-bold text-sm bg-white border" data-tab="empresas">Empresas</button>
-            <button class="tab-btn px-4 py-2 rounded-lg font-bold text-sm bg-white border" data-tab="paginas">Páginas (usuários)</button>
-            <button class="tab-btn px-4 py-2 rounded-lg font-bold text-sm bg-white border" data-tab="leads">Leads</button>
+        <div class="stat-card">
+          <div class="stat-label">Scans / acessos</div>
+          <div class="stat-value">{{ stats.total_scans }}</div>
         </div>
-
-        <!-- ================= DASHBOARD ================= -->
-        <div id="tab-dashboard" class="tab-content active space-y-4">
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div class="bg-white p-5 rounded-xl shadow-sm border text-center">
-                    <p class="text-3xl font-black text-gray-900">{{ stats.total_paginas }}</p>
-                    <p class="text-xs font-bold text-gray-400 uppercase mt-1">Páginas/QR criados</p>
-                </div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border text-center">
-                    <p class="text-3xl font-black text-gray-900">{{ stats.total_scans }}</p>
-                    <p class="text-xs font-bold text-gray-400 uppercase mt-1">Scans/Acessos</p>
-                </div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border text-center">
-                    <p class="text-3xl font-black text-gray-900">{{ stats.total_brindes }}</p>
-                    <p class="text-xs font-bold text-gray-400 uppercase mt-1">Brindes no catálogo</p>
-                </div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border text-center">
-                    <p class="text-3xl font-black text-gray-900">{{ stats.total_empresas }}</p>
-                    <p class="text-xs font-bold text-gray-400 uppercase mt-1">Empresas no diretório</p>
-                </div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border text-center">
-                    <p class="text-3xl font-black text-yellow-600">{{ stats.leads_pendentes }}</p>
-                    <p class="text-xs font-bold text-gray-400 uppercase mt-1">Leads pendentes</p>
-                </div>
-            </div>
+        <div class="stat-card">
+          <div class="stat-label">Brindes no catálogo</div>
+          <div class="stat-value">{{ stats.total_brindes }}</div>
         </div>
-
-        <!-- ================= OCASIÕES ================= -->
-        <div id="tab-ocasioes" class="tab-content space-y-6">
-            <div class="bg-white p-6 rounded-xl shadow-sm border">
-                <h3 class="font-bold text-lg mb-4">Nova ocasião</h3>
-                <form method="POST" action="/admin/ocasioes/add" class="grid md:grid-cols-4 gap-3 items-end">
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Nome</label>
-                        <input type="text" name="nome" required class="w-full border rounded p-3" placeholder="Ex: Casamento">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Slug</label>
-                        <input type="text" name="slug" required class="w-full border rounded p-3" placeholder="casamento">
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <input type="checkbox" name="sazonal" id="sazonal" class="w-5 h-5">
-                        <label for="sazonal" class="text-sm font-bold text-gray-600">Sazonal</label>
-                    </div>
-                    <div class="md:col-span-4">
-                        <button type="submit" class="bg-green-600 text-white font-bold px-6 py-3 rounded-lg hover:bg-green-700">Adicionar</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50 text-xs uppercase text-gray-500">
-                        <tr>
-                            <th class="p-3 text-left">Nome</th>
-                            <th class="p-3 text-left">Slug</th>
-                            <th class="p-3 text-left">Sazonal</th>
-                            <th class="p-3 text-left">Ativo</th>
-                            <th class="p-3 text-left">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for o in ocasioes %}
-                        <tr class="border-t">
-                            <td class="p-3 font-bold">{{ o.nome }}</td>
-                            <td class="p-3 text-gray-500">{{ o.slug }}</td>
-                            <td class="p-3">{{ 'Sim' if o.sazonal else 'Não' }}</td>
-                            <td class="p-3">
-                                <span class="px-2 py-1 rounded-full text-xs font-bold {{ 'bg-green-100 text-green-700' if o.ativo else 'bg-gray-200 text-gray-500' }}">
-                                    {{ 'Ativo' if o.ativo else 'Inativo' }}
-                                </span>
-                            </td>
-                            <td class="p-3 flex gap-2">
-                                <form method="POST" action="/admin/ocasioes/{{ o.id }}/toggle">
-                                    <button class="text-blue-600 font-bold hover:underline">{{ 'Desativar' if o.ativo else 'Ativar' }}</button>
-                                </form>
-                                <form method="POST" action="/admin/ocasioes/{{ o.id }}/delete" onsubmit="return confirm('Excluir esta ocasião?');">
-                                    <button class="text-red-600 font-bold hover:underline">Excluir</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr><td colspan="5" class="p-6 text-center text-gray-400">Nenhuma ocasião cadastrada.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        <div class="stat-card">
+          <div class="stat-label">Empresas no diretório</div>
+          <div class="stat-value">{{ stats.total_empresas }}</div>
         </div>
-
-        <!-- ================= TIPOS DE IMPRESSÃO ================= -->
-        <div id="tab-tipos" class="tab-content space-y-6">
-            <div class="bg-white p-6 rounded-xl shadow-sm border">
-                <h3 class="font-bold text-lg mb-4">Novo tipo de impressão</h3>
-                <form method="POST" action="/admin/tipos-impressao/add" class="grid md:grid-cols-3 gap-3 items-end">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Nome</label>
-                        <input type="text" name="nome" required class="w-full border rounded p-3" placeholder="Ex: Sublimação">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Slug</label>
-                        <input type="text" name="slug" required class="w-full border rounded p-3" placeholder="sublimacao">
-                    </div>
-                    <div>
-                        <button type="submit" class="bg-green-600 text-white font-bold px-6 py-3 rounded-lg hover:bg-green-700">Adicionar</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50 text-xs uppercase text-gray-500">
-                        <tr>
-                            <th class="p-3 text-left">Nome</th>
-                            <th class="p-3 text-left">Slug</th>
-                            <th class="p-3 text-left">Ativo</th>
-                            <th class="p-3 text-left">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for t in tipos %}
-                        <tr class="border-t">
-                            <td class="p-3 font-bold">{{ t.nome }}</td>
-                            <td class="p-3 text-gray-500">{{ t.slug }}</td>
-                            <td class="p-3">
-                                <span class="px-2 py-1 rounded-full text-xs font-bold {{ 'bg-green-100 text-green-700' if t.ativo else 'bg-gray-200 text-gray-500' }}">
-                                    {{ 'Ativo' if t.ativo else 'Inativo' }}
-                                </span>
-                            </td>
-                            <td class="p-3 flex gap-2">
-                                <form method="POST" action="/admin/tipos-impressao/{{ t.id }}/toggle">
-                                    <button class="text-blue-600 font-bold hover:underline">{{ 'Desativar' if t.ativo else 'Ativar' }}</button>
-                                </form>
-                                <form method="POST" action="/admin/tipos-impressao/{{ t.id }}/delete" onsubmit="return confirm('Excluir este tipo?');">
-                                    <button class="text-red-600 font-bold hover:underline">Excluir</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr><td colspan="4" class="p-6 text-center text-gray-400">Nenhum tipo cadastrado.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        <div class="stat-card">
+          <div class="stat-label">Leads pendentes</div>
+          <div class="stat-value accent">{{ stats.leads_pendentes }}</div>
         </div>
-
-        <!-- ================= BRINDES ================= -->
-        <div id="tab-brindes" class="tab-content space-y-6">
-            <div class="bg-white p-6 rounded-xl shadow-sm border">
-                <h3 class="font-bold text-lg mb-4">Novo brinde</h3>
-                <form method="POST" action="/admin/brindes/add" enctype="multipart/form-data" class="grid md:grid-cols-4 gap-3 items-end">
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Nome</label>
-                        <input type="text" name="nome" required class="w-full border rounded p-3" placeholder="Ex: Caneca com QR code">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Slug</label>
-                        <input type="text" name="slug" required class="w-full border rounded p-3">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Foto</label>
-                        <input type="file" name="imagem" class="w-full text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Ocasião</label>
-                        <select name="ocasiao_id" class="w-full border rounded p-3 bg-white">
-                            <option value="">—</option>
-                            {% for o in ocasioes %}
-                            <option value="{{ o.id }}">{{ o.nome }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Tipo de impressão</label>
-                        <select name="tipo_impressao_id" class="w-full border rounded p-3 bg-white">
-                            <option value="">—</option>
-                            {% for t in tipos %}
-                            <option value="{{ t.id }}">{{ t.nome }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Descrição</label>
-                        <input type="text" name="descricao" class="w-full border rounded p-3">
-                    </div>
-                    <div class="md:col-span-4">
-                        <button type="submit" class="bg-green-600 text-white font-bold px-6 py-3 rounded-lg hover:bg-green-700">Adicionar</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50 text-xs uppercase text-gray-500">
-                        <tr>
-                            <th class="p-3 text-left">Foto</th>
-                            <th class="p-3 text-left">Nome</th>
-                            <th class="p-3 text-left">Ocasião</th>
-                            <th class="p-3 text-left">Tipo</th>
-                            <th class="p-3 text-left">Ativo</th>
-                            <th class="p-3 text-left">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for b in brindes %}
-                        <tr class="border-t">
-                            <td class="p-3"><img src="{{ b.imagem_url or 'https://placehold.co/60x60?text=Sem+Foto' }}" class="w-10 h-10 rounded object-cover bg-gray-100"></td>
-                            <td class="p-3 font-bold">{{ b.nome }}</td>
-                            <td class="p-3 text-gray-500">{{ b.ocasiao_nome or '—' }}</td>
-                            <td class="p-3 text-gray-500">{{ b.tipo_nome or '—' }}</td>
-                            <td class="p-3">
-                                <span class="px-2 py-1 rounded-full text-xs font-bold {{ 'bg-green-100 text-green-700' if b.ativo else 'bg-gray-200 text-gray-500' }}">
-                                    {{ 'Ativo' if b.ativo else 'Inativo' }}
-                                </span>
-                            </td>
-                            <td class="p-3 flex gap-2">
-                                <form method="POST" action="/admin/brindes/{{ b.id }}/toggle">
-                                    <button class="text-blue-600 font-bold hover:underline">{{ 'Desativar' if b.ativo else 'Ativar' }}</button>
-                                </form>
-                                <form method="POST" action="/admin/brindes/{{ b.id }}/delete" onsubmit="return confirm('Excluir este brinde?');">
-                                    <button class="text-red-600 font-bold hover:underline">Excluir</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr><td colspan="6" class="p-6 text-center text-gray-400">Nenhum brinde cadastrado.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- ================= EMPRESAS ================= -->
-        <div id="tab-empresas" class="tab-content space-y-6">
-            <div class="bg-white p-6 rounded-xl shadow-sm border">
-                <h3 class="font-bold text-lg mb-4">Nova empresa</h3>
-                <form method="POST" action="/admin/empresas/add" class="grid md:grid-cols-4 gap-3 items-end">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Nome</label>
-                        <input type="text" name="nome" required class="w-full border rounded p-3">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Slug</label>
-                        <input type="text" name="slug" required class="w-full border rounded p-3">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">E-mail</label>
-                        <input type="email" name="email" class="w-full border rounded p-3">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">WhatsApp</label>
-                        <input type="text" name="whatsapp" class="w-full border rounded p-3">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Cidade</label>
-                        <input type="text" name="cidade" class="w-full border rounded p-3">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Plano</label>
-                        <select name="plano" class="w-full border rounded p-3 bg-white">
-                            <option value="gratis">Grátis</option>
-                            <option value="destaque">Destaque</option>
-                        </select>
-                    </div>
-                    <div class="md:col-span-2">
-                        <button type="submit" class="bg-green-600 text-white font-bold px-6 py-3 rounded-lg hover:bg-green-700">Adicionar</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50 text-xs uppercase text-gray-500">
-                        <tr>
-                            <th class="p-3 text-left">Nome</th>
-                            <th class="p-3 text-left">Cidade</th>
-                            <th class="p-3 text-left">Plano</th>
-                            <th class="p-3 text-left">Ativo</th>
-                            <th class="p-3 text-left">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for e in empresas %}
-                        <tr class="border-t">
-                            <td class="p-3 font-bold">{{ e.nome }}</td>
-                            <td class="p-3 text-gray-500">{{ e.cidade or '—' }}</td>
-                            <td class="p-3">
-                                <span class="px-2 py-1 rounded-full text-xs font-bold {{ 'bg-yellow-100 text-yellow-700' if e.plano == 'destaque' else 'bg-gray-100 text-gray-500' }}">
-                                    {{ e.plano }}
-                                </span>
-                            </td>
-                            <td class="p-3">
-                                <span class="px-2 py-1 rounded-full text-xs font-bold {{ 'bg-green-100 text-green-700' if e.ativo else 'bg-gray-200 text-gray-500' }}">
-                                    {{ 'Ativo' if e.ativo else 'Inativo' }}
-                                </span>
-                            </td>
-                            <td class="p-3 flex gap-2">
-                                <form method="POST" action="/admin/empresas/{{ e.id }}/toggle-plano">
-                                    <button class="text-yellow-700 font-bold hover:underline">{{ 'Tirar destaque' if e.plano == 'destaque' else 'Destacar' }}</button>
-                                </form>
-                                <form method="POST" action="/admin/empresas/{{ e.id }}/toggle">
-                                    <button class="text-blue-600 font-bold hover:underline">{{ 'Desativar' if e.ativo else 'Ativar' }}</button>
-                                </form>
-                                <form method="POST" action="/admin/empresas/{{ e.id }}/delete" onsubmit="return confirm('Excluir esta empresa?');">
-                                    <button class="text-red-600 font-bold hover:underline">Excluir</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr><td colspan="5" class="p-6 text-center text-gray-400">Nenhuma empresa cadastrada.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- ================= PÁGINAS (USUÁRIOS) ================= -->
-        <div id="tab-paginas" class="tab-content space-y-6">
-            <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50 text-xs uppercase text-gray-500">
-                        <tr>
-                            <th class="p-3 text-left">Link (slug)</th>
-                            <th class="p-3 text-left">E-mail</th>
-                            <th class="p-3 text-left">Destino</th>
-                            <th class="p-3 text-left">Plano</th>
-                            <th class="p-3 text-left">Scans</th>
-                            <th class="p-3 text-left">Status</th>
-                            <th class="p-3 text-left">Criada em</th>
-                            <th class="p-3 text-left">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for p in paginas %}
-                        <!-- Form "vazio" fora da <tr>/<td>: os inputs lá dentro se conectam a ele via form="editar-pagina-{{ p.id }}" (atributo HTML5), sem precisar aninhar <form> dentro de <td>, o que é HTML inválido. -->
-                        <tr class="border-t align-top">
-                            <td class="p-3">
-                                <form id="editar-pagina-{{ p.id }}" method="POST" action="/admin/paginas/{{ p.id }}/editar"></form>
-                                <div class="flex items-center gap-1">
-                                    <span class="text-gray-400 text-xs">/</span>
-                                    <input form="editar-pagina-{{ p.id }}" type="text" name="slug" value="{{ p.slug }}" class="w-32 border rounded p-2 font-bold text-xs">
-                                </div>
-                                <a href="/{{ p.slug }}" target="_blank" class="text-[10px] text-blue-600 hover:underline">abrir ↗</a>
-                            </td>
-                            <td class="p-3">
-                                <input form="editar-pagina-{{ p.id }}" type="email" name="email" value="{{ p.email or '' }}" class="w-44 border rounded p-2 text-xs" placeholder="sem e-mail">
-                            </td>
-                            <td class="p-3 text-xs text-gray-500">
-                                {{ p.tipo_destino }}
-                            </td>
-                            <td class="p-3">
-                                <span class="px-2 py-1 rounded-full text-xs font-bold {{ 'bg-green-100 text-green-700' if p.plano == 'pago' else 'bg-gray-100 text-gray-500' }}">
-                                    {{ p.plano }}
-                                </span>
-                            </td>
-                            <td class="p-3 text-xs font-bold text-gray-600">{{ p.total_scans }}</td>
-                            <td class="p-3">
-                                <span class="px-2 py-1 rounded-full text-xs font-bold {{ 'bg-green-100 text-green-700' if p.ativo else 'bg-gray-200 text-gray-500' }}">
-                                    {{ 'Ativa' if p.ativo else 'Inativa' }}
-                                </span>
-                            </td>
-                            <td class="p-3 text-gray-400 text-xs">{{ p.created_at.strftime('%d/%m/%Y') if p.created_at else '' }}</td>
-                            <td class="p-3">
-                                <div class="flex flex-col gap-1 items-start">
-                                    <button form="editar-pagina-{{ p.id }}" type="submit" class="text-green-700 font-bold hover:underline text-xs">Salvar</button>
-                                    <form method="POST" action="/admin/paginas/{{ p.id }}/resetar-senha" onsubmit="return confirm('Gerar uma senha nova para esta página e enviar por e-mail?');">
-                                        <button class="text-purple-700 font-bold hover:underline text-xs">Resetar senha</button>
-                                    </form>
-                                    <form method="POST" action="/admin/paginas/{{ p.id }}/toggle">
-                                        <button class="text-blue-600 font-bold hover:underline text-xs">{{ 'Desativar' if p.ativo else 'Ativar' }}</button>
-                                    </form>
-                                    <form method="POST" action="/admin/paginas/{{ p.id }}/delete" onsubmit="return confirm('Excluir esta página em definitivo? Essa ação não pode ser desfeita.');">
-                                        <button class="text-red-600 font-bold hover:underline text-xs">Excluir</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr><td colspan="8" class="p-6 text-center text-gray-400">Nenhuma página criada ainda.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- ================= LEADS ================= -->
-        <div id="tab-leads" class="tab-content space-y-6">
-            <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50 text-xs uppercase text-gray-500">
-                        <tr>
-                            <th class="p-3 text-left">Brinde</th>
-                            <th class="p-3 text-left">Empresa</th>
-                            <th class="p-3 text-left">Cliente</th>
-                            <th class="p-3 text-left">Contato</th>
-                            <th class="p-3 text-left">Taxa</th>
-                            <th class="p-3 text-left">Status</th>
-                            <th class="p-3 text-left">Data</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for l in leads %}
-                        <tr class="border-t">
-                            <td class="p-3 font-bold">{{ l.brinde_nome or '—' }}</td>
-                            <td class="p-3 text-gray-500">{{ l.empresa_nome or '—' }}</td>
-                            <td class="p-3">{{ l.nome or '—' }}</td>
-                            <td class="p-3 text-gray-500">{{ l.email or l.telefone or '—' }}</td>
-                            <td class="p-3">R$ {{ '%.2f'|format(l.valor_taxa) }}</td>
-                            <td class="p-3">
-                                <form method="POST" action="/admin/leads/{{ l.id }}/status" class="flex items-center gap-2">
-                                    <select name="status" onchange="this.form.submit()" class="border rounded p-1 text-xs font-bold bg-white">
-                                        <option value="pendente" {{ 'selected' if l.status == 'pendente' }}>Pendente</option>
-                                        <option value="enviado" {{ 'selected' if l.status == 'enviado' }}>Enviado</option>
-                                        <option value="pago" {{ 'selected' if l.status == 'pago' }}>Pago</option>
-                                    </select>
-                                </form>
-                            </td>
-                            <td class="p-3 text-gray-400 text-xs">{{ l.created_at.strftime('%d/%m/%Y') if l.created_at else '' }}</td>
-                        </tr>
-                        {% else %}
-                        <tr><td colspan="7" class="p-6 text-center text-gray-400">Nenhum lead ainda.</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
+      </div>
     </div>
 
-    <script>
-        const buttons = document.querySelectorAll('.tab-btn');
-        const contents = document.querySelectorAll('.tab-content');
+    <!-- ═══════════════ OCASIÕES ═══════════════ -->
+    <div class="section" id="sec-ocasioes">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Nova ocasião</span></div>
+        <div class="card-body">
+          <form method="POST" action="/admin/ocasioes/add" class="form-grid cols-4">
+            <div class="field form-full" style="grid-column: span 2;">
+              <label>Nome</label>
+              <input type="text" name="nome" required placeholder="Ex: Casamento">
+            </div>
+            <div class="field">
+              <label>Slug</label>
+              <input type="text" name="slug" required placeholder="casamento">
+            </div>
+            <div class="field" style="flex-direction:row; align-items:center;">
+              <label class="checkbox-label" style="width:100%;"><input type="checkbox" name="sazonal"> Sazonal</label>
+            </div>
+            <div class="form-full">
+              <button type="submit" class="btn btn-primary">Adicionar</button>
+            </div>
+          </form>
+        </div>
+      </div>
 
-        function ativarAba(nome) {
-            buttons.forEach(b => b.classList.toggle('active', b.dataset.tab === nome));
-            contents.forEach(c => c.classList.toggle('active', c.id === 'tab-' + nome));
-            history.replaceState(null, '', '#' + nome);
-        }
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nome</th><th>Slug</th><th>Sazonal</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody>
+              {% for o in ocasioes %}
+              <tr>
+                <td style="font-weight:600;">{{ o.nome }}</td>
+                <td class="td-muted">{{ o.slug }}</td>
+                <td>{{ 'Sim' if o.sazonal else 'Não' }}</td>
+                <td><span class="badge {{ 'badge-green' if o.ativo else 'badge-gray' }}">{{ 'Ativo' if o.ativo else 'Inativo' }}</span></td>
+                <td class="td-actions">
+                  <form method="POST" action="/admin/ocasioes/{{ o.id }}/toggle"><button class="btn-link" style="color:var(--accent);">{{ 'Desativar' if o.ativo else 'Ativar' }}</button></form>
+                  <form method="POST" action="/admin/ocasioes/{{ o.id }}/delete" onsubmit="return confirm('Excluir esta ocasião?');"><button class="btn-link" style="color:var(--red);">Excluir</button></form>
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="5" class="empty-state">Nenhuma ocasião cadastrada.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
-        buttons.forEach(btn => {
-            btn.addEventListener('click', () => ativarAba(btn.dataset.tab));
-        });
+    <!-- ═══════════════ TIPOS DE IMPRESSÃO ═══════════════ -->
+    <div class="section" id="sec-tipos">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Novo tipo de impressão</span></div>
+        <div class="card-body">
+          <form method="POST" action="/admin/tipos-impressao/add" class="form-grid cols-3">
+            <div class="field"><label>Nome</label><input type="text" name="nome" required placeholder="Ex: Sublimação"></div>
+            <div class="field"><label>Slug</label><input type="text" name="slug" required placeholder="sublimacao"></div>
+            <div class="field"><button type="submit" class="btn btn-primary">Adicionar</button></div>
+          </form>
+        </div>
+      </div>
 
-        const hash = window.location.hash.replace('#', '');
-        if (hash) ativarAba(hash);
-    </script>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nome</th><th>Slug</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody>
+              {% for t in tipos %}
+              <tr>
+                <td style="font-weight:600;">{{ t.nome }}</td>
+                <td class="td-muted">{{ t.slug }}</td>
+                <td><span class="badge {{ 'badge-green' if t.ativo else 'badge-gray' }}">{{ 'Ativo' if t.ativo else 'Inativo' }}</span></td>
+                <td class="td-actions">
+                  <form method="POST" action="/admin/tipos-impressao/{{ t.id }}/toggle"><button class="btn-link" style="color:var(--accent);">{{ 'Desativar' if t.ativo else 'Ativar' }}</button></form>
+                  <form method="POST" action="/admin/tipos-impressao/{{ t.id }}/delete" onsubmit="return confirm('Excluir este tipo?');"><button class="btn-link" style="color:var(--red);">Excluir</button></form>
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="4" class="empty-state">Nenhum tipo cadastrado.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ BRINDES ═══════════════ -->
+    <div class="section" id="sec-brindes">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Novo brinde</span></div>
+        <div class="card-body">
+          <form method="POST" action="/admin/brindes/add" enctype="multipart/form-data" class="form-grid cols-3">
+            <div class="field" style="grid-column: span 1;"><label>Nome</label><input type="text" name="nome" required placeholder="Ex: Caneca com QR code"></div>
+            <div class="field"><label>Slug</label><input type="text" name="slug" required></div>
+            <div class="field"><label>Foto</label><input type="file" name="imagem"></div>
+            <div class="field">
+              <label>Ocasião</label>
+              <select name="ocasiao_id">
+                <option value="">—</option>
+                {% for o in ocasioes %}<option value="{{ o.id }}">{{ o.nome }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="field">
+              <label>Tipo de impressão</label>
+              <select name="tipo_impressao_id">
+                <option value="">—</option>
+                {% for t in tipos %}<option value="{{ t.id }}">{{ t.nome }}</option>{% endfor %}
+              </select>
+            </div>
+            <div class="field"><label>Descrição</label><input type="text" name="descricao"></div>
+            <div class="form-full">
+              <button type="submit" class="btn btn-primary">Adicionar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Foto</th><th>Nome</th><th>Ocasião</th><th>Tipo</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody>
+              {% for b in brindes %}
+              <tr>
+                <td><img class="td-img" src="{{ b.imagem_url or 'https://placehold.co/60x60?text=%20' }}" alt=""></td>
+                <td style="font-weight:600;">{{ b.nome }}</td>
+                <td class="td-muted">{{ b.ocasiao_nome or '—' }}</td>
+                <td class="td-muted">{{ b.tipo_nome or '—' }}</td>
+                <td><span class="badge {{ 'badge-green' if b.ativo else 'badge-gray' }}">{{ 'Ativo' if b.ativo else 'Inativo' }}</span></td>
+                <td class="td-actions">
+                  <form method="POST" action="/admin/brindes/{{ b.id }}/toggle"><button class="btn-link" style="color:var(--accent);">{{ 'Desativar' if b.ativo else 'Ativar' }}</button></form>
+                  <form method="POST" action="/admin/brindes/{{ b.id }}/delete" onsubmit="return confirm('Excluir este brinde?');"><button class="btn-link" style="color:var(--red);">Excluir</button></form>
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="6" class="empty-state">Nenhum brinde cadastrado.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ EMPRESAS ═══════════════ -->
+    <div class="section" id="sec-empresas">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Nova empresa</span></div>
+        <div class="card-body">
+          <form method="POST" action="/admin/empresas/add" class="form-grid cols-3">
+            <div class="field"><label>Nome</label><input type="text" name="nome" required></div>
+            <div class="field"><label>Slug</label><input type="text" name="slug" required></div>
+            <div class="field"><label>E-mail</label><input type="email" name="email"></div>
+            <div class="field"><label>WhatsApp</label><input type="text" name="whatsapp"></div>
+            <div class="field"><label>Cidade</label><input type="text" name="cidade"></div>
+            <div class="field">
+              <label>Plano</label>
+              <select name="plano">
+                <option value="gratis">Grátis</option>
+                <option value="destaque">Destaque</option>
+              </select>
+            </div>
+            <div class="form-full">
+              <button type="submit" class="btn btn-primary">Adicionar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nome</th><th>Cidade</th><th>Plano</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody>
+              {% for e in empresas %}
+              <tr>
+                <td style="font-weight:600;">{{ e.nome }}</td>
+                <td class="td-muted">{{ e.cidade or '—' }}</td>
+                <td><span class="badge {{ 'badge-amber' if e.plano == 'destaque' else 'badge-gray' }}">{{ e.plano }}</span></td>
+                <td><span class="badge {{ 'badge-green' if e.ativo else 'badge-gray' }}">{{ 'Ativo' if e.ativo else 'Inativo' }}</span></td>
+                <td class="td-actions">
+                  <form method="POST" action="/admin/empresas/{{ e.id }}/toggle-plano"><button class="btn-link" style="color:var(--amber);">{{ 'Tirar destaque' if e.plano == 'destaque' else 'Destacar' }}</button></form>
+                  <form method="POST" action="/admin/empresas/{{ e.id }}/toggle"><button class="btn-link" style="color:var(--accent);">{{ 'Desativar' if e.ativo else 'Ativar' }}</button></form>
+                  <form method="POST" action="/admin/empresas/{{ e.id }}/delete" onsubmit="return confirm('Excluir esta empresa?');"><button class="btn-link" style="color:var(--red);">Excluir</button></form>
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="5" class="empty-state">Nenhuma empresa cadastrada.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ PÁGINAS (USUÁRIOS) ═══════════════ -->
+    <div class="section" id="sec-paginas">
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Link (slug)</th><th>E-mail</th><th>Destino</th><th>Plano</th>
+                <th>Scans</th><th>Status</th><th>Criada em</th><th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in paginas %}
+              <tr>
+                <td>
+                  <form id="editar-pagina-{{ p.id }}" method="POST" action="/admin/paginas/{{ p.id }}/editar"></form>
+                  <div style="display:flex; align-items:center; gap:4px;">
+                    <span class="td-muted">/</span>
+                    <input form="editar-pagina-{{ p.id }}" type="text" name="slug" value="{{ p.slug }}" style="width:120px; font-weight:600; font-size:12.5px; padding:6px 8px; border:1px solid var(--border2); border-radius:6px;">
+                  </div>
+                  <a href="/{{ p.slug }}" target="_blank" style="font-size:10.5px; color:var(--accent); text-decoration:none;">abrir ↗</a>
+                </td>
+                <td>
+                  <input form="editar-pagina-{{ p.id }}" type="email" name="email" value="{{ p.email or '' }}" placeholder="sem e-mail" style="width:170px; font-size:12.5px; padding:6px 8px; border:1px solid var(--border2); border-radius:6px;">
+                </td>
+                <td class="td-muted">{{ p.tipo_destino }}</td>
+                <td><span class="badge {{ 'badge-green' if p.plano == 'pago' else 'badge-gray' }}">{{ p.plano }}</span></td>
+                <td style="font-weight:600;">{{ p.total_scans }}</td>
+                <td><span class="badge {{ 'badge-green' if p.ativo else 'badge-gray' }}">{{ 'Ativa' if p.ativo else 'Inativa' }}</span></td>
+                <td class="td-muted">{{ p.created_at.strftime('%d/%m/%Y') if p.created_at else '' }}</td>
+                <td>
+                  <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start;">
+                    <button form="editar-pagina-{{ p.id }}" type="submit" class="btn-link" style="color:var(--green); font-size:12px;">Salvar</button>
+                    <form method="POST" action="/admin/paginas/{{ p.id }}/resetar-senha" onsubmit="return confirm('Gerar uma senha nova para esta página e enviar por e-mail?');"><button class="btn-link" style="color:#7c5cbf; font-size:12px;">Resetar senha</button></form>
+                    <form method="POST" action="/admin/paginas/{{ p.id }}/toggle"><button class="btn-link" style="color:var(--accent); font-size:12px;">{{ 'Desativar' if p.ativo else 'Ativar' }}</button></form>
+                    <form method="POST" action="/admin/paginas/{{ p.id }}/delete" onsubmit="return confirm('Excluir esta página em definitivo? Essa ação não pode ser desfeita.');"><button class="btn-link" style="color:var(--red); font-size:12px;">Excluir</button></form>
+                  </div>
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="8" class="empty-state">Nenhuma página criada ainda.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ LEADS ═══════════════ -->
+    <div class="section" id="sec-leads">
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Brinde</th><th>Empresa</th><th>Cliente</th><th>Contato</th><th>Taxa</th><th>Status</th><th>Data</th></tr></thead>
+            <tbody>
+              {% for l in leads %}
+              <tr>
+                <td style="font-weight:600;">{{ l.brinde_nome or '—' }}</td>
+                <td class="td-muted">{{ l.empresa_nome or '—' }}</td>
+                <td>{{ l.nome or '—' }}</td>
+                <td class="td-muted">{{ l.email or l.telefone or '—' }}</td>
+                <td>R$ {{ '%.2f'|format(l.valor_taxa) }}</td>
+                <td>
+                  <form method="POST" action="/admin/leads/{{ l.id }}/status">
+                    <select name="status" onchange="this.form.submit()" style="padding:6px 8px; border:1px solid var(--border2); border-radius:6px; font-size:12.5px; font-weight:600; background:#fff;">
+                      <option value="pendente" {{ 'selected' if l.status == 'pendente' }}>Pendente</option>
+                      <option value="enviado" {{ 'selected' if l.status == 'enviado' }}>Enviado</option>
+                      <option value="pago" {{ 'selected' if l.status == 'pago' }}>Pago</option>
+                    </select>
+                  </form>
+                </td>
+                <td class="td-muted">{{ l.created_at.strftime('%d/%m/%Y') if l.created_at else '' }}</td>
+              </tr>
+              {% else %}
+              <tr><td colspan="7" class="empty-state">Nenhum lead ainda.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════ ANÚNCIOS (SPA / drawer, via fetch JSON) ═══════════════ -->
+    <div class="section" id="sec-anuncios">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Anúncios pagos</span>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <div class="search-bar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" placeholder="Buscar anúncio..." id="searchAnuncios" oninput="filtrarAnuncios(this.value)">
+            </div>
+            <button class="btn btn-primary" onclick="abrirDrawerAnuncio()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Novo anúncio
+            </button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Título</th><th>Posição</th><th>Segmentação</th><th>Vigência</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="anunciosBody"><tr><td colspan="6"><div class="loading"><div class="spinner"></div>Carregando...</div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════ DRAWER (anúncios) ═══════════════ -->
+<div class="modal-overlay" id="modalOverlay" onclick="fecharDrawerOnOverlay(event)">
+  <div class="drawer">
+    <div class="drawer-header">
+      <span class="drawer-title" id="drawerTitle">Novo anúncio</span>
+      <button class="drawer-close" onclick="fecharDrawer()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+// Ocasiões disponíveis, pra popular o select de segmentação do formulário de anúncio.
+const OCASIOES = {{ ocasioes|tojson }};
+
+// ── Navegação entre seções (mesmo padrão do admin anterior, agora com sidebar) ──
+const navItems = document.querySelectorAll('.nav-item');
+const sections = document.querySelectorAll('.section');
+const titulos = {
+  dashboard: 'Dashboard', ocasioes: 'Ocasiões', tipos: 'Tipos de impressão',
+  brindes: 'Brindes', empresas: 'Empresas', paginas: 'Páginas (usuários)',
+  leads: 'Leads', anuncios: 'Anúncios',
+};
+
+function ativarSecao(nome) {
+  navItems.forEach(b => b.classList.toggle('active', b.dataset.section === nome));
+  sections.forEach(s => s.classList.toggle('active', s.id === 'sec-' + nome));
+  document.getElementById('topbarTitle').textContent = titulos[nome] || nome;
+  history.replaceState(null, '', '#' + nome);
+  document.getElementById('sidebar').classList.remove('open');
+  if (nome === 'anuncios' && !window._anunciosCarregados) {
+    carregarAnuncios();
+  }
+}
+
+navItems.forEach(btn => btn.addEventListener('click', () => ativarSecao(btn.dataset.section)));
+
+const hashInicial = window.location.hash.replace('#', '');
+if (hashInicial && titulos[hashInicial]) ativarSecao(hashInicial);
+
+// ── Toast ──
+function mostrarToast(msg, tipo) {
+  const el = document.createElement('div');
+  el.className = 'toast ' + (tipo || '');
+  el.textContent = msg;
+  document.getElementById('toastWrap').appendChild(el);
+  setTimeout(() => el.remove(), 3200);
+}
+
+// ── Anúncios: listar ──
+let _anunciosCache = [];
+
+async function carregarAnuncios() {
+  window._anunciosCarregados = true;
+  try {
+    const r = await fetch('/admin/anuncios');
+    _anunciosCache = await r.json();
+    renderAnuncios(_anunciosCache);
+  } catch (e) {
+    document.getElementById('anunciosBody').innerHTML = '<tr><td colspan="6" class="empty-state">Erro ao carregar anúncios.</td></tr>';
+  }
+}
+
+function filtrarAnuncios(q) {
+  q = (q || '').toLowerCase();
+  renderAnuncios(_anunciosCache.filter(a => (a.titulo || '').toLowerCase().includes(q)));
+}
+
+function escaparHtml(s) {
+  return (s || '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function formatarData(d) {
+  if (!d) return null;
+  const [ano, mes, dia] = d.split('-');
+  return `${dia}/${mes}/${ano}`;
+}
+
+function renderAnuncios(lista) {
+  const tbody = document.getElementById('anunciosBody');
+  if (!lista || !lista.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nenhum anúncio cadastrado ainda.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = lista.map(a => {
+    const posicaoLabel = a.posicao === 'meio' ? 'Meio' : 'Topo';
+    const segmentacao = a.ocasiao_nome ? escaparHtml(a.ocasiao_nome) : 'Todas as ocasiões';
+    const vigencia = [];
+    if (a.data_inicio) vigencia.push('de ' + formatarData(a.data_inicio));
+    if (a.data_fim) vigencia.push('até ' + formatarData(a.data_fim));
+    const vigenciaTxt = vigencia.length ? vigencia.join(' ') : 'sem prazo';
+    const statusBadge = a.ativo
+      ? '<span class="badge badge-green">Ativo</span>'
+      : '<span class="badge badge-gray">Inativo</span>';
+    return `
+      <tr>
+        <td style="font-weight:600;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <img class="td-img" src="${escaparHtml(a.foto_url)}" alt="">
+            <span>${escaparHtml(a.titulo)}</span>
+          </div>
+        </td>
+        <td class="td-muted">${posicaoLabel}</td>
+        <td class="td-muted">${segmentacao}</td>
+        <td class="td-muted">${vigenciaTxt}</td>
+        <td>${statusBadge}</td>
+        <td class="td-actions">
+          <button class="btn-link" style="color:var(--accent);" onclick="editarAnuncio(${a.id})">Editar</button>
+          <button class="btn-link" style="color:#7c5cbf;" onclick="alternarAnuncio(${a.id})">${a.ativo ? 'Desativar' : 'Ativar'}</button>
+          <button class="btn-link" style="color:var(--red);" onclick="excluirAnuncio(${a.id})">Excluir</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ── Anúncios: drawer (criar/editar) ──
+function formularioAnuncio() {
+  const opcoesOcasiao = OCASIOES.map(o => `<option value="${o.id}">${escaparHtml(o.nome)}</option>`).join('');
+  return `
+  <form id="drawerForm">
+    <div class="form-grid">
+      <div class="field form-full"><label>Título *</label><input name="titulo" required placeholder="Ex: Promoção de Dia dos Namorados"></div>
+      <div class="field">
+        <label>Posição *</label>
+        <select name="posicao" required>
+          <option value="topo">Topo</option>
+          <option value="meio">Meio</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Ocasião (opcional)</label>
+        <select name="ocasiao_id">
+          <option value="">— Todas as ocasiões —</option>
+          ${opcoesOcasiao}
+        </select>
+      </div>
+      <div class="field form-full"><label>URL da imagem (Cloudinary) *</label><input name="foto_url" required placeholder="https://res.cloudinary.com/..."></div>
+      <div class="field form-full"><label>Link ao clicar *</label><input name="link" required placeholder="https://..."></div>
+      <div class="field"><label>Data início</label><input type="date" name="data_inicio"></div>
+      <div class="field"><label>Data fim</label><input type="date" name="data_fim"></div>
+      <div class="field form-full">
+        <label class="checkbox-label"><input type="checkbox" name="ativo" checked> Ativo</label>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" onclick="fecharDrawer()">Cancelar</button>
+      <button type="submit" class="btn btn-primary">Salvar anúncio</button>
+    </div>
+  </form>`;
+}
+
+function abrirDrawer() {
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function fecharDrawer() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+function fecharDrawerOnOverlay(e) {
+  if (e.target === document.getElementById('modalOverlay')) fecharDrawer();
+}
+
+function preencherFormulario(form, dados) {
+  for (const [chave, valor] of Object.entries(dados)) {
+    const el = form.elements[chave];
+    if (!el || valor == null) continue;
+    if (el.type === 'checkbox') el.checked = (valor === true || valor === 'true' || valor === 't');
+    else el.value = valor;
+  }
+}
+
+function configurarEnvio(form, url, ehEdicao) {
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const btn = form.querySelector('[type=submit]');
+    btn.disabled = true;
+    btn.textContent = 'Salvando...';
+    try {
+      const r = await fetch(url, { method: 'POST', body: new FormData(form) });
+      const data = await r.json().catch(() => ({}));
+      if (r.ok && data.ok) {
+        fecharDrawer();
+        mostrarToast('Anúncio salvo com sucesso!', 'success');
+        await carregarAnuncios();
+      } else {
+        mostrarToast(data.erro || 'Erro ao salvar anúncio.', 'error');
+      }
+    } catch (err) {
+      mostrarToast('Erro de conexão.', 'error');
+    }
+    btn.disabled = false;
+    btn.textContent = 'Salvar anúncio';
+  });
+}
+
+function abrirDrawerAnuncio() {
+  document.getElementById('drawerTitle').textContent = 'Novo anúncio';
+  document.getElementById('drawerBody').innerHTML = formularioAnuncio();
+  abrirDrawer();
+  const form = document.getElementById('drawerForm');
+  configurarEnvio(form, '/admin/anuncios/novo', false);
+}
+
+async function editarAnuncio(id) {
+  document.getElementById('drawerTitle').textContent = 'Carregando...';
+  document.getElementById('drawerBody').innerHTML = '<div class="loading"><div class="spinner"></div>Carregando...</div>';
+  abrirDrawer();
+  try {
+    const r = await fetch(`/admin/anuncios/${id}/editar`);
+    const dados = await r.json();
+    document.getElementById('drawerTitle').textContent = 'Editar anúncio';
+    document.getElementById('drawerBody').innerHTML = formularioAnuncio();
+    const form = document.getElementById('drawerForm');
+    preencherFormulario(form, dados);
+    configurarEnvio(form, `/admin/anuncios/${id}/editar`, true);
+  } catch (e) {
+    mostrarToast('Erro ao carregar anúncio.', 'error');
+    fecharDrawer();
+  }
+}
+
+async function alternarAnuncio(id) {
+  try {
+    const r = await fetch(`/admin/anuncios/${id}/toggle`, { method: 'POST' });
+    if (r.ok) { mostrarToast('Status atualizado.', 'success'); await carregarAnuncios(); }
+    else mostrarToast('Erro ao atualizar status.', 'error');
+  } catch (e) { mostrarToast('Erro de conexão.', 'error'); }
+}
+
+async function excluirAnuncio(id) {
+  if (!confirm('Excluir este anúncio definitivamente?')) return;
+  try {
+    const r = await fetch(`/admin/anuncios/${id}/deletar`, { method: 'POST' });
+    if (r.ok) { mostrarToast('Anúncio excluído.', 'success'); await carregarAnuncios(); }
+    else mostrarToast('Erro ao excluir.', 'error');
+  } catch (e) { mostrarToast('Erro de conexão.', 'error'); }
+}
+</script>
 </body>
 </html>
