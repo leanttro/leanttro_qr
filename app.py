@@ -4,6 +4,9 @@ import psycopg2.extras
 import requests
 import os
 import io
+import secrets
+import smtplib
+from email.mime.text import MIMEText
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -42,6 +45,13 @@ DB_CONFIG = {
 IMGUR_CLIENT_ID = os.getenv("IMGUR_CLIENT_ID", "")
 
 TAXA_LEAD_PADRAO = float(os.getenv("TAXA_LEAD_PADRAO", 20.00))
+
+# --- E-MAIL (opcional — usado pra enviar senha resetada pro usuário) ---
+SMTP_HOST = os.getenv("SMTP_HOST", "")
+SMTP_PORT = int(os.getenv("SMTP_PORT", 587))
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+SMTP_FROM = os.getenv("SMTP_FROM", SMTP_USER)
 
 TEMPLATES_DISPONIVEIS = {
     "classic": "love/index.html",
@@ -153,6 +163,34 @@ def upload_imgur(file_storage):
     except Exception as e:
         print(f"Erro upload Imgur: {e}")
     return None
+
+
+def gerar_senha_aleatoria(tamanho=10):
+    """Gera uma senha aleatória fácil de digitar (letras minúsculas + dígitos, sem caracteres ambíguos)."""
+    alfabeto = "abcdefghjkmnpqrstuvwxyz23456789"  # sem 0/o/1/l/i pra evitar confusão
+    return "".join(secrets.choice(alfabeto) for _ in range(tamanho))
+
+
+def enviar_email(destinatario, assunto, corpo_texto):
+    """Envia um e-mail simples via SMTP. Retorna (sucesso: bool, erro: str|None).
+    Se SMTP não estiver configurado no .env, retorna sucesso=False com uma mensagem clara,
+    sem derrubar o resto da aplicação."""
+    if not SMTP_HOST or not SMTP_USER or not SMTP_PASSWORD:
+        return False, "SMTP não configurado no .env (SMTP_HOST/SMTP_USER/SMTP_PASSWORD)."
+
+    try:
+        msg = MIMEText(corpo_texto, "plain", "utf-8")
+        msg["Subject"] = assunto
+        msg["From"] = SMTP_FROM
+        msg["To"] = destinatario
+
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as server:
+            server.starttls()
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(SMTP_FROM, [destinatario], msg.as_string())
+        return True, None
+    except Exception as e:
+        return False, str(e)
 
 
 def registrar_scan(pagina_id):
@@ -313,6 +351,57 @@ def login_pagina(slug):
         flash('Senha incorreta.', 'error')
 
     return render_template('login.html', slug=slug)
+
+
+# --- ESQUECI MINHA SENHA (self-service, sem precisar do admin) ---
+@app.route('/<slug>/esqueci-senha', methods=['GET', 'POST'])
+def esqueci_senha(slug):
+    pagina = get_pagina_by_slug(slug)
+    if not pagina:
+        abort(404)
+
+    if request.method == 'POST':
+        if not check_limit(f"esqueci_{get_ip()}", 5, 600):
+            flash("Muitas tentativas. Aguarde um pouco antes de tentar de novo.", "error")
+            return render_template('esqueci_senha.html', slug=slug)
+
+        email_digitado = request.form.get('email', '').strip().lower()
+
+        # Mensagem sempre genérica na tela, mesmo se o e-mail não bater —
+        # evita que alguém descubra por tentativa se um e-mail está cadastrado
+        # numa página de outra pessoa.
+        email_cadastrado = (pagina.get('email') or '').strip().lower()
+
+        if email_cadastrado and email_digitado == email_cadastrado:
+            senha_nova = gerar_senha_aleatoria()
+            execute(
+                "UPDATE brindes_paginas SET senha_hash = %s WHERE id = %s",
+                (generate_password_hash(senha_nova), pagina['id'])
+            )
+            link_login = f"{BASE_URL}/{slug}/login"
+            corpo = (
+                f"Olá!\n\n"
+                f"Recebemos um pedido de redefinição de senha para o seu QR code "
+                f"({BASE_URL}/{slug}).\n\n"
+                f"Nova senha: {senha_nova}\n"
+                f"Link de login: {link_login}\n\n"
+                f"Se você não pediu isso, ignore este e-mail — sua senha antiga "
+                f"deixou de funcionar, então é recomendável entrar e definir uma nova "
+                f"o quanto antes.\n\n"
+                f"— QRCodeBrindes"
+            )
+            enviar_email(pagina['email'], "Nova senha do seu QRCodeBrindes", corpo)
+            # não checamos o resultado do envio aqui de propósito — a mensagem
+            # pra o usuário é a mesma em qualquer caso, por segurança
+
+        flash(
+            'Se o e-mail informado estiver correto e cadastrado, '
+            'enviamos uma nova senha para ele.',
+            'success'
+        )
+        return redirect(f'/{slug}/login')
+
+    return render_template('esqueci_senha.html', slug=slug)
 
 
 @app.route('/<slug>/logout')
@@ -519,12 +608,116 @@ def admin_dashboard():
         LEFT JOIN brindes_empresas e ON e.id = l.empresa_id
         ORDER BY l.created_at DESC
     """)
+    paginas = query_all("""
+        SELECT p.*, COUNT(s.id) as total_scans
+        FROM brindes_paginas p
+        LEFT JOIN brindes_scans s ON s.pagina_id = p.id
+        GROUP BY p.id
+        ORDER BY p.created_at DESC
+    """)
 
     return render_template(
         'admin.html',
         stats=stats, ocasioes=ocasioes, tipos=tipos,
-        brindes=brindes, empresas=empresas, leads=leads,
+        brindes=brindes, empresas=empresas, leads=leads, paginas=paginas,
     )
+
+
+# --- PÁGINAS (usuários que geraram QR code) ---
+@app.route('/admin/paginas/<int:item_id>/editar', methods=['POST'])
+@admin_required
+def admin_paginas_editar(item_id):
+    novo_slug = request.form.get('slug', '').strip().lower()
+    novo_email = request.form.get('email', '').strip()
+
+    if not novo_slug:
+        flash('O link (slug) não pode ficar vazio.', 'error')
+        return redirect('/admin#paginas')
+
+    conflito = query_one(
+        "SELECT id FROM brindes_paginas WHERE slug = %s AND id != %s",
+        (novo_slug, item_id)
+    )
+    if conflito:
+        flash('Esse link já está em uso por outra página.', 'error')
+        return redirect('/admin#paginas')
+
+    try:
+        execute(
+            "UPDATE brindes_paginas SET slug = %s, email = %s WHERE id = %s",
+            (novo_slug, novo_email or None, item_id)
+        )
+        flash('Página atualizada.', 'success')
+    except Exception:
+        flash('Erro ao atualizar a página.', 'error')
+    return redirect('/admin#paginas')
+
+
+@app.route('/admin/paginas/<int:item_id>/toggle', methods=['POST'])
+@admin_required
+def admin_paginas_toggle(item_id):
+    execute("UPDATE brindes_paginas SET ativo = NOT ativo WHERE id = %s", (item_id,))
+    return redirect('/admin#paginas')
+
+
+@app.route('/admin/paginas/<int:item_id>/delete', methods=['POST'])
+@admin_required
+def admin_paginas_delete(item_id):
+    execute("DELETE FROM brindes_paginas WHERE id = %s", (item_id,))
+    flash('Página excluída definitivamente.', 'success')
+    return redirect('/admin#paginas')
+
+
+@app.route('/admin/paginas/<int:item_id>/resetar-senha', methods=['POST'])
+@admin_required
+def admin_paginas_resetar_senha(item_id):
+    pagina = query_one("SELECT * FROM brindes_paginas WHERE id = %s", (item_id,))
+    if not pagina:
+        flash('Página não encontrada.', 'error')
+        return redirect('/admin#paginas')
+
+    senha_nova = gerar_senha_aleatoria()
+    execute(
+        "UPDATE brindes_paginas SET senha_hash = %s WHERE id = %s",
+        (generate_password_hash(senha_nova), item_id)
+    )
+
+    if not pagina.get('email'):
+        flash(
+            f'Senha resetada, mas essa página não tem e-mail cadastrado pra enviar. '
+            f'Nova senha (anote agora, não vai aparecer de novo): {senha_nova}',
+            'error'
+        )
+        return redirect('/admin#paginas')
+
+    link_login = f"{BASE_URL}/{pagina['slug']}/login"
+    corpo = (
+        f"Olá!\n\n"
+        f"Sua senha de acesso ao painel do QRCodeBrindes foi redefinida.\n\n"
+        f"Link do seu QR code: {BASE_URL}/{pagina['slug']}\n"
+        f"Link de login: {link_login}\n"
+        f"Nova senha: {senha_nova}\n\n"
+        f"Recomendamos trocar essa senha assim que possível (ainda não temos tela de troca de senha "
+        f"pelo próprio painel — fale com a gente se precisar trocar de novo).\n\n"
+        f"— QRCodeBrindes"
+    )
+
+    sucesso, erro = enviar_email(
+        pagina['email'],
+        "Sua senha do QRCodeBrindes foi redefinida",
+        corpo
+    )
+
+    if sucesso:
+        flash(f"Senha resetada e enviada por e-mail para {pagina['email']}.", 'success')
+    else:
+        flash(
+            f"Senha resetada, mas houve erro ao enviar o e-mail ({erro}). "
+            f"Nova senha (anote agora, não vai aparecer de novo): {senha_nova}",
+            'error'
+        )
+
+    return redirect('/admin#paginas')
 
 
 # --- OCASIÕES ---
