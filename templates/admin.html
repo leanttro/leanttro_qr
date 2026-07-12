@@ -38,6 +38,7 @@
             <button class="tab-btn px-4 py-2 rounded-lg font-bold text-sm bg-white border" data-tab="tipos">Tipos de Impressão</button>
             <button class="tab-btn px-4 py-2 rounded-lg font-bold text-sm bg-white border" data-tab="brindes">Brindes</button>
             <button class="tab-btn px-4 py-2 rounded-lg font-bold text-sm bg-white border" data-tab="empresas">Empresas</button>
+            <button class="tab-btn px-4 py-2 rounded-lg font-bold text-sm bg-white border" data-tab="paginas">Páginas (usuários)</button>
             <button class="tab-btn px-4 py-2 rounded-lg font-bold text-sm bg-white border" data-tab="leads">Leads</button>
         </div>
 
@@ -349,6 +350,75 @@
                         </tr>
                         {% else %}
                         <tr><td colspan="5" class="p-6 text-center text-gray-400">Nenhuma empresa cadastrada.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ================= PÁGINAS (USUÁRIOS) ================= -->
+        <div id="tab-paginas" class="tab-content space-y-6">
+            <div class="bg-white rounded-xl shadow-sm border overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 text-xs uppercase text-gray-500">
+                        <tr>
+                            <th class="p-3 text-left">Link (slug)</th>
+                            <th class="p-3 text-left">E-mail</th>
+                            <th class="p-3 text-left">Destino</th>
+                            <th class="p-3 text-left">Plano</th>
+                            <th class="p-3 text-left">Scans</th>
+                            <th class="p-3 text-left">Status</th>
+                            <th class="p-3 text-left">Criada em</th>
+                            <th class="p-3 text-left">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in paginas %}
+                        <!-- Form "vazio" fora da <tr>/<td>: os inputs lá dentro se conectam a ele via form="editar-pagina-{{ p.id }}" (atributo HTML5), sem precisar aninhar <form> dentro de <td>, o que é HTML inválido. -->
+                        <tr class="border-t align-top">
+                            <td class="p-3">
+                                <form id="editar-pagina-{{ p.id }}" method="POST" action="/admin/paginas/{{ p.id }}/editar"></form>
+                                <div class="flex items-center gap-1">
+                                    <span class="text-gray-400 text-xs">/</span>
+                                    <input form="editar-pagina-{{ p.id }}" type="text" name="slug" value="{{ p.slug }}" class="w-32 border rounded p-2 font-bold text-xs">
+                                </div>
+                                <a href="/{{ p.slug }}" target="_blank" class="text-[10px] text-blue-600 hover:underline">abrir ↗</a>
+                            </td>
+                            <td class="p-3">
+                                <input form="editar-pagina-{{ p.id }}" type="email" name="email" value="{{ p.email or '' }}" class="w-44 border rounded p-2 text-xs" placeholder="sem e-mail">
+                            </td>
+                            <td class="p-3 text-xs text-gray-500">
+                                {{ p.tipo_destino }}
+                            </td>
+                            <td class="p-3">
+                                <span class="px-2 py-1 rounded-full text-xs font-bold {{ 'bg-green-100 text-green-700' if p.plano == 'pago' else 'bg-gray-100 text-gray-500' }}">
+                                    {{ p.plano }}
+                                </span>
+                            </td>
+                            <td class="p-3 text-xs font-bold text-gray-600">{{ p.total_scans }}</td>
+                            <td class="p-3">
+                                <span class="px-2 py-1 rounded-full text-xs font-bold {{ 'bg-green-100 text-green-700' if p.ativo else 'bg-gray-200 text-gray-500' }}">
+                                    {{ 'Ativa' if p.ativo else 'Inativa' }}
+                                </span>
+                            </td>
+                            <td class="p-3 text-gray-400 text-xs">{{ p.created_at.strftime('%d/%m/%Y') if p.created_at else '' }}</td>
+                            <td class="p-3">
+                                <div class="flex flex-col gap-1 items-start">
+                                    <button form="editar-pagina-{{ p.id }}" type="submit" class="text-green-700 font-bold hover:underline text-xs">Salvar</button>
+                                    <form method="POST" action="/admin/paginas/{{ p.id }}/resetar-senha" onsubmit="return confirm('Gerar uma senha nova para esta página e enviar por e-mail?');">
+                                        <button class="text-purple-700 font-bold hover:underline text-xs">Resetar senha</button>
+                                    </form>
+                                    <form method="POST" action="/admin/paginas/{{ p.id }}/toggle">
+                                        <button class="text-blue-600 font-bold hover:underline text-xs">{{ 'Desativar' if p.ativo else 'Ativar' }}</button>
+                                    </form>
+                                    <form method="POST" action="/admin/paginas/{{ p.id }}/delete" onsubmit="return confirm('Excluir esta página em definitivo? Essa ação não pode ser desfeita.');">
+                                        <button class="text-red-600 font-bold hover:underline text-xs">Excluir</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="8" class="p-6 text-center text-gray-400">Nenhuma página criada ainda.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
