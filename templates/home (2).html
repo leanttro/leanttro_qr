@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QRCodeBrindes — Presente com QR code, sem enrolação</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap');
+
+        :root {
+            --paper: #DCE5DA;
+            --paper-2: #CBD8C7;
+            --ink: #1F3D2E;
+            --coral: #E8604C;
+            --gold: #C9A227;
+            --blush: #F3D4C9;
+        }
+
+        body {
+            background-color: var(--paper);
+            color: var(--ink);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .font-display { font-family: 'Fraunces', serif; }
+        .font-mono { font-family: 'IBM Plex Mono', monospace; }
+
+        /* --- Etiqueta / Tag --- */
+        .tag {
+            position: relative;
+            background: #F6F3E9;
+            border-radius: 0.5rem 1.5rem 1.5rem 0.5rem;
+            box-shadow: 0 18px 40px -12px rgba(31, 61, 46, 0.35);
+        }
+        .tag::before {
+            content: '';
+            position: absolute;
+            top: 22px;
+            left: 22px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--paper);
+            border: 2px solid var(--ink);
+        }
+        .tag-string {
+            position: absolute;
+            top: -46px;
+            left: 30px;
+            width: 60px;
+            height: 60px;
+            pointer-events: none;
+        }
+
+        .tilt-left { transform: rotate(-3deg); }
+        .tilt-right { transform: rotate(2.5deg); }
+
+        @keyframes riseIn {
+            from { opacity: 0; transform: translateY(16px) rotate(var(--r, 0deg)); }
+            to { opacity: 1; transform: translateY(0) rotate(var(--r, 0deg)); }
+        }
+        .rise { animation: riseIn 0.7s ease-out both; }
+
+        .qr-deco {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 4px;
+            width: 90px;
+        }
+        .qr-deco span { display: block; aspect-ratio: 1; background: var(--ink); border-radius: 2px; }
+
+        .thread-line {
+            border-top: 2px dashed var(--gold);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .rise { animation: none; }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- NAV -->
+    <header class="max-w-6xl mx-auto px-6 py-6 flex justify-between items-center">
+        <span class="font-display text-xl font-semibold tracking-tight">QRCode<span style="color: var(--coral)">Brindes</span></span>
+        <a href="/gerar-qr" class="font-mono text-xs uppercase tracking-widest px-5 py-3 rounded-full text-white shadow-md hover:-translate-y-0.5 transition-transform" style="background-color: var(--ink)">
+            Criar QR code
+        </a>
+    </header>
+
+    <!-- HERO -->
+    <section class="max-w-6xl mx-auto px-6 pt-10 pb-24 grid md:grid-cols-2 gap-16 items-center">
+        <div class="rise" style="--r: 0deg;">
+            <p class="font-mono text-xs uppercase tracking-[0.2em] mb-4" style="color: var(--coral)">Etiqueta física + link vivo</p>
+            <h1 class="font-display text-4xl md:text-5xl font-semibold leading-[1.1] mb-6">
+                Todo presente merece guardar uma história.
+            </h1>
+            <p class="text-base md:text-lg leading-relaxed mb-8 max-w-md" style="color: #3E5A4B">
+                Cole um link ou monte uma página com mensagem, foto e linha do tempo.
+                A gente gera o QR code pronto pra colar no brinde — e você pode trocar
+                o destino depois, sem reimprimir nada.
+            </p>
+            <div class="flex flex-wrap gap-4 items-center">
+                <a href="/gerar-qr" class="font-semibold px-7 py-4 rounded-full text-white shadow-lg hover:-translate-y-0.5 transition-transform" style="background-color: var(--coral)">
+                    Criar meu QR code grátis
+                </a>
+                <span class="font-mono text-xs" style="color: #5C7B6A">sem cartão · leva 1 minuto</span>
+            </div>
+        </div>
+
+        <div class="relative flex justify-center">
+            <div class="tag tilt-right rise p-8 pt-10 w-full max-w-sm" style="--r: 2.5deg; animation-delay: .1s">
+                <svg class="tag-string" viewBox="0 0 60 60" fill="none">
+                    <path d="M30 60 C 10 40, 10 15, 30 4" stroke="var(--gold)" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+                <p class="font-mono text-[10px] uppercase tracking-widest mb-6" style="color: #8A8060">Etiqueta Nº 0048</p>
+                <div class="flex justify-between items-end gap-6">
+                    <div>
+                        <p class="font-display text-lg font-semibold leading-snug">Feliz<br>aniversário,<br>Ana!</p>
+                        <p class="font-mono text-[10px] mt-4" style="color: #8A8060">escaneie para ver o vídeo</p>
+                    </div>
+                    <div class="qr-deco shrink-0">
+                        <span></span><span></span><span style="background:transparent"></span><span></span><span></span>
+                        <span></span><span style="background:transparent"></span><span></span><span style="background:transparent"></span><span></span>
+                        <span></span><span></span><span></span><span></span><span></span>
+                        <span style="background:transparent"></span><span></span><span style="background:transparent"></span><span></span><span style="background:transparent"></span>
+                        <span></span><span></span><span style="background:transparent"></span><span></span><span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- COMO FUNCIONA -->
+    <section class="py-20" style="background-color: var(--paper-2)">
+        <div class="max-w-5xl mx-auto px-6">
+            <h2 class="font-display text-3xl font-semibold text-center mb-16">Como funciona</h2>
+            <div class="grid md:grid-cols-3 gap-10 relative">
+                <div class="hidden md:block absolute top-6 left-[16%] right-[16%] thread-line"></div>
+
+                <div class="text-center rise" style="animation-delay:.05s">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-5 font-mono font-semibold text-white relative z-10" style="background-color: var(--ink)">1</div>
+                    <h3 class="font-display text-lg font-semibold mb-2">Monte sua etiqueta digital</h3>
+                    <p class="text-sm" style="color: #3E5A4B">Cole um link pronto ou escreva mensagem, suba uma foto e conte sua linha do tempo.</p>
+                </div>
+                <div class="text-center rise" style="animation-delay:.15s">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-5 font-mono font-semibold text-white relative z-10" style="background-color: var(--ink)">2</div>
+                    <h3 class="font-display text-lg font-semibold mb-2">Baixe o QR code</h3>
+                    <p class="text-sm" style="color: #3E5A4B">PNG pronto pra imprimir — em plaquinha, cartão, caneca ou onde quiser.</p>
+                </div>
+                <div class="text-center rise" style="animation-delay:.25s">
+                    <div class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-5 font-mono font-semibold text-white relative z-10" style="background-color: var(--ink)">3</div>
+                    <h3 class="font-display text-lg font-semibold mb-2">Cole no brinde</h3>
+                    <p class="text-sm" style="color: #3E5A4B">Precisa mudar o destino depois? Edita no painel — o QR impresso continua o mesmo.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- OCASIÕES -->
+    <section class="py-20 max-w-6xl mx-auto px-6">
+        <h2 class="font-display text-3xl font-semibold text-center mb-3">Pra qual ocasião?</h2>
+        <p class="text-center mb-14" style="color: #3E5A4B">Curadoria de ideias de brinde com QR code embutido.</p>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {% set ocasioes_home = [
+                ('Casamento', '#F3D4C9'),
+                ('Aniversário', '#DCE5DA'),
+                ('Corporativo', '#CBD8C7'),
+                ('Formatura', '#F6F3E9'),
+            ] %}
+            {% for nome, cor in ocasioes_home %}
+            <div class="tag {{ 'tilt-left' if loop.index is even else 'tilt-right' }} p-5 pt-8 rise" style="background-color: {{ cor }}; animation-delay: {{ loop.index0 * 0.08 }}s">
+                <p class="font-display text-base font-semibold">{{ nome }}</p>
+                <p class="font-mono text-[10px] mt-2" style="color: #8A8060">ver ideias →</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- DIRETÓRIO DE EMPRESAS -->
+    <section class="py-20" style="background-color: var(--ink)">
+        <div class="max-w-4xl mx-auto px-6 text-center">
+            <p class="font-mono text-xs uppercase tracking-[0.2em] mb-4" style="color: var(--gold)">Pra quem fabrica</p>
+            <h2 class="font-display text-3xl font-semibold text-white mb-4">
+                Tem gráfica ou faz brinde personalizado?
+            </h2>
+            <p class="max-w-xl mx-auto mb-8" style="color: #B8CFC1">
+                Apareça no nosso diretório e receba pedidos de orçamento de quem já
+                decidiu o que quer — direto na sua categoria e ocasião.
+            </p>
+            <a href="mailto:contato@qrcodebrindes.com.br" class="inline-block font-semibold px-7 py-4 rounded-full text-white shadow-lg hover:-translate-y-0.5 transition-transform" style="background-color: var(--coral)">
+                Quero cadastrar minha empresa
+            </a>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="py-10 text-center">
+        <p class="font-display text-sm font-semibold mb-1">QRCodeBrindes</p>
+        <p class="font-mono text-[10px]" style="color: #8A8060">{{ current_year }} — presente físico, história digital</p>
+        <a href="/admin/login" class="inline-block mt-4 font-mono text-[10px] hover:text-black transition" style="color: #A9B8AC">painel</a>
+    </footer>
+
+</body>
+</html>

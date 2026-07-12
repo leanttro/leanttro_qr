@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar QR code | QRCodeBrindes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap');
+
+        :root {
+            --paper: #DCE5DA;
+            --ink: #1F3D2E;
+            --coral: #E8604C;
+            --gold: #C9A227;
+        }
+        body { background-color: var(--paper); color: var(--ink); font-family: 'Inter', sans-serif; }
+        .font-display { font-family: 'Fraunces', serif; }
+        .font-mono { font-family: 'IBM Plex Mono', monospace; }
+
+        .tag {
+            position: relative;
+            background: #F6F3E9;
+            border-radius: 0.5rem 1.5rem 1.5rem 0.5rem;
+            box-shadow: 0 18px 40px -12px rgba(31, 61, 46, 0.35);
+        }
+        .tag::before {
+            content: '';
+            position: absolute;
+            top: 22px;
+            left: 22px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--paper);
+            border: 2px solid var(--ink);
+        }
+
+        input[type=text], input[type=url], input[type=email], input[type=password] {
+            background: #fff;
+            border: 1.5px solid #C9D3C3;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--ink);
+        }
+
+        .toggle-option {
+            border: 1.5px solid #C9D3C3;
+            transition: all .15s ease;
+        }
+        .toggle-option.active {
+            border-color: var(--ink);
+            background: var(--ink);
+            color: #fff;
+        }
+
+        .hidden-block { display: none; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <header class="max-w-4xl mx-auto px-6 py-6 flex justify-between items-center">
+        <a href="/" class="font-display text-xl font-semibold tracking-tight">QRCode<span style="color: var(--coral)">Brindes</span></a>
+        <a href="/" class="font-mono text-xs uppercase tracking-widest hover:underline">Voltar</a>
+    </header>
+
+    <main class="max-w-2xl mx-auto px-6 pb-24 pt-6">
+
+        <p class="font-mono text-xs uppercase tracking-[0.2em] mb-3 text-center" style="color: var(--coral)">Etiqueta Nº ????</p>
+        <h1 class="font-display text-3xl md:text-4xl font-semibold text-center mb-2">Criar seu QR code</h1>
+        <p class="text-center mb-10" style="color: #3E5A4B">Leva menos de um minuto — e dá pra editar depois.</p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="mb-6 p-4 rounded-xl text-sm font-semibold" style="background-color: #F3D4C9; color: #7A2E1E">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" class="tag p-8 pt-10 space-y-6">
+
+            <div>
+                <label class="block font-mono text-[11px] uppercase tracking-widest mb-3" style="color: #8A8060">O que o QR code vai abrir?</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="toggle-option rounded-xl p-4 text-center cursor-pointer font-semibold text-sm" data-option="link">
+                        <input type="radio" name="tipo_destino" value="link" class="hidden" checked>
+                        Um link que eu já tenho
+                    </label>
+                    <label class="toggle-option rounded-xl p-4 text-center cursor-pointer font-semibold text-sm" data-option="pagina">
+                        <input type="radio" name="tipo_destino" value="pagina" class="hidden">
+                        Uma página própria
+                    </label>
+                </div>
+            </div>
+
+            <div id="bloco-link">
+                <label class="block font-mono text-[11px] uppercase tracking-widest mb-2" style="color: #8A8060">Link de destino</label>
+                <input type="url" name="destino_url" class="w-full rounded-lg p-3" placeholder="https://...">
+            </div>
+
+            <div id="bloco-pagina" class="hidden-block space-y-4">
+                <div>
+                    <label class="block font-mono text-[11px] uppercase tracking-widest mb-2" style="color: #8A8060">Título da página</label>
+                    <input type="text" name="titulo" class="w-full rounded-lg p-3" placeholder="Ex: Feliz aniversário, Ana!">
+                </div>
+                <div>
+                    <label class="block font-mono text-[11px] uppercase tracking-widest mb-2" style="color: #8A8060">Estilo</label>
+                    <select name="template" class="w-full rounded-lg p-3 border" style="border: 1.5px solid #C9D3C3;">
+                        <option value="classic">Clássico</option>
+                        <option value="stitch">Stitch / Ohana</option>
+                    </select>
+                </div>
+                <p class="text-xs" style="color: #5C7B6A">Mensagem, foto e linha do tempo você adiciona depois, no painel.</p>
+            </div>
+
+            <div class="pt-2 border-t" style="border-color: #C9D3C3">
+                <label class="block font-mono text-[11px] uppercase tracking-widest mb-2" style="color: #8A8060">Escolha seu link (slug)</label>
+                <div class="flex items-center rounded-lg overflow-hidden" style="border: 1.5px solid #C9D3C3;">
+                    <span class="font-mono text-sm px-3 py-3" style="color: #8A8060; background: #EFEBDD">qrcodebrindes.com/</span>
+                    <input type="text" name="slug" required class="w-full p-3 border-0" placeholder="joao123">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-mono text-[11px] uppercase tracking-widest mb-2" style="color: #8A8060">Crie uma senha</label>
+                <input type="password" name="senha" required class="w-full rounded-lg p-3" placeholder="Pra editar depois">
+            </div>
+
+            <div id="bloco-email">
+                <label class="block font-mono text-[11px] uppercase tracking-widest mb-2" style="color: #8A8060">
+                    E-mail <span id="email-opcional">(opcional)</span>
+                </label>
+                <input type="email" name="email" class="w-full rounded-lg p-3" placeholder="seu@email.com">
+            </div>
+
+            <button type="submit" class="w-full font-semibold py-4 rounded-full text-white shadow-lg hover:-translate-y-0.5 transition-transform" style="background-color: var(--coral)">
+                Gerar meu QR code
+            </button>
+        </form>
+    </main>
+
+    <script>
+        const opcoes = document.querySelectorAll('.toggle-option');
+        const blocoLink = document.getElementById('bloco-link');
+        const blocoPagina = document.getElementById('bloco-pagina');
+        const emailOpcional = document.getElementById('email-opcional');
+        const inputEmail = document.querySelector('input[name="email"]');
+
+        function atualizar(tipo) {
+            opcoes.forEach(o => o.classList.toggle('active', o.dataset.option === tipo));
+            blocoLink.classList.toggle('hidden-block', tipo !== 'link');
+            blocoPagina.classList.toggle('hidden-block', tipo !== 'pagina');
+
+            if (tipo === 'pagina') {
+                emailOpcional.textContent = '(obrigatório pra página própria)';
+                inputEmail.required = true;
+            } else {
+                emailOpcional.textContent = '(opcional)';
+                inputEmail.required = false;
+            }
+        }
+
+        opcoes.forEach(op => {
+            op.addEventListener('click', () => {
+                op.querySelector('input').checked = true;
+                atualizar(op.dataset.option);
+            });
+        });
+
+        atualizar('link');
+    </script>
+</body>
+</html>

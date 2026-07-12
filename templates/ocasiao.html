@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ ocasiao.nome }} | QRCodeBrindes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap');
+        :root { --paper: #DCE5DA; --ink: #1F3D2E; --coral: #E8604C; --gold: #C9A227; }
+        body { background-color: var(--paper); color: var(--ink); font-family: 'Inter', sans-serif; }
+        .font-display { font-family: 'Fraunces', serif; }
+        .font-mono { font-family: 'IBM Plex Mono', monospace; }
+        .tag {
+            position: relative;
+            background: #F6F3E9;
+            border-radius: 0.5rem 1.5rem 1.5rem 0.5rem;
+            box-shadow: 0 14px 30px -10px rgba(31, 61, 46, 0.3);
+            transition: transform .2s ease;
+        }
+        .tag:hover { transform: translateY(-4px); }
+        .tag::before {
+            content: '';
+            position: absolute;
+            top: 16px; left: 16px;
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: var(--paper);
+            border: 2px solid var(--ink);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <header class="max-w-6xl mx-auto px-6 py-6 flex justify-between items-center">
+        <a href="/" class="font-display text-xl font-semibold tracking-tight">QRCode<span style="color: var(--coral)">Brindes</span></a>
+        <a href="/gerar-qr" class="font-mono text-xs uppercase tracking-widest px-5 py-3 rounded-full text-white shadow-md" style="background-color: var(--ink)">Criar QR code</a>
+    </header>
+
+    <section class="max-w-6xl mx-auto px-6 pt-6 pb-14 text-center">
+        <p class="font-mono text-xs uppercase tracking-[0.2em] mb-3" style="color: var(--coral)">Curadoria de brindes</p>
+        <h1 class="font-display text-4xl font-semibold mb-4">{{ ocasiao.nome }}</h1>
+        {% if ocasiao.descricao %}
+        <p class="max-w-xl mx-auto" style="color: #3E5A4B">{{ ocasiao.descricao }}</p>
+        {% endif %}
+    </section>
+
+    <section class="max-w-6xl mx-auto px-6 pb-24">
+        {% if brindes %}
+        <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {% for b in brindes %}
+            <a href="/brinde/{{ b.slug }}" class="tag block p-5 pt-8">
+                <div class="w-full aspect-square rounded-xl overflow-hidden mb-4 bg-white">
+                    <img src="{{ b.imagem_url or 'https://placehold.co/400x400?text=Brinde' }}" class="w-full h-full object-cover">
+                </div>
+                <p class="font-display text-lg font-semibold leading-snug mb-1">{{ b.nome }}</p>
+                {% if b.tipo_nome %}
+                <p class="font-mono text-[10px] uppercase tracking-widest" style="color: #8A8060">{{ b.tipo_nome }}</p>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="tag p-10 text-center max-w-md mx-auto">
+            <p class="font-display text-lg font-semibold mb-2">Ainda sem brindes por aqui</p>
+            <p class="text-sm" style="color: #5C7B6A">Em breve a gente adiciona ideias curadas pra essa ocasião.</p>
+        </div>
+        {% endif %}
+    </section>
+
+    <footer class="py-10 text-center">
+        <p class="font-display text-sm font-semibold mb-1">QRCodeBrindes</p>
+        <p class="font-mono text-[10px]" style="color: #8A8060">presente físico, história digital</p>
+    </footer>
+
+</body>
+</html>
