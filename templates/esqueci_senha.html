@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Esqueci minha senha | {{ slug }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4 font-sans">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+        <p class="text-xs font-bold text-gray-400 uppercase text-center mb-1">/{{ slug }}</p>
+        <h2 class="text-2xl font-bold text-gray-900 mb-2 text-center">Esqueci minha senha</h2>
+        <p class="text-sm text-gray-500 text-center mb-6">
+            Digite o e-mail que você cadastrou ao criar essa página.
+            Se ele estiver correto, mandamos uma senha nova pra ele.
+        </p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="mb-4 p-3 rounded text-sm font-bold {{ 'bg-red-100 text-red-700' if category == 'error' else 'bg-green-100 text-green-700' }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase">E-mail cadastrado</label>
+                <input type="email" name="email" required autofocus class="w-full p-3 border rounded-lg" placeholder="seu@email.com">
+            </div>
+            <button type="submit" class="w-full bg-yellow-400 text-black font-bold py-4 rounded-xl hover:bg-yellow-300">
+                Enviar senha nova
+            </button>
+        </form>
+
+        <a href="/{{ slug }}/login" class="block text-center text-xs font-bold text-gray-500 hover:text-black mt-6">
+            &larr; Voltar para o login
+        </a>
+
+        <p class="text-center text-[11px] text-gray-400 mt-6">
+            Não lembra o e-mail que cadastrou, ou não colocou nenhum? Fale com a gente pelo suporte.
+        </p>
+    </div>
+</body>
+</html>
