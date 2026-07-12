@@ -252,11 +252,31 @@ def get_anuncio(posicao, ocasiao_id=None):
 # --- ROTA RAIZ ---
 @app.route('/')
 def index():
+    brindes_destaque = query_all("""
+        SELECT b.*, o.nome as ocasiao_nome, o.slug as ocasiao_slug,
+               t.nome as tipo_nome
+        FROM brindes_brindes b
+        LEFT JOIN brindes_ocasioes o ON o.id = b.ocasiao_id
+        LEFT JOIN brindes_tipos_impressao t ON t.id = b.tipo_impressao_id
+        WHERE b.ativo = TRUE
+        ORDER BY b.created_at DESC
+        LIMIT 8
+    """)
+
+    empresas_destaque = query_all("""
+        SELECT * FROM brindes_empresas
+        WHERE ativo = TRUE AND plano = 'destaque'
+        ORDER BY RANDOM()
+        LIMIT 8
+    """)
+
     return render_template(
         'home.html',
         current_year=datetime.now().year,
         anuncio_topo=get_anuncio('topo'),
         anuncio_meio=get_anuncio('meio'),
+        brindes_destaque=brindes_destaque,
+        empresas_destaque=empresas_destaque,
     )
 
 
