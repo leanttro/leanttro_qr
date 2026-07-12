@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrar | {{ slug }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4 font-sans">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+        <h2 class="text-2xl font-bold text-gray-900 mb-1 text-center">Entrar no Painel</h2>
+        <p class="text-center text-sm text-gray-400 mb-6">
+            Página: <span class="font-bold text-gray-600">/{{ slug }}</span>
+        </p>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="mb-4 p-3 rounded text-sm font-bold bg-red-100 text-red-700">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase">Senha da página</label>
+                <input type="password" name="senha" required autofocus class="w-full p-3 border rounded-lg">
+            </div>
+            <button type="submit" class="w-full bg-yellow-400 text-black font-bold py-4 rounded-xl hover:bg-yellow-300">ENTRAR</button>
+        </form>
+
+        <div class="mt-4 flex flex-col items-center gap-2">
+            <a href="/{{ slug }}" class="text-sm text-gray-500 hover:text-gray-800">Voltar para a página</a>
+        </div>
+    </div>
+</body>
+</html>
