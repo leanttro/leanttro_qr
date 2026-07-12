@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ brinde.nome }} | QRCodeBrindes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap');
+        :root { --paper: #DCE5DA; --ink: #1F3D2E; --coral: #E8604C; --gold: #C9A227; }
+        body { background-color: var(--paper); color: var(--ink); font-family: 'Inter', sans-serif; }
+        .font-display { font-family: 'Fraunces', serif; }
+        .font-mono { font-family: 'IBM Plex Mono', monospace; }
+        .tag {
+            position: relative;
+            background: #F6F3E9;
+            border-radius: 0.5rem 1.5rem 1.5rem 0.5rem;
+            box-shadow: 0 18px 40px -12px rgba(31, 61, 46, 0.35);
+        }
+        .tag::before {
+            content: '';
+            position: absolute;
+            top: 22px; left: 22px;
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            background: var(--paper);
+            border: 2px solid var(--ink);
+        }
+        input[type=text], input[type=email], input[type=tel], textarea {
+            background: #fff;
+            border: 1.5px solid #C9D3C3;
+        }
+        input:focus, textarea:focus { outline: none; border-color: var(--ink); }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <header class="max-w-5xl mx-auto px-6 py-6 flex justify-between items-center">
+        <a href="/" class="font-display text-xl font-semibold tracking-tight">QRCode<span style="color: var(--coral)">Brindes</span></a>
+        <a href="/gerar-qr" class="font-mono text-xs uppercase tracking-widest px-5 py-3 rounded-full text-white shadow-md" style="background-color: var(--ink)">Criar QR code</a>
+    </header>
+
+    <nav class="max-w-5xl mx-auto px-6 mb-6">
+        {% if brinde.ocasiao_slug %}
+        <a href="/ocasiao/{{ brinde.ocasiao_slug }}" class="font-mono text-xs uppercase tracking-widest hover:underline" style="color: #5C7B6A">&larr; {{ brinde.ocasiao_nome }}</a>
+        {% else %}
+        <a href="/" class="font-mono text-xs uppercase tracking-widest hover:underline" style="color: #5C7B6A">&larr; Início</a>
+        {% endif %}
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-6 pb-24">
+        <div class="grid md:grid-cols-2 gap-12 items-start">
+
+            <div class="tag p-6 pt-10">
+                <div class="w-full aspect-square rounded-xl overflow-hidden bg-white">
+                    <img src="{{ brinde.imagem_url or 'https://placehold.co/500x500?text=Brinde' }}" class="w-full h-full object-cover" alt="{{ brinde.nome }}">
+                </div>
+            </div>
+
+            <div class="pt-2">
+                {% if brinde.tipo_nome %}
+                <p class="font-mono text-xs uppercase tracking-[0.2em] mb-3" style="color: var(--coral)">{{ brinde.tipo_nome }}</p>
+                {% endif %}
+                <h1 class="font-display text-3xl md:text-4xl font-semibold mb-4">{{ brinde.nome }}</h1>
+                {% if brinde.descricao %}
+                <p class="leading-relaxed mb-8" style="color: #3E5A4B">{{ brinde.descricao }}</p>
+                {% endif %}
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                        <div class="mb-6 p-4 rounded-xl text-sm font-semibold" style="background-color: {{ '#F3D4C9' if category == 'error' else '#DCE5DA' }}; color: {{ '#7A2E1E' if category == 'error' else '#1F3D2E' }}">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <div class="tag p-6 pt-8">
+                    <p class="font-display text-lg font-semibold mb-1">Quero um orçamento</p>
+                    <p class="text-sm mb-6" style="color: #5C7B6A">A gente encaminha seu pedido pra quem faz esse brinde perto de você.</p>
+
+                    <form method="POST" action="/brinde/{{ brinde.slug }}/orcamento" class="space-y-4">
+                        <div>
+                            <label class="block font-mono text-[11px] uppercase tracking-widest mb-2" style="color: #8A8060">Seu nome</label>
+                            <input type="text" name="nome" required class="w-full rounded-lg p-3" placeholder="Como podemos te chamar?">
+                        </div>
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block font-mono text-[11px] uppercase tracking-widest mb-2" style="color: #8A8060">E-mail</label>
+                                <input type="email" name="email" class="w-full rounded-lg p-3" placeholder="seu@email.com">
+                            </div>
+                            <div>
+                                <label class="block font-mono text-[11px] uppercase tracking-widest mb-2" style="color: #8A8060">WhatsApp</label>
+                                <input type="tel" name="telefone" class="w-full rounded-lg p-3" placeholder="(00) 00000-0000">
+                            </div>
+                        </div>
+                        <p class="text-xs" style="color: #8A8060">Preencha pelo menos um: e-mail ou WhatsApp.</p>
+                        <div>
+                            <label class="block font-mono text-[11px] uppercase tracking-widest mb-2" style="color: #8A8060">Mensagem (opcional)</label>
+                            <textarea name="mensagem" rows="3" class="w-full rounded-lg p-3" placeholder="Quantidade, prazo, alguma personalização..."></textarea>
+                        </div>
+                        <button type="submit" class="w-full font-semibold py-4 rounded-full text-white shadow-lg hover:-translate-y-0.5 transition-transform" style="background-color: var(--coral)">
+                            Pedir orçamento
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="py-10 text-center">
+        <p class="font-display text-sm font-semibold mb-1">QRCodeBrindes</p>
+        <p class="font-mono text-[10px]" style="color: #8A8060">presente físico, história digital</p>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diretório de empresas | QRCodeBrindes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap');
+        :root { --paper: #DCE5DA; --ink: #1F3D2E; --coral: #E8604C; --gold: #C9A227; }
+        body { background-color: var(--paper); color: var(--ink); font-family: 'Inter', sans-serif; }
+        .font-display { font-family: 'Fraunces', serif; }
+        .font-mono { font-family: 'IBM Plex Mono', monospace; }
+        .tag {
+            position: relative;
+            background: #F6F3E9;
+            border-radius: 0.5rem 1.5rem 1.5rem 0.5rem;
+            box-shadow: 0 14px 30px -10px rgba(31, 61, 46, 0.3);
+            transition: transform .2s ease;
+        }
+        .tag:hover { transform: translateY(-4px); }
+        .tag::before {
+            content: '';
+            position: absolute;
+            top: 16px; left: 16px;
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: var(--paper);
+            border: 2px solid var(--ink);
+        }
+        .tag.destaque { background: #F3D4C9; }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <header class="max-w-6xl mx-auto px-6 py-6 flex justify-between items-center">
+        <a href="/" class="font-display text-xl font-semibold tracking-tight">QRCode<span style="color: var(--coral)">Brindes</span></a>
+        <a href="/gerar-qr" class="font-mono text-xs uppercase tracking-widest px-5 py-3 rounded-full text-white shadow-md" style="background-color: var(--ink)">Criar QR code</a>
+    </header>
+
+    <section class="max-w-6xl mx-auto px-6 pt-6 pb-14 text-center">
+        <p class="font-mono text-xs uppercase tracking-[0.2em] mb-3" style="color: var(--coral)">Diretório</p>
+        <h1 class="font-display text-4xl font-semibold mb-4">Quem faz o brinde acontecer</h1>
+        <p class="max-w-xl mx-auto" style="color: #3E5A4B">Gráficas e fornecedores parceiros, prontos pra transformar sua ideia em brinde de verdade.</p>
+    </section>
+
+    <section class="max-w-6xl mx-auto px-6 pb-20">
+        {% if empresas %}
+        <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {% for e in empresas %}
+            <div class="tag {{ 'destaque' if e.plano == 'destaque' else '' }} p-5 pt-8">
+                {% if e.plano == 'destaque' %}
+                <p class="font-mono text-[10px] uppercase tracking-widest mb-2" style="color: var(--coral)">★ Em destaque</p>
+                {% endif %}
+                <p class="font-display text-lg font-semibold leading-snug mb-1">{{ e.nome }}</p>
+                {% if e.cidade %}
+                <p class="font-mono text-[10px] uppercase tracking-widest mb-4" style="color: #8A8060">{{ e.cidade }}</p>
+                {% endif %}
+                <div class="flex flex-col gap-2 mt-4">
+                    {% if e.whatsapp %}
+                    <a href="https://wa.me/{{ e.whatsapp }}" target="_blank" class="text-center text-sm font-semibold py-2.5 rounded-full text-white" style="background-color: var(--ink)">Falar no WhatsApp</a>
+                    {% elif e.email %}
+                    <a href="mailto:{{ e.email }}" class="text-center text-sm font-semibold py-2.5 rounded-full text-white" style="background-color: var(--ink)">Enviar e-mail</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="tag p-10 text-center max-w-md mx-auto">
+            <p class="font-display text-lg font-semibold mb-2">Ainda sem empresas cadastradas</p>
+            <p class="text-sm" style="color: #5C7B6A">Em breve o diretório fica completo.</p>
+        </div>
+        {% endif %}
+    </section>
+
+    <section class="py-16" style="background-color: var(--ink)">
+        <div class="max-w-3xl mx-auto px-6 text-center">
+            <p class="font-mono text-xs uppercase tracking-[0.2em] mb-4" style="color: var(--gold)">Pra quem fabrica</p>
+            <h2 class="font-display text-2xl font-semibold text-white mb-4">Quer aparecer aqui?</h2>
+            <a href="mailto:contato@qrcodebrindes.com.br" class="inline-block font-semibold px-7 py-4 rounded-full text-white shadow-lg hover:-translate-y-0.5 transition-transform" style="background-color: var(--coral)">
+                Quero cadastrar minha empresa
+            </a>
+        </div>
+    </section>
+
+    <footer class="py-10 text-center">
+        <p class="font-display text-sm font-semibold mb-1">QRCodeBrindes</p>
+        <p class="font-mono text-[10px]" style="color: #8A8060">presente físico, história digital</p>
+    </footer>
+
+</body>
+</html>
