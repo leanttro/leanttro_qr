@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, flash, url_for, abort, send_file
+from flask import Flask, render_template, request, redirect, session, flash, url_for, abort, send_file, jsonify
 import psycopg2
 import psycopg2.extras
 import requests
@@ -212,10 +212,52 @@ def gerar_timeline_events(pagina):
     return pagina.get("timeline_json") or []
 
 
+# --- ANÚNCIOS (mesmo padrão do hub, adaptado: sem hub_id, sem cidade/bairro) ---
+def get_anuncio(posicao, ocasiao_id=None):
+    """Retorna 1 anúncio ativo pra posição informada ('topo' ou 'meio'), dentro
+    da vigência (data_inicio/data_fim). Se ocasiao_id for passado, prioriza um
+    anúncio segmentado pra essa ocasião, mas também aceita um genérico
+    (ocasiao_id NULL no banco = vale pra qualquer ocasião). Sem ocasiao_id
+    (ex.: home, diretório), só considera anúncios genéricos."""
+    hoje = datetime.now().date()
+
+    if ocasiao_id:
+        sql = """
+            SELECT a.*, o.nome as ocasiao_nome
+            FROM brindes_anuncios a
+            LEFT JOIN brindes_ocasioes o ON o.id = a.ocasiao_id
+            WHERE a.ativo = TRUE AND a.posicao = %s
+              AND (a.data_inicio IS NULL OR a.data_inicio <= %s)
+              AND (a.data_fim IS NULL OR a.data_fim >= %s)
+              AND (a.ocasiao_id IS NULL OR a.ocasiao_id = %s)
+            ORDER BY (a.ocasiao_id IS NOT NULL) DESC, RANDOM()
+            LIMIT 1
+        """
+        return query_one(sql, (posicao, hoje, hoje, ocasiao_id))
+
+    sql = """
+        SELECT a.*, o.nome as ocasiao_nome
+        FROM brindes_anuncios a
+        LEFT JOIN brindes_ocasioes o ON o.id = a.ocasiao_id
+        WHERE a.ativo = TRUE AND a.posicao = %s
+          AND (a.data_inicio IS NULL OR a.data_inicio <= %s)
+          AND (a.data_fim IS NULL OR a.data_fim >= %s)
+          AND a.ocasiao_id IS NULL
+        ORDER BY RANDOM()
+        LIMIT 1
+    """
+    return query_one(sql, (posicao, hoje, hoje))
+
+
 # --- ROTA RAIZ ---
 @app.route('/')
 def index():
-    return render_template('home.html', current_year=datetime.now().year)
+    return render_template(
+        'home.html',
+        current_year=datetime.now().year,
+        anuncio_topo=get_anuncio('topo'),
+        anuncio_meio=get_anuncio('meio'),
+    )
 
 
 # --- GERAR QR CODE (criação de página) ---
@@ -481,7 +523,12 @@ def ocasiao_publica(slug):
         ORDER BY b.nome
     """, (ocasiao['id'],))
 
-    return render_template('ocasiao.html', ocasiao=ocasiao, brindes=brindes)
+    return render_template(
+        'ocasiao.html',
+        ocasiao=ocasiao, brindes=brindes,
+        anuncio_topo=get_anuncio('topo', ocasiao['id']),
+        anuncio_meio=get_anuncio('meio', ocasiao['id']),
+    )
 
 
 @app.route('/brinde/<slug>')
@@ -496,7 +543,12 @@ def brinde_publico(slug):
     if not brinde:
         abort(404)
 
-    return render_template('brinde.html', brinde=brinde)
+    return render_template(
+        'brinde.html',
+        brinde=brinde,
+        anuncio_topo=get_anuncio('topo', brinde.get('ocasiao_id')),
+        anuncio_meio=get_anuncio('meio', brinde.get('ocasiao_id')),
+    )
 
 
 @app.route('/brinde/<slug>/orcamento', methods=['POST'])
@@ -550,7 +602,12 @@ def diretorio_publico():
         WHERE ativo = TRUE
         ORDER BY (plano = 'destaque') DESC, nome
     """)
-    return render_template('diretorio.html', empresas=empresas)
+    return render_template(
+        'diretorio.html',
+        empresas=empresas,
+        anuncio_topo=get_anuncio('topo'),
+        anuncio_meio=get_anuncio('meio'),
+    )
 
 
 # =====================================================================
@@ -874,6 +931,101 @@ def admin_leads_status(item_id):
     status = request.form.get('status', 'pendente')
     execute("UPDATE brindes_leads SET status = %s WHERE id = %s", (status, item_id))
     return redirect('/admin#leads')
+
+
+# =====================================================================
+#  ANÚNCIOS — admin, padrão SPA/JSON (aba com drawer, igual ao hub)
+#  Diferente das outras abas (que são POST + redirect + flash), essa
+#  aba conversa com o front-end via fetch/JSON, então as rotas abaixo
+#  devolvem jsonify em vez de redirect.
+# =====================================================================
+
+@app.route('/admin/anuncios')
+@admin_required
+def admin_anuncios_listar():
+    anuncios = query_all("""
+        SELECT a.*, o.nome as ocasiao_nome
+        FROM brindes_anuncios a
+        LEFT JOIN brindes_ocasioes o ON o.id = a.ocasiao_id
+        ORDER BY a.created_at DESC
+    """)
+    return jsonify(anuncios)
+
+
+@app.route('/admin/anuncios/novo', methods=['POST'])
+@admin_required
+def admin_anuncios_novo():
+    titulo = request.form.get('titulo', '').strip()
+    posicao = request.form.get('posicao', 'topo').strip()
+    foto_url = request.form.get('foto_url', '').strip()
+    link = request.form.get('link', '').strip()
+    ocasiao_id = request.form.get('ocasiao_id') or None
+    data_inicio = request.form.get('data_inicio') or None
+    data_fim = request.form.get('data_fim') or None
+    ativo = 'ativo' in request.form
+
+    if not titulo or not foto_url or not link:
+        return jsonify({'erro': 'Preencha título, imagem e link.'}), 400
+
+    try:
+        execute("""
+            INSERT INTO brindes_anuncios
+                (titulo, posicao, foto_url, link, ocasiao_id, data_inicio, data_fim, ativo)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (titulo, posicao, foto_url, link, ocasiao_id, data_inicio, data_fim, ativo))
+        return jsonify({'ok': True})
+    except Exception:
+        return jsonify({'erro': 'Erro ao salvar o anúncio.'}), 400
+
+
+@app.route('/admin/anuncios/<int:item_id>/editar', methods=['GET', 'POST'])
+@admin_required
+def admin_anuncios_editar(item_id):
+    anuncio = query_one("SELECT * FROM brindes_anuncios WHERE id = %s", (item_id,))
+    if not anuncio:
+        abort(404)
+
+    # GET: o drawer do admin busca os dados atuais pra preencher o formulário.
+    if request.method == 'GET':
+        return jsonify(anuncio)
+
+    # POST: salva as alterações.
+    titulo = request.form.get('titulo', '').strip()
+    posicao = request.form.get('posicao', 'topo').strip()
+    foto_url = request.form.get('foto_url', '').strip()
+    link = request.form.get('link', '').strip()
+    ocasiao_id = request.form.get('ocasiao_id') or None
+    data_inicio = request.form.get('data_inicio') or None
+    data_fim = request.form.get('data_fim') or None
+    ativo = 'ativo' in request.form
+
+    if not titulo or not foto_url or not link:
+        return jsonify({'erro': 'Preencha título, imagem e link.'}), 400
+
+    try:
+        execute("""
+            UPDATE brindes_anuncios
+            SET titulo = %s, posicao = %s, foto_url = %s, link = %s,
+                ocasiao_id = %s, data_inicio = %s, data_fim = %s, ativo = %s
+            WHERE id = %s
+        """, (titulo, posicao, foto_url, link, ocasiao_id, data_inicio, data_fim, ativo, item_id))
+        return jsonify({'ok': True})
+    except Exception:
+        return jsonify({'erro': 'Erro ao salvar o anúncio.'}), 400
+
+
+@app.route('/admin/anuncios/<int:item_id>/toggle', methods=['POST'])
+@admin_required
+def admin_anuncios_toggle(item_id):
+    execute("UPDATE brindes_anuncios SET ativo = NOT ativo WHERE id = %s", (item_id,))
+    return jsonify({'ok': True})
+
+
+@app.route('/admin/anuncios/<int:item_id>/deletar', methods=['POST'])
+@admin_required
+def admin_anuncios_deletar(item_id):
+    execute("DELETE FROM brindes_anuncios WHERE id = %s", (item_id,))
+    return jsonify({'ok': True})
 
 
 if __name__ == '__main__':
