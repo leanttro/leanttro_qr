@@ -7,6 +7,7 @@ import io
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 import qrcode
 
 load_dotenv()
@@ -104,6 +105,15 @@ def get_ip():
     if request.headers.getlist("X-Forwarded-For"):
         return request.headers.getlist("X-Forwarded-For")[0]
     return request.remote_addr
+
+
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('admin_id'):
+            return redirect('/admin/login')
+        return f(*args, **kwargs)
+    return decorated
 
 
 # --- MIDDLEWARE ANTI-BOT (mesmo padrão do SOS Motoboy) ---
@@ -347,6 +357,225 @@ def painel_pagina(slug):
         total_scans=total_scans['total'] if total_scans else 0,
         qr_url=f"/{slug}/qr.png",
     )
+
+
+# =====================================================================
+#  ADMIN — painel global (ocasiões, tipos, brindes, empresas, leads)
+# =====================================================================
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if not check_limit(f"admin_login_{get_ip()}", 10, 60):
+        flash("Muitas tentativas. Aguarde.", "error")
+        return render_template('admin_login.html')
+
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        senha = request.form.get('senha', '')
+        admin = query_one("SELECT * FROM brindes_admin WHERE email = %s", (email,))
+        if admin and check_password_hash(admin['password_hash'], senha):
+            session['admin_id'] = admin['id']
+            return redirect('/admin')
+        flash('E-mail ou senha incorretos.', 'error')
+
+    return render_template('admin_login.html')
+
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('admin_id', None)
+    return redirect('/admin/login')
+
+
+@app.route('/admin')
+@admin_required
+def admin_dashboard():
+    stats = {
+        'total_paginas': query_one("SELECT COUNT(*) as c FROM brindes_paginas")['c'],
+        'total_scans': query_one("SELECT COUNT(*) as c FROM brindes_scans")['c'],
+        'total_brindes': query_one("SELECT COUNT(*) as c FROM brindes_brindes")['c'],
+        'total_empresas': query_one("SELECT COUNT(*) as c FROM brindes_empresas")['c'],
+        'leads_pendentes': query_one("SELECT COUNT(*) as c FROM brindes_leads WHERE status = 'pendente'")['c'],
+    }
+    ocasioes = query_all("SELECT * FROM brindes_ocasioes ORDER BY nome")
+    tipos = query_all("SELECT * FROM brindes_tipos_impressao ORDER BY nome")
+    brindes = query_all("""
+        SELECT b.*, o.nome as ocasiao_nome, t.nome as tipo_nome
+        FROM brindes_brindes b
+        LEFT JOIN brindes_ocasioes o ON o.id = b.ocasiao_id
+        LEFT JOIN brindes_tipos_impressao t ON t.id = b.tipo_impressao_id
+        ORDER BY b.created_at DESC
+    """)
+    empresas = query_all("SELECT * FROM brindes_empresas ORDER BY nome")
+    leads = query_all("""
+        SELECT l.*, b.nome as brinde_nome, e.nome as empresa_nome
+        FROM brindes_leads l
+        LEFT JOIN brindes_brindes b ON b.id = l.brinde_id
+        LEFT JOIN brindes_empresas e ON e.id = l.empresa_id
+        ORDER BY l.created_at DESC
+    """)
+
+    return render_template(
+        'admin.html',
+        stats=stats, ocasioes=ocasioes, tipos=tipos,
+        brindes=brindes, empresas=empresas, leads=leads,
+    )
+
+
+# --- OCASIÕES ---
+@app.route('/admin/ocasioes/add', methods=['POST'])
+@admin_required
+def admin_ocasioes_add():
+    nome = request.form.get('nome', '').strip()
+    slug = request.form.get('slug', '').strip().lower()
+    sazonal = 'sazonal' in request.form
+    if nome and slug:
+        try:
+            execute("INSERT INTO brindes_ocasioes (nome, slug, sazonal) VALUES (%s, %s, %s)", (nome, slug, sazonal))
+            flash('Ocasião adicionada.', 'success')
+        except Exception:
+            flash('Erro ao adicionar (slug já existe?).', 'error')
+    return redirect('/admin#ocasioes')
+
+
+@app.route('/admin/ocasioes/<int:item_id>/toggle', methods=['POST'])
+@admin_required
+def admin_ocasioes_toggle(item_id):
+    execute("UPDATE brindes_ocasioes SET ativo = NOT ativo WHERE id = %s", (item_id,))
+    return redirect('/admin#ocasioes')
+
+
+@app.route('/admin/ocasioes/<int:item_id>/delete', methods=['POST'])
+@admin_required
+def admin_ocasioes_delete(item_id):
+    execute("DELETE FROM brindes_ocasioes WHERE id = %s", (item_id,))
+    return redirect('/admin#ocasioes')
+
+
+# --- TIPOS DE IMPRESSÃO ---
+@app.route('/admin/tipos-impressao/add', methods=['POST'])
+@admin_required
+def admin_tipos_add():
+    nome = request.form.get('nome', '').strip()
+    slug = request.form.get('slug', '').strip().lower()
+    if nome and slug:
+        try:
+            execute("INSERT INTO brindes_tipos_impressao (nome, slug) VALUES (%s, %s)", (nome, slug))
+            flash('Tipo de impressão adicionado.', 'success')
+        except Exception:
+            flash('Erro ao adicionar (slug já existe?).', 'error')
+    return redirect('/admin#tipos')
+
+
+@app.route('/admin/tipos-impressao/<int:item_id>/toggle', methods=['POST'])
+@admin_required
+def admin_tipos_toggle(item_id):
+    execute("UPDATE brindes_tipos_impressao SET ativo = NOT ativo WHERE id = %s", (item_id,))
+    return redirect('/admin#tipos')
+
+
+@app.route('/admin/tipos-impressao/<int:item_id>/delete', methods=['POST'])
+@admin_required
+def admin_tipos_delete(item_id):
+    execute("DELETE FROM brindes_tipos_impressao WHERE id = %s", (item_id,))
+    return redirect('/admin#tipos')
+
+
+# --- BRINDES (catálogo) ---
+@app.route('/admin/brindes/add', methods=['POST'])
+@admin_required
+def admin_brindes_add():
+    nome = request.form.get('nome', '').strip()
+    slug = request.form.get('slug', '').strip().lower()
+    descricao = request.form.get('descricao', '')
+    ocasiao_id = request.form.get('ocasiao_id') or None
+    tipo_impressao_id = request.form.get('tipo_impressao_id') or None
+
+    imagem_url = None
+    f = request.files.get('imagem')
+    if f and f.filename:
+        imagem_url = upload_imgur(f)
+
+    if nome and slug:
+        try:
+            execute("""
+                INSERT INTO brindes_brindes (nome, slug, descricao, ocasiao_id, tipo_impressao_id, imagem_url)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (nome, slug, descricao, ocasiao_id, tipo_impressao_id, imagem_url))
+            flash('Brinde adicionado.', 'success')
+        except Exception:
+            flash('Erro ao adicionar (slug já existe?).', 'error')
+    return redirect('/admin#brindes')
+
+
+@app.route('/admin/brindes/<int:item_id>/toggle', methods=['POST'])
+@admin_required
+def admin_brindes_toggle(item_id):
+    execute("UPDATE brindes_brindes SET ativo = NOT ativo WHERE id = %s", (item_id,))
+    return redirect('/admin#brindes')
+
+
+@app.route('/admin/brindes/<int:item_id>/delete', methods=['POST'])
+@admin_required
+def admin_brindes_delete(item_id):
+    execute("DELETE FROM brindes_brindes WHERE id = %s", (item_id,))
+    return redirect('/admin#brindes')
+
+
+# --- EMPRESAS (diretório) ---
+@app.route('/admin/empresas/add', methods=['POST'])
+@admin_required
+def admin_empresas_add():
+    nome = request.form.get('nome', '').strip()
+    slug = request.form.get('slug', '').strip().lower()
+    email = request.form.get('email', '').strip()
+    whatsapp = request.form.get('whatsapp', '').strip()
+    cidade = request.form.get('cidade', '').strip()
+    plano = request.form.get('plano', 'gratis')
+
+    if nome and slug:
+        try:
+            execute("""
+                INSERT INTO brindes_empresas (nome, slug, email, whatsapp, cidade, plano)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (nome, slug, email or None, whatsapp or None, cidade or None, plano))
+            flash('Empresa adicionada.', 'success')
+        except Exception:
+            flash('Erro ao adicionar (slug já existe?).', 'error')
+    return redirect('/admin#empresas')
+
+
+@app.route('/admin/empresas/<int:item_id>/toggle', methods=['POST'])
+@admin_required
+def admin_empresas_toggle(item_id):
+    execute("UPDATE brindes_empresas SET ativo = NOT ativo WHERE id = %s", (item_id,))
+    return redirect('/admin#empresas')
+
+
+@app.route('/admin/empresas/<int:item_id>/toggle-plano', methods=['POST'])
+@admin_required
+def admin_empresas_toggle_plano(item_id):
+    empresa = query_one("SELECT plano FROM brindes_empresas WHERE id = %s", (item_id,))
+    if empresa:
+        novo_plano = 'gratis' if empresa['plano'] == 'destaque' else 'destaque'
+        execute("UPDATE brindes_empresas SET plano = %s WHERE id = %s", (novo_plano, item_id))
+    return redirect('/admin#empresas')
+
+
+@app.route('/admin/empresas/<int:item_id>/delete', methods=['POST'])
+@admin_required
+def admin_empresas_delete(item_id):
+    execute("DELETE FROM brindes_empresas WHERE id = %s", (item_id,))
+    return redirect('/admin#empresas')
+
+
+# --- LEADS ---
+@app.route('/admin/leads/<int:item_id>/status', methods=['POST'])
+@admin_required
+def admin_leads_status(item_id):
+    status = request.form.get('status', 'pendente')
+    execute("UPDATE brindes_leads SET status = %s WHERE id = %s", (status, item_id))
+    return redirect('/admin#leads')
 
 
 if __name__ == '__main__':
