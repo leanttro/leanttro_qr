@@ -211,7 +211,11 @@ def slugify_cidade(texto):
 
 def carregar_templates():
     """Varre templates/paginas/ e devolve os metadados (<slug>.json) de cada
-    template disponível (<slug>.html + <slug>.json lado a lado)."""
+    template disponível (<slug>.html + <slug>.json lado a lado).
+
+    A preview_url (URL da imagem de capa) é sobrescrita pelo valor salvo em
+    brindes_templates_capas, se existir — porque o arquivo .json em disco
+    não sobrevive a redeploy, mas o banco sim."""
     templates = []
     pasta = os.path.join(app.template_folder, 'paginas')
     if not os.path.isdir(pasta):
@@ -226,6 +230,19 @@ def carregar_templates():
                 meta['slug'] = slug
                 meta['arquivo'] = f'paginas/{arquivo}'
                 templates.append(meta)
+
+    try:
+        capas = query_all("SELECT slug, preview_url FROM brindes_templates_capas")
+        capas_por_slug = {c['slug']: c['preview_url'] for c in capas}
+        for meta in templates:
+            url_salva = capas_por_slug.get(meta['slug'])
+            if url_salva:
+                meta['preview_url'] = url_salva
+    except Exception:
+        # Se a tabela ainda não existir ou o banco estiver fora do ar,
+        # simplesmente segue com o preview_url que veio do .json.
+        pass
+
     return templates
 
 
@@ -1093,9 +1110,23 @@ def admin_templates_editar(slug):
     try:
         with open(meta_path, 'w', encoding='utf-8') as f:
             json.dump(tpl, f, ensure_ascii=False, indent=2)
-        return jsonify({'ok': True})
     except Exception:
         return jsonify({'erro': 'Erro ao salvar o template.'}), 400
+
+    # A URL da capa também vai pro banco (UPSERT), porque o .json acima
+    # some a cada redeploy — o banco não. carregar_templates() dá
+    # prioridade a esse valor salvo aqui.
+    try:
+        execute("""
+            INSERT INTO brindes_templates_capas (slug, preview_url, updated_at)
+            VALUES (%s, %s, NOW())
+            ON CONFLICT (slug) DO UPDATE
+                SET preview_url = EXCLUDED.preview_url, updated_at = NOW();
+        """, (slug, preview_url))
+    except Exception:
+        return jsonify({'erro': 'Template salvo, mas a URL da capa não persistiu no banco.'}), 400
+
+    return jsonify({'ok': True})
 
 
 # --- PÁGINAS (usuários que geraram QR code) ---
