@@ -353,7 +353,14 @@ header{
 .badge-tpl{align-self:flex-start;font-size:.72em;font-family:'Montserrat',sans-serif;padding:3px 10px;border-radius:999px}
 .badge-tpl.gratis{background:var(--surface-2);color:var(--ink-soft)}
 .badge-tpl.pago{background:var(--ink-black);color:#fff}
-.card-template .btn-gerar{margin-top:auto;justify-content:center;font-size:.9em}
+.card-template .link-arrow{margin-top:auto;font-size:.88em}
+
+/* Monte sua página com QR code — templates + recursos numa seção só */
+.modelos-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:44px;align-items:start}
+.modelos-templates .grid-cards{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+.modelos-recursos .extras-list{margin-top:0;margin-bottom:26px}
+.modelos-cta{display:flex;justify-content:center;margin-top:48px}
+@media (max-width:860px){.modelos-grid{grid-template-columns:1fr}}
 
 /* ============ FOOTER ============ */
 footer{background:var(--ink-black);color:#e6e6e9;padding:52px 0 28px}
@@ -489,80 +496,78 @@ footer a:hover{color:#fff}
         <div class="section-head">
             <span class="eyebrow">Modelo visual pronto</span>
             <h2>Monte sua página com QR code</h2>
-            <p>Escolha um modelo pronto, personalize com sua mensagem e foto, e gere um QR code que abre direto nessa página.</p>
+            <p>Escolha um modelo pronto, personalize com sua mensagem, foto e linha do tempo, e gere um QR code que abre direto nessa página. Ideal pra casamentos, aniversários e presentes corporativos.</p>
         </div>
 
-        <div class="grid-cards">
-            {% for tpl in templates %}
-            <div class="card-template">
-                <div class="card-template-img">
-                    {% if tpl.preview_url %}
-                    <img src="{{ tpl.preview_url }}" alt="{{ tpl.nome }}" loading="lazy">
-                    {% endif %}
-                </div>
-                <div class="card-template-body">
-                    <span class="badge-tpl {{ 'pago' if tpl.tier == 'pago' else 'gratis' }}">{{ 'Pago' if tpl.tier == 'pago' else 'Grátis' }}</span>
-                    <h3>{{ tpl.nome }}</h3>
-                    <a class="btn-gerar" href="{{ url_for('gerar_qr') }}">Criar minha página →</a>
+        <div class="modelos-grid">
+            <div class="modelos-templates">
+                <div class="grid-cards">
+                    {% for tpl in templates %}
+                    <div class="card-template">
+                        <div class="card-template-img">
+                            {% if tpl.preview_url %}
+                            <img src="{{ tpl.preview_url }}" alt="{{ tpl.nome }}" loading="lazy">
+                            {% endif %}
+                        </div>
+                        <div class="card-template-body">
+                            <span class="badge-tpl {{ 'pago' if tpl.tier == 'pago' else 'gratis' }}">{{ 'Pago' if tpl.tier == 'pago' else 'Grátis' }}</span>
+                            <h3>{{ tpl.nome }}</h3>
+                            <a class="link-arrow" href="{{ url_for('demo_template', template_slug=tpl.slug) }}" target="_blank">Ver exemplo ao vivo →</a>
+                        </div>
+                    </div>
+                    {% endfor %}
                 </div>
             </div>
-            {% endfor %}
+
+            <div class="modelos-recursos">
+                <div class="extras-list">
+                    <div class="extras-item">
+                        <div class="extras-icon">💬</div>
+                        <div>
+                            <h3>Mensagem personalizada</h3>
+                            <p>Escreva um recado que aparece assim que o QR é escaneado.</p>
+                        </div>
+                    </div>
+                    <div class="extras-item">
+                        <div class="extras-icon">📷</div>
+                        <div>
+                            <h3>Foto de capa</h3>
+                            <p>Suba uma imagem pra dar cara própria à página.</p>
+                        </div>
+                    </div>
+                    <div class="extras-item">
+                        <div class="extras-icon">🕓</div>
+                        <div>
+                            <h3>Linha do tempo</h3>
+                            <p>Conte uma história em etapas — datas e marcos importantes.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="plan-card">
+                    <div class="plan-row">
+                        <span class="name">Página publicada com QR funcionando</span>
+                        <span class="tag tag-free">grátis</span>
+                    </div>
+                    <div class="plan-row">
+                        <span class="name">Métricas de scan</span>
+                        <span class="tag tag-free">grátis</span>
+                    </div>
+                    <div class="plan-row">
+                        <span class="name">Recursos extras de edição e personalização</span>
+                        <span class="tag tag-paid">pago</span>
+                    </div>
+                    <p class="plan-note">O plano grátis já publica sua página com o QR funcionando. Recursos extras são liberados no plano pago, direto pelo seu painel.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="modelos-cta">
+            <a class="btn-gerar" href="{{ url_for('gerar_qr') }}">Criar minha página →</a>
         </div>
     </div>
 </section>
 {% endif %}
-
-<!-- PÁGINAS EXTRAS -->
-<section class="section" id="paginas-extras">
-    <div class="container extras-grid">
-        <div>
-            <span class="eyebrow">Recurso opcional</span>
-            <h2>Ou crie uma página própria pro QR apontar</h2>
-            <p style="color:var(--ink-soft);font-size:1.03em;line-height:1.6;margin-top:14px">Em vez de apontar pra um link externo, seu QR pode abrir uma página feita na hora — com mensagem, foto e linha do tempo. Ideal pra casamentos, aniversários e presentes corporativos.</p>
-
-            <div class="extras-list">
-                <div class="extras-item">
-                    <div class="extras-icon">💬</div>
-                    <div>
-                        <h3>Mensagem personalizada</h3>
-                        <p>Escreva um recado que aparece assim que o QR é escaneado.</p>
-                    </div>
-                </div>
-                <div class="extras-item">
-                    <div class="extras-icon">📷</div>
-                    <div>
-                        <h3>Foto de capa</h3>
-                        <p>Suba uma imagem pra dar cara própria à página.</p>
-                    </div>
-                </div>
-                <div class="extras-item">
-                    <div class="extras-icon">🕓</div>
-                    <div>
-                        <h3>Linha do tempo</h3>
-                        <p>Conte uma história em etapas — datas e marcos importantes.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="plan-card">
-            <div class="plan-row">
-                <span class="name">Página publicada com QR funcionando</span>
-                <span class="tag tag-free">grátis</span>
-            </div>
-            <div class="plan-row">
-                <span class="name">Métricas de scan</span>
-                <span class="tag tag-free">grátis</span>
-            </div>
-            <div class="plan-row">
-                <span class="name">Recursos extras de edição e personalização</span>
-                <span class="tag tag-paid">pago</span>
-            </div>
-            <p class="plan-note">O plano grátis já publica sua página com o QR funcionando. Recursos extras são liberados no plano pago, direto pelo seu painel.</p>
-            <button class="btn-gerar" type="button" style="width:100%;justify-content:center;margin-top:18px" onclick="abrirModal('pagina')">Criar minha página →</button>
-        </div>
-    </div>
-</section>
 
 <!-- CATÁLOGO DE BRINDES -->
 <section class="section section-alt" id="catalogo">
