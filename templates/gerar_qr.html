@@ -1,177 +1,262 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Criar QR code | QRCodeBrindes</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap');
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Criar meu QR code | QR Code Brindes</title>
+<meta name="description" content="Gere um QR code dinâmico grátis. Cole um link ou crie uma página própria com mensagem, foto e linha do tempo.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#ffffff">
+<meta name="author" content="QR Code Brindes">
 
-        :root {
-            --paper: #DCE5DA;
-            --ink: #1F3D2E;
-            --coral: #E8604C;
-            --gold: #C9A227;
-        }
-        body { background-color: var(--paper); color: var(--ink); font-family: 'Inter', sans-serif; }
-        .font-display { font-family: 'Fraunces', serif; }
-        .font-mono { font-family: 'IBM Plex Mono', monospace; }
+<link rel="icon" type="image/png" href="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png">
+<link rel="apple-touch-icon" href="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png">
 
-        .tag {
-            position: relative;
-            background: #F6F3E9;
-            border-radius: 0.5rem 1.5rem 1.5rem 0.5rem;
-            box-shadow: 0 18px 40px -12px rgba(31, 61, 46, 0.35);
-        }
-        .tag::before {
-            content: '';
-            position: absolute;
-            top: 22px;
-            left: 22px;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: var(--paper);
-            border: 2px solid var(--ink);
-        }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+    --bg:#ffffff;--surface:#f6f6f8;--surface-2:#eeeef1;
+    --ink:#17171a;--ink-soft:#63636c;--ink-faint:#9797a0;
+    --line:#e2e2e7;--line-strong:#cfcfd6;
+    --chrome-1:#fcfcfd;--chrome-2:#d7d7dd;--chrome-3:#9a9aa2;--chrome-4:#4a4a52;
+    --ink-black:#111113;--focus:#3b6ef0;--radius:14px;
+    --shadow-sm:0 1px 2px rgba(20,20,25,.06);
+    --shadow-md:0 8px 24px rgba(20,20,25,.08);
+    --shadow-lg:0 24px 64px rgba(20,20,25,.14);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Montserrat',sans-serif;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+.container{max-width:880px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:'Montserrat',sans-serif;margin:0;color:var(--ink-black)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:3px;border-radius:4px}
 
-        input[type=text], input[type=url], input[type=email], input[type=password] {
-            background: #fff;
-            border: 1.5px solid #C9D3C3;
-        }
-        input:focus {
-            outline: none;
-            border-color: var(--ink);
-        }
+/* HEADER */
+header{
+    position:sticky;top:0;z-index:60;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;
+    padding:10px 24px;gap:16px;
+}
+.header-logo a{display:flex;align-items:center;gap:10px}
+.header-logo img{height:88px;width:auto}
+@media (max-width:900px){.header-logo img{height:80px}}
 
-        .toggle-option {
-            border: 1.5px solid #C9D3C3;
-            transition: all .15s ease;
-        }
-        .toggle-option.active {
-            border-color: var(--ink);
-            background: var(--ink);
-            color: #fff;
-        }
+/* PAGE HEAD */
+.page-head{padding:52px 0 8px;text-align:center}
+.eyebrow{
+    display:inline-flex;align-items:baseline;gap:12px;font-size:.78em;font-weight:700;
+    letter-spacing:.22em;text-transform:uppercase;color:var(--chrome-4);margin-bottom:16px;
+}
+.eyebrow::before{content:"";display:inline-block;width:34px;height:1px;background:linear-gradient(90deg,transparent,var(--chrome-3));transform:translateY(-3px)}
+.page-head h1{font-size:clamp(1.7em,3.4vw,2.3em);margin-bottom:10px}
+.page-head p{color:var(--ink-soft);font-size:1.02em;margin:0 auto;max-width:52ch}
 
-        .hidden-block { display: none; }
-    </style>
+/* FLASH */
+.flash-box{
+    background:#fdecea;border:1px solid #f3c2bd;color:#8a2e22;
+    padding:12px 14px;border-radius:9px;font-size:.9em;margin:24px 0;
+}
+.flash-box.success{background:#eaf6ee;border-color:#bfe3cb;color:#1f6b4a}
+
+/* FORM CARD */
+.form-section{padding:32px 0 72px}
+.form-card{
+    background:var(--chrome-1);border:1px solid var(--line-strong);border-radius:var(--radius);
+    padding:32px;box-shadow:var(--shadow-md);
+}
+.modal-tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px;margin-bottom:26px}
+.modal-tab{
+    flex:1;text-align:center;padding:10px;border-radius:7px;font-size:.9em;font-weight:600;
+    color:var(--ink-soft);cursor:pointer;border:none;background:none;
+}
+.modal-tab.active{background:#fff;color:var(--ink-black);box-shadow:var(--shadow-sm)}
+.field{margin-bottom:18px}
+.field label{display:block;font-size:.88em;font-weight:600;margin-bottom:6px;color:var(--ink)}
+.field input{
+    width:100%;padding:13px 14px;border:1px solid var(--line-strong);border-radius:9px;
+    font-size:.98em;font-family:'Montserrat',sans-serif;background:var(--surface);
+}
+.field input:focus{outline:2px solid var(--focus);outline-offset:1px;background:#fff}
+.field .hint{font-size:.8em;color:var(--ink-faint);margin-top:5px}
+.field-optional{color:var(--ink-faint);font-weight:400}
+.btn-submit{
+    width:100%;background:var(--ink-black);color:#fff;border:none;border-radius:10px;
+    padding:15px;font-weight:600;font-size:1em;cursor:pointer;margin-top:8px;
+}
+.btn-submit:hover{background:var(--chrome-4)}
+
+/* TEMPLATE PICKER */
+.template-section{margin:28px 0}
+.template-section > label.section-label{display:block;font-size:.88em;font-weight:600;margin-bottom:12px;color:var(--ink)}
+.template-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
+.template-option{position:relative}
+.template-option input{position:absolute;opacity:0;width:1px;height:1px}
+.template-option label{
+    display:block;border:2px solid var(--line);border-radius:12px;overflow:hidden;
+    cursor:pointer;transition:border-color .15s, box-shadow .15s;background:var(--chrome-1);
+}
+.template-option input:checked + label{border-color:var(--ink-black);box-shadow:var(--shadow-sm)}
+.template-preview{aspect-ratio:4/3;background:var(--surface-2);overflow:hidden}
+.template-preview img{width:100%;height:100%;object-fit:cover}
+.template-body{padding:12px 14px}
+.template-body .nome{font-size:.92em;font-weight:600;display:block;margin-bottom:6px}
+.tag{display:inline-block;font-size:.72em;padding:3px 9px;border-radius:999px}
+.tag-free{background:var(--surface-2);color:var(--ink-soft)}
+.tag-paid{background:var(--ink-black);color:#fff}
+.template-demo-link{display:block;margin-top:8px;font-size:.78em;color:var(--ink-soft);text-decoration:underline}
+.template-demo-link:hover{color:var(--ink-black)}
+
+/* FOOTER */
+footer{background:var(--ink-black);color:#e6e6e9;padding:40px 0 24px;margin-top:60px}
+.footer-bottom{max-width:880px;margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.82em;color:#7a7a84}
+
+@media (max-width:600px){.form-card{padding:22px}}
+</style>
 </head>
-<body class="min-h-screen">
+<body>
 
-    <header class="max-w-4xl mx-auto px-6 py-6 flex justify-between items-center">
-        <a href="/" class="font-display text-xl font-semibold tracking-tight">QRCode<span style="color: var(--coral)">Brindes</span></a>
-        <a href="/" class="font-mono text-xs uppercase tracking-widest hover:underline">Voltar</a>
-    </header>
+<!-- HEADER -->
+<header>
+    <div class="header-logo">
+        <a href="{{ url_for('index') }}" aria-label="QR Code Brindes — página inicial">
+            <img src="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png" alt="QR Code Brindes">
+        </a>
+    </div>
+</header>
 
-    <main class="max-w-2xl mx-auto px-6 pb-24 pt-6">
+<!-- PAGE HEAD -->
+<section class="page-head">
+    <div class="container">
+        <span class="eyebrow">Criar QR code</span>
+        <h1>Vamos criar seu QR code dinâmico</h1>
+        <p>Leva menos de um minuto e é grátis pra começar. Você pode trocar o destino depois, sem reimprimir nada.</p>
+    </div>
+</section>
 
-        <p class="font-mono text-xs uppercase tracking-[0.2em] mb-3 text-center" style="color: var(--coral)">Etiqueta Nº ????</p>
-        <h1 class="font-display text-3xl md:text-4xl font-semibold text-center mb-2">Criar seu QR code</h1>
-        <p class="text-center mb-10" style="color: #3E5A4B">Leva menos de um minuto — e dá pra editar depois.</p>
+<section class="form-section">
+    <div class="container">
 
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                {% for category, message in messages %}
-                <div class="mb-6 p-4 rounded-xl text-sm font-semibold" style="background-color: #F3D4C9; color: #7A2E1E">
-                    {{ message }}
-                </div>
+                {% for categoria, mensagem in messages %}
+                <div class="flash-box {{ 'success' if categoria == 'success' else '' }}">{{ mensagem }}</div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
 
-        <form method="POST" class="tag p-8 pt-10 space-y-6">
+        <div class="form-card">
+            <div class="modal-tabs">
+                <button type="button" class="modal-tab" id="tab-link" onclick="trocarTab('link')">Já tenho um link</button>
+                <button type="button" class="modal-tab" id="tab-pagina" onclick="trocarTab('pagina')">Quero criar uma página</button>
+            </div>
 
-            <div>
-                <label class="block font-mono text-[11px] uppercase tracking-widest mb-3" style="color: #8A8060">O que o QR code vai abrir?</label>
-                <div class="grid grid-cols-2 gap-3">
-                    <label class="toggle-option rounded-xl p-4 text-center cursor-pointer font-semibold text-sm" data-option="link">
-                        <input type="radio" name="tipo_destino" value="link" class="hidden" checked>
-                        Um link que eu já tenho
-                    </label>
-                    <label class="toggle-option rounded-xl p-4 text-center cursor-pointer font-semibold text-sm" data-option="pagina">
-                        <input type="radio" name="tipo_destino" value="pagina" class="hidden">
-                        Uma página própria
-                    </label>
+            <form action="{{ url_for('gerar_qr') }}" method="POST">
+                <input type="hidden" name="tipo_destino" id="input-tipo-destino" value="link">
+
+                <div class="field" id="campo-destino-url">
+                    <label for="destino_url">Link de destino</label>
+                    <input type="url" id="destino_url" name="destino_url" placeholder="https://...">
                 </div>
-            </div>
 
-            <div id="bloco-link">
-                <label class="block font-mono text-[11px] uppercase tracking-widest mb-2" style="color: #8A8060">Link de destino</label>
-                <input type="url" name="destino_url" class="w-full rounded-lg p-3" placeholder="https://...">
-            </div>
-
-            <div id="bloco-pagina" class="hidden-block space-y-4">
-                <div>
-                    <label class="block font-mono text-[11px] uppercase tracking-widest mb-2" style="color: #8A8060">Título da página</label>
-                    <input type="text" name="titulo" class="w-full rounded-lg p-3" placeholder="Ex: Feliz aniversário, Ana!">
+                <div class="field" id="campo-templates" style="display:none">
+                    <div class="template-section">
+                        <label class="section-label">Escolha um modelo de página</label>
+                        <div class="template-grid">
+                            {% for t in templates %}
+                            <div class="template-option">
+                                <input type="radio" name="template" id="tpl-{{ t.slug }}" value="{{ t.slug }}" {% if loop.first %}checked{% endif %}>
+                                <label for="tpl-{{ t.slug }}">
+                                    <div class="template-preview">
+                                        {% if t.preview_url %}<img src="{{ t.preview_url }}" alt="{{ t.nome }}">{% endif %}
+                                    </div>
+                                    <div class="template-body">
+                                        <span class="nome">{{ t.nome }}</span>
+                                        {% if t.tier == 'pago' %}
+                                        <span class="tag tag-paid">Pago (R$ {{ '%.2f'|format(t.preco or 0) }})</span>
+                                        {% else %}
+                                        <span class="tag tag-free">Grátis</span>
+                                        {% endif %}
+                                        <a class="template-demo-link" href="{{ url_for('demo_template', template_slug=t.slug) }}" target="_blank" rel="noopener">Ver exemplo ao vivo →</a>
+                                    </div>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <label class="block font-mono text-[11px] uppercase tracking-widest mb-2" style="color: #8A8060">Estilo</label>
-                    <select name="template" class="w-full rounded-lg p-3 border" style="border: 1.5px solid #C9D3C3;">
-                        <option value="classic">Clássico</option>
-                        <option value="stitch">Stitch / Ohana</option>
-                    </select>
+
+                <div class="field">
+                    <label for="slug">Escolha o link do seu QR</label>
+                    <input type="text" id="slug" name="slug" placeholder="ex: casamento-ana-e-joao" required pattern="[a-zA-Z0-9\-]+">
+                    <p class="hint">Vai ficar em qrcodebrindes.com/<span id="slug-preview">seu-link</span></p>
                 </div>
-                <p class="text-xs" style="color: #5C7B6A">Mensagem, foto e linha do tempo você adiciona depois, no painel.</p>
-            </div>
 
-            <div class="pt-2 border-t" style="border-color: #C9D3C3">
-                <label class="block font-mono text-[11px] uppercase tracking-widest mb-2" style="color: #8A8060">Escolha seu link (slug)</label>
-                <div class="flex items-center rounded-lg overflow-hidden" style="border: 1.5px solid #C9D3C3;">
-                    <span class="font-mono text-sm px-3 py-3" style="color: #8A8060; background: #EFEBDD">qrcodebrindes.com/</span>
-                    <input type="text" name="slug" required class="w-full p-3 border-0" placeholder="joao123">
+                <div class="field">
+                    <label for="senha">Crie uma senha</label>
+                    <input type="password" id="senha" name="senha" placeholder="Pra editar seu QR depois" required>
                 </div>
-            </div>
 
-            <div>
-                <label class="block font-mono text-[11px] uppercase tracking-widest mb-2" style="color: #8A8060">Crie uma senha</label>
-                <input type="password" name="senha" required class="w-full rounded-lg p-3" placeholder="Pra editar depois">
-            </div>
+                <div class="field" id="campo-email">
+                    <label for="email">E-mail <span class="field-optional" id="email-optional">(opcional)</span></label>
+                    <input type="email" id="email" name="email" placeholder="Pra recuperar sua senha e receber avisos de pagamento">
+                </div>
 
-            <div id="bloco-email">
-                <label class="block font-mono text-[11px] uppercase tracking-widest mb-2" style="color: #8A8060">
-                    E-mail <span id="email-opcional">(opcional)</span>
-                </label>
-                <input type="email" name="email" class="w-full rounded-lg p-3" placeholder="seu@email.com">
-            </div>
+                <div class="field">
+                    <label for="titulo">Título <span class="field-optional">(opcional)</span></label>
+                    <input type="text" id="titulo" name="titulo" placeholder="ex: Casamento Ana & João">
+                </div>
 
-            <button type="submit" class="w-full font-semibold py-4 rounded-full text-white shadow-lg hover:-translate-y-0.5 transition-transform" style="background-color: var(--coral)">
-                Gerar meu QR code
-            </button>
-        </form>
-    </main>
+                <button class="btn-submit" type="submit">Gerar meu QR code →</button>
+            </form>
+        </div>
+    </div>
+</section>
 
-    <script>
-        const opcoes = document.querySelectorAll('.toggle-option');
-        const blocoLink = document.getElementById('bloco-link');
-        const blocoPagina = document.getElementById('bloco-pagina');
-        const emailOpcional = document.getElementById('email-opcional');
-        const inputEmail = document.querySelector('input[name="email"]');
+<footer>
+    <div class="footer-bottom">
+        <span>© {{ current_year or '' }} QR Code Brindes</span>
+        <span>Feito pra durar mais que o brinde</span>
+    </div>
+</footer>
 
-        function atualizar(tipo) {
-            opcoes.forEach(o => o.classList.toggle('active', o.dataset.option === tipo));
-            blocoLink.classList.toggle('hidden-block', tipo !== 'link');
-            blocoPagina.classList.toggle('hidden-block', tipo !== 'pagina');
+<script>
+function trocarTab(tipo){
+    document.getElementById('tab-link').classList.toggle('active', tipo === 'link');
+    document.getElementById('tab-pagina').classList.toggle('active', tipo === 'pagina');
+    document.getElementById('input-tipo-destino').value = tipo;
 
-            if (tipo === 'pagina') {
-                emailOpcional.textContent = '(obrigatório pra página própria)';
-                inputEmail.required = true;
-            } else {
-                emailOpcional.textContent = '(opcional)';
-                inputEmail.required = false;
-            }
-        }
+    const campoDestino = document.getElementById('campo-destino-url');
+    const campoTemplates = document.getElementById('campo-templates');
+    const campoEmail = document.getElementById('email');
+    const emailOptional = document.getElementById('email-optional');
+    const destinoInput = document.getElementById('destino_url');
 
-        opcoes.forEach(op => {
-            op.addEventListener('click', () => {
-                op.querySelector('input').checked = true;
-                atualizar(op.dataset.option);
-            });
-        });
+    if (tipo === 'link') {
+        campoDestino.style.display = '';
+        campoTemplates.style.display = 'none';
+        destinoInput.required = true;
+        campoEmail.required = false;
+        emailOptional.style.display = '';
+    } else {
+        campoDestino.style.display = 'none';
+        campoTemplates.style.display = '';
+        destinoInput.required = false;
+        campoEmail.required = true;
+        emailOptional.style.display = 'none';
+    }
+}
 
-        atualizar('link');
-    </script>
+trocarTab('link');
+
+document.getElementById('slug').addEventListener('input', function(e){
+    const preview = document.getElementById('slug-preview');
+    preview.textContent = e.target.value.trim() ? e.target.value.trim() : 'seu-link';
+});
+</script>
+
 </body>
 </html>
