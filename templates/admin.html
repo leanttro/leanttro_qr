@@ -382,7 +382,7 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
         </div>
         <div class="stat-card">
           <div class="stat-label">Empresas no diretório</div>
-          <div class="stat-value">{{ stats.total_empresas }}</div>
+          <div class="stat-value">{{ stats.total_empresas }}{% if stats.empresas_pendentes %} <span style="font-size:.55em;background:var(--amber);color:#1a1a1a;border-radius:999px;padding:2px 8px;vertical-align:middle;">{{ stats.empresas_pendentes }} pendente{{ 's' if stats.empresas_pendentes > 1 }}</span>{% endif %}</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Leads pendentes</div>
@@ -554,6 +554,49 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
 
     <!-- ═══════════════ EMPRESAS ═══════════════ -->
     <div class="section" id="sec-empresas">
+
+      {% if empresas_pendentes %}
+      <div class="card" style="border-left:4px solid var(--amber);">
+        <div class="card-header" style="gap:10px;">
+          <span class="card-title">⏳ Aguardando aprovação</span>
+          <span class="badge badge-amber">{{ empresas_pendentes|length }}</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Logo</th><th>Nome</th><th>Cidade</th><th>Contato</th><th>Descrição</th><th>Ações</th></tr></thead>
+            <tbody>
+              {% for e in empresas_pendentes %}
+              <tr>
+                <td>
+                  {% if e.logo_url %}<img class="td-img" src="{{ e.logo_url }}" alt="">
+                  {% else %}<div class="td-img td-img-fallback">{{ (e.nome or '?')[0]|upper }}</div>{% endif %}
+                </td>
+                <td style="font-weight:600;">
+                  {{ e.nome }}
+                  {% if e.site %}<br><a href="{{ e.site }}" target="_blank" style="font-size:11px;color:var(--accent);">{{ e.site }}</a>{% endif %}
+                </td>
+                <td class="td-muted">{{ e.cidade or '—' }}</td>
+                <td class="td-muted" style="font-size:12px;">
+                  {% if e.whatsapp %}<div>📱 {{ e.whatsapp }}</div>{% endif %}
+                  {% if e.telefone %}<div>📞 {{ e.telefone }}</div>{% endif %}
+                </td>
+                <td class="td-muted" style="font-size:12px;max-width:200px;white-space:pre-wrap;">{{ (e.descricao or '—')[:180] }}{% if e.descricao and e.descricao|length > 180 %}…{% endif %}</td>
+                <td class="td-actions">
+                  <form method="POST" action="/admin/empresas/{{ e.id }}/aprovar">
+                    <button class="btn btn-primary" style="font-size:12px;padding:5px 12px;">✓ Aprovar</button>
+                  </form>
+                  <form method="POST" action="/admin/empresas/{{ e.id }}/delete" onsubmit="return confirm('Recusar e excluir?');">
+                    <button class="btn-link" style="color:var(--red);font-size:12px;">✕ Recusar</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
       <div class="card">
         <div class="card-header"><span class="card-title">Nova empresa</span></div>
         <div class="card-body">
