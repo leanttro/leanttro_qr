@@ -229,6 +229,7 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
 .field textarea { resize: vertical; min-height: 70px; }
 .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; padding: 9px 12px; border: 1px solid var(--border2); border-radius: var(--radius-sm); background: var(--surface); }
 .checkbox-label input { width: 15px; height: 15px; accent-color: var(--accent); }
+.checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; }
 
 .form-actions { display: flex; gap: 10px; justify-content: flex-end; padding-top: 16px; border-top: 1px solid var(--border); margin-top: 20px; }
 
@@ -505,12 +506,13 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
                 {% for o in ocasioes %}<option value="{{ o.id }}">{{ o.nome }}</option>{% endfor %}
               </select>
             </div>
-            <div class="field">
-              <label>Tipo de impressão</label>
-              <select name="tipo_impressao_id">
-                <option value="">—</option>
-                {% for t in tipos %}<option value="{{ t.id }}">{{ t.nome }}</option>{% endfor %}
-              </select>
+            <div class="field form-full">
+              <label>Tipos de impressão</label>
+              <div class="checkbox-group">
+                {% for t in tipos if t.ativo %}
+                <label class="checkbox-label"><input type="checkbox" name="tipo_impressao_ids" value="{{ t.id }}"> {{ t.nome }}</label>
+                {% endfor %}
+              </div>
             </div>
             <div class="field"><label>Descrição</label><input type="text" name="descricao"></div>
             <div class="form-full">
@@ -523,7 +525,7 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
       <div class="card">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Foto</th><th>Nome</th><th>Ocasião</th><th>Tipo</th><th>Status</th><th>Ações</th></tr></thead>
+            <thead><tr><th>Foto</th><th>Nome</th><th>Ocasião</th><th>Tipos</th><th>Status</th><th>Ações</th></tr></thead>
             <tbody>
               {% for b in brindes %}
               <tr>
@@ -533,7 +535,7 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
                 </td>
                 <td style="font-weight:600;">{{ b.nome }}</td>
                 <td class="td-muted">{{ b.ocasiao_nome or '—' }}</td>
-                <td class="td-muted">{{ b.tipo_nome or '—' }}</td>
+                <td class="td-muted">{{ b.tipos_nomes|join(', ') if b.tipos_nomes else '—' }}</td>
                 <td><span class="badge {{ 'badge-green' if b.ativo else 'badge-gray' }}">{{ 'Ativo' if b.ativo else 'Inativo' }}</span></td>
                 <td class="td-actions">
                   <button class="btn-link" style="color:var(--accent);" onclick="editarBrinde({{ b.id }})">Editar</button>
@@ -925,8 +927,17 @@ function fecharDrawerOnOverlay(e) {
 
 function preencherFormulario(form, dados) {
   for (const [chave, valor] of Object.entries(dados)) {
+    if (valor == null) continue;
+    if (Array.isArray(valor)) {
+      // Grupo de checkboxes com o mesmo name (ex: tipo_impressao_ids em edição de brinde)
+      const valoresStr = valor.map(String);
+      form.querySelectorAll(`input[type=checkbox][name="${chave}"]`).forEach(cb => {
+        cb.checked = valoresStr.includes(cb.value);
+      });
+      continue;
+    }
     const el = form.elements[chave];
-    if (!el || valor == null) continue;
+    if (!el) continue;
     if (el.type === 'checkbox') el.checked = (valor === true || valor === 'true' || valor === 't');
     else el.value = valor;
   }
@@ -1091,7 +1102,9 @@ async function editarTipo(id) {
 
 function formularioBrinde() {
   const opcoesOcasiao = OCASIOES.map(o => `<option value="${o.id}">${escaparHtml(o.nome)}</option>`).join('');
-  const opcoesTipo = TIPOS.map(t => `<option value="${t.id}">${escaparHtml(t.nome)}</option>`).join('');
+  const checkboxesTipo = TIPOS.filter(t => t.ativo).map(t =>
+    `<label class="checkbox-label"><input type="checkbox" name="tipo_impressao_ids" value="${t.id}"> ${escaparHtml(t.nome)}</label>`
+  ).join('');
   return `
   <form id="drawerForm">
     <div class="form-grid">
@@ -1102,9 +1115,9 @@ function formularioBrinde() {
         <label>Ocasião</label>
         <select name="ocasiao_id"><option value="">—</option>${opcoesOcasiao}</select>
       </div>
-      <div class="field">
-        <label>Tipo de impressão</label>
-        <select name="tipo_impressao_id"><option value="">—</option>${opcoesTipo}</select>
+      <div class="field form-full">
+        <label>Tipos de impressão</label>
+        <div class="checkbox-group">${checkboxesTipo}</div>
       </div>
       <div class="field form-full"><label>Descrição</label><textarea name="descricao"></textarea></div>
     </div>
