@@ -270,44 +270,11 @@ footer a:hover{color:#fff}
 </div>
 {% endif %}
 
-<!-- FORMULÁRIO DE ORÇAMENTO -->
+<!-- AVISO DE DIRETÓRIO -->
 <section class="section section-alt">
     <div class="container">
         <div class="orcamento-card">
-            <div class="section-head">
-                <span class="eyebrow">Pedir orçamento</span>
-                <h2>Fale com quem fabrica</h2>
-                <p>Preencha seus dados e uma empresa parceira entra em contato pra fechar seu pedido deste brinde.</p>
-            </div>
-
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                    <div class="flash-box {{ 'success' if category == 'success' else '' }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-
-            <form method="POST" action="{{ url_for('brinde_orcamento', slug=brinde.slug) }}">
-                <div class="field">
-                    <label for="orc-nome">Nome *</label>
-                    <input id="orc-nome" type="text" name="nome" required>
-                </div>
-                <div class="field">
-                    <label for="orc-email">E-mail</label>
-                    <input id="orc-email" type="email" name="email">
-                </div>
-                <div class="field">
-                    <label for="orc-telefone">Telefone / WhatsApp</label>
-                    <input id="orc-telefone" type="text" name="telefone">
-                </div>
-                <div class="field">
-                    <label for="orc-mensagem">Mensagem <span class="field-optional">(opcional)</span></label>
-                    <textarea id="orc-mensagem" name="mensagem" rows="4" placeholder="Quantidade, prazo, alguma personalização em mente..."></textarea>
-                </div>
-                <p class="form-hint">Preencha pelo menos um contato — e-mail ou telefone.</p>
-                <button class="btn-submit" type="submit">Pedir orçamento →</button>
-            </form>
+            <p class="form-hint" style="text-align:center;margin:0">Somos um diretório — não fabricamos nem vendemos este brinde. Veja as empresas parceiras no catálogo pra pedir orçamento direto com quem produz.</p>
         </div>
     </div>
 </section>
