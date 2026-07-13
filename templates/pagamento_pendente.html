@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pagamento pendente | QR Code Brindes</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#ffffff">
+
+<link rel="icon" type="image/png" href="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+    --bg:#ffffff;--surface:#f6f6f8;--surface-2:#eeeef1;
+    --ink:#17171a;--ink-soft:#63636c;--ink-faint:#9797a0;
+    --line:#e2e2e7;--line-strong:#cfcfd6;
+    --chrome-1:#fcfcfd;--chrome-4:#4a4a52;
+    --ink-black:#111113;--radius:14px;
+    --shadow-md:0 8px 24px rgba(20,20,25,.08);
+    --shadow-lg:0 24px 64px rgba(20,20,25,.14);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--surface);color:var(--ink);font-family:'Montserrat',sans-serif;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px}
+.card{
+    max-width:480px;width:100%;background:var(--chrome-1);border:1px solid var(--line-strong);
+    border-radius:var(--radius);padding:36px 32px;box-shadow:var(--shadow-lg);text-align:center;
+}
+.logo{height:64px;margin:0 auto 20px}
+.eyebrow{font-size:.76em;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--chrome-4);margin-bottom:14px;display:block}
+h1{font-size:1.5em;margin:0 0 10px;color:var(--ink-black)}
+.preco{font-size:1.1em;font-weight:700;color:var(--ink-black);margin:0 0 18px}
+p{color:var(--ink-soft);font-size:.98em;line-height:1.6;margin:0 0 18px}
+.btn-pagamento{
+    display:inline-block;width:100%;background:var(--ink-black);color:#fff;
+    padding:14px;border-radius:10px;font-weight:600;font-size:.98em;margin-bottom:14px;
+}
+.btn-pagamento:hover{background:var(--chrome-4)}
+.aviso{
+    border:1px dashed var(--line-strong);border-radius:10px;padding:14px 16px;
+    font-size:.86em;color:var(--ink-soft);text-align:left;line-height:1.55;
+}
+.voltar{display:inline-block;margin-top:18px;font-size:.88em;color:var(--ink-soft);text-decoration:underline}
+.voltar:hover{color:var(--ink-black)}
+footer{text-align:center;padding:0 0 30px;font-size:.8em;color:var(--ink-faint)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+    <div class="card">
+        <img class="logo" src="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png" alt="QR Code Brindes">
+        <span class="eyebrow">Modelo pago selecionado</span>
+        <h1>{{ template.nome }}</h1>
+        <p class="preco">R$ {{ '%.2f'|format(template.preco or 0) }}</p>
+        <p>Esse modelo de página é um recurso pago. Sua página ainda não foi criada — conclua o pagamento pra gente liberar ela pra você.</p>
+
+        {% if link_pagamento %}
+        <a class="btn-pagamento" href="{{ link_pagamento }}" target="_blank" rel="noopener">Pagar agora →</a>
+        {% endif %}
+
+        <div class="aviso">
+            Depois de pagar, chame a gente pelo WhatsApp ou e-mail informando o link (slug) que você escolheu, que liberamos sua página o quanto antes.
+        </div>
+
+        <a class="voltar" href="{{ url_for('gerar_qr') }}">← Voltar e escolher outro modelo</a>
+    </div>
+</div>
+
+<footer>© {{ current_year or '' }} QR Code Brindes</footer>
+
+</body>
+</html>

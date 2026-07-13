@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Empresas de brindes em {{ cidade_nome }} | QR Code Brindes</title>
+<meta name="description" content="Fabricantes e gráficas de brindes personalizados com QR code em {{ cidade_nome }}.">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<meta name="theme-color" content="#ffffff">
+<meta name="author" content="QR Code Brindes">
+
+<link rel="icon" type="image/png" href="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png">
+<link rel="apple-touch-icon" href="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="QR Code Brindes">
+<meta property="og:title" content="Empresas de brindes em {{ cidade_nome }} | QR Code Brindes">
+<meta property="og:description" content="Fabricantes e gráficas de brindes personalizados com QR code em {{ cidade_nome }}.">
+<meta property="og:locale" content="pt_BR">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+    --bg:#ffffff;--surface:#f6f6f8;--surface-2:#eeeef1;
+    --ink:#17171a;--ink-soft:#63636c;--ink-faint:#9797a0;
+    --line:#e2e2e7;--line-strong:#cfcfd6;
+    --chrome-1:#fcfcfd;--chrome-2:#d7d7dd;--chrome-3:#9a9aa2;--chrome-4:#4a4a52;
+    --ink-black:#111113;--focus:#3b6ef0;--radius:14px;
+    --shadow-sm:0 1px 2px rgba(20,20,25,.06);
+    --shadow-md:0 8px 24px rgba(20,20,25,.08);
+    --shadow-lg:0 24px 64px rgba(20,20,25,.14);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Montserrat',sans-serif;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+.container{max-width:1180px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:'Montserrat',sans-serif;margin:0;color:var(--ink-black)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:3px;border-radius:4px}
+
+/* HEADER */
+header{
+    position:sticky;top:0;z-index:60;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;
+    padding:10px 24px;gap:16px;
+}
+.header-logo a{display:flex;align-items:center;gap:10px}
+.header-logo img{height:88px;width:auto}
+.desktop-nav ul{list-style:none;display:flex;gap:30px;margin:0;padding:0;align-items:center}
+.desktop-nav a{font-size:.94em;font-weight:500;color:var(--ink-soft);transition:color .15s}
+.desktop-nav a:hover{color:var(--ink-black)}
+.btn-nav-cta{
+    background:linear-gradient(180deg, var(--chrome-1) 0%, #e3e3e8 55%, var(--chrome-2) 100%);
+    color:var(--ink-black);padding:11px 22px;border-radius:10px;font-size:.9em;font-weight:700;
+    border:1px solid var(--line-strong);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 0 1px 3px rgba(20,20,25,.1);
+}
+@media (max-width:900px){
+    header{flex-direction:column;padding:14px 20px 12px;gap:8px}
+    .header-logo{width:100%;display:flex;justify-content:center}
+    .header-logo a{justify-content:center}
+    .header-logo img{height:80px}
+    .desktop-nav{display:none}
+}
+
+/* PAGE HEAD */
+.page-head{background:var(--surface);border-bottom:1px solid var(--line);padding:56px 0}
+.eyebrow{
+    display:inline-flex;align-items:baseline;gap:12px;font-size:.78em;font-weight:700;
+    letter-spacing:.22em;text-transform:uppercase;color:var(--chrome-4);margin-bottom:16px;
+}
+.eyebrow::before{content:"";display:inline-block;width:34px;height:1px;background:linear-gradient(90deg,transparent,var(--chrome-3));transform:translateY(-3px)}
+.page-head h1{font-size:clamp(1.8em,3.6vw,2.6em);line-height:1.15;margin-bottom:14px}
+.page-head p{color:var(--ink-soft);font-size:1.05em;line-height:1.6;max-width:60ch}
+
+/* SECTION / GRID */
+.section{padding:56px 0}
+.grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px}
+.card-empresa{
+    text-align:center;background:var(--chrome-1);border:1px solid var(--line);border-radius:var(--radius);
+    padding:24px 18px;transition:transform .18s, box-shadow .18s;
+}
+.card-empresa:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+.card-empresa-logo{
+    width:64px;height:64px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);
+    margin:0 auto 14px;display:flex;align-items:center;justify-content:center;overflow:hidden;
+    font-weight:700;color:var(--ink-soft);
+}
+.card-empresa-logo img{width:100%;height:100%;object-fit:cover}
+.card-empresa h3{font-size:.98em;margin-bottom:4px}
+.card-empresa .cidade{font-size:.84em;color:var(--ink-soft)}
+.badge-destaque{
+    display:inline-block;margin-top:10px;font-size:.7em;color:var(--chrome-4);
+    background:var(--surface-2);padding:3px 9px;border-radius:999px;
+}
+
+.empty-state{
+    border:1px dashed var(--line-strong);border-radius:var(--radius);
+    padding:36px 28px;text-align:center;color:var(--ink-soft);background:var(--surface);
+}
+.empty-state strong{display:block;color:var(--ink-black);font-size:1.1em;margin-bottom:6px}
+
+.section-foot{margin-top:36px}
+.link-arrow{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:.95em;color:var(--ink-black);border-bottom:1px solid var(--ink-black);padding-bottom:2px}
+.link-arrow:hover{gap:10px;transition:gap .15s}
+
+/* ANÚNCIOS */
+.anuncio-wrap{padding:28px 24px;display:flex;justify-content:center}
+.anuncio-wrap img{max-height:100px;width:auto;border-radius:10px;box-shadow:var(--shadow-sm)}
+
+/* FOOTER */
+footer{background:var(--ink-black);color:#e6e6e9;padding:52px 0 28px}
+.footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px;margin-bottom:40px}
+.footer-logo{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.footer-logo img{height:32px}
+.footer-logo span{font-weight:700;color:#fff}
+footer p{color:#9a9aa4;font-size:.92em;line-height:1.6;max-width:36ch;margin:0}
+footer h4{font-size:.78em;text-transform:uppercase;letter-spacing:.06em;color:#7a7a84;margin-bottom:14px;font-weight:600}
+footer ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+footer a{color:#c9c9ce;font-size:.94em}
+footer a:hover{color:#fff}
+.footer-bottom{border-top:1px solid #2a2a2e;padding-top:22px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.82em;color:#7a7a84}
+@media (max-width:700px){.footer-grid{grid-template-columns:1fr;gap:28px}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+    <div class="header-logo">
+        <a href="{{ url_for('index') }}" aria-label="QR Code Brindes — página inicial">
+            <img src="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png" alt="QR Code Brindes">
+        </a>
+    </div>
+    <nav class="desktop-nav" aria-label="Navegação principal">
+        <ul>
+            <li><a href="{{ url_for('index') }}#catalogo">Catálogo de brindes</a></li>
+            <li><a href="{{ url_for('diretorio_publico') }}">Diretório de empresas</a></li>
+        </ul>
+    </nav>
+    <a class="btn-nav-cta" href="{{ url_for('gerar_qr') }}">Criar meu QR</a>
+</header>
+
+{% if anuncio_topo %}
+<div class="anuncio-wrap">
+    <a href="{{ anuncio_topo.link }}" target="_blank" rel="noopener sponsored">
+        <img src="{{ anuncio_topo.foto_url }}" alt="{{ anuncio_topo.titulo or 'Publicidade' }}">
+    </a>
+</div>
+{% endif %}
+
+<!-- PAGE HEAD -->
+<section class="page-head">
+    <div class="container">
+        <span class="eyebrow">Diretório por cidade</span>
+        <h1>Empresas de brindes em {{ cidade_nome }}</h1>
+        <p>Fabricantes e gráficas parceiras prontas pra receber seu pedido de orçamento em {{ cidade_nome }}.</p>
+    </div>
+</section>
+
+<!-- EMPRESAS -->
+<section class="section">
+    <div class="container">
+        {% if empresas %}
+        <div class="grid-cards">
+            {% for empresa in empresas %}
+            <a class="card-empresa" href="{{ url_for('empresa_publica', slug=empresa.slug) }}">
+                <div class="card-empresa-logo">
+                    {% if empresa.logo_url %}
+                    <img src="{{ empresa.logo_url }}" alt="{{ empresa.nome }}">
+                    {% else %}
+                    {{ empresa.nome[0]|upper }}
+                    {% endif %}
+                </div>
+                <h3>{{ empresa.nome }}</h3>
+                {% if empresa.cidade %}<div class="cidade">{{ empresa.cidade }}</div>{% endif %}
+                {% if empresa.plano == 'destaque' %}<span class="badge-destaque">destaque</span>{% endif %}
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <strong>Nenhuma empresa cadastrada nessa cidade ainda</strong>
+            Explore o diretório completo pra encontrar outras opções.
+        </div>
+        {% endif %}
+
+        <div class="section-foot">
+            <a class="link-arrow" href="{{ url_for('diretorio_publico') }}">← Ver diretório completo</a>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <div class="container footer-grid">
+        <div>
+            <div class="footer-logo">
+                <img src="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png" alt="">
+                <span>QR Code Brindes</span>
+            </div>
+            <p>QR code dinâmico, catálogo de brindes personalizados e diretório de fabricantes, tudo em um lugar só.</p>
+        </div>
+        <div>
+            <h4>Navegação</h4>
+            <ul>
+                <li><a href="{{ url_for('index') }}#catalogo">Catálogo de brindes</a></li>
+                <li><a href="{{ url_for('diretorio_publico') }}">Diretório de empresas</a></li>
+            </ul>
+        </div>
+        <div>
+            <h4>Sua conta</h4>
+            <ul>
+                <li><a href="{{ url_for('gerar_qr') }}">Criar meu QR</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="container footer-bottom">
+        <span>© {{ current_year or '' }} QR Code Brindes</span>
+        <span>Feito pra durar mais que o brinde</span>
+    </div>
+</footer>
+
+</body>
+</html>
