@@ -1,0 +1,19 @@
+{
+  "nome": "Simples",
+  "tier": "gratis",
+  "preco": 0,
+  "preview_url": "",
+  "campos": [
+    {"tipo": "texto", "nome": "titulo", "label": "Título da mensagem"},
+    {"tipo": "textarea", "nome": "mensagem", "label": "Sua mensagem"},
+    {"tipo": "timeline", "nome": "timeline", "label": "Linha do tempo (opcional)"}
+  ],
+  "demo": {
+    "titulo": "Feliz aniversário, Ana!",
+    "mensagem": "Que esse novo ano venha cheio de coisas boas.\nCom carinho, seus amigos.",
+    "timeline": [
+      {"data": "2020", "texto": "Nos conhecemos"},
+      {"data": "2023", "texto": "Nossa primeira viagem juntos"}
+    ]
+  }
+}

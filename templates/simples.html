@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ page.titulo }}</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#f7f1e8">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --font-family: {{ font_css }};
+    --font-size: {{ font_size_val }};
+
+    --bg-1: #f7f1e8;
+    --bg-2: #f0e4d3;
+    --card-bg: #fffdfa;
+    --ink: #2e2620;
+    --ink-soft: #6f6357;
+    --ink-faint: #a89b8c;
+    --accent: #c98a5e;
+    --accent-soft: #f1ddc9;
+    --line: #e9ddc9;
+    --shadow: rgba(60, 45, 25, 0.12);
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin: 0;
+    padding: 0;
+  }
+
+  body{
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    background: radial-gradient(circle at 50% 0%, var(--bg-2), var(--bg-1) 70%);
+    font-family: var(--font-family);
+    font-size: var(--font-size);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page{
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .card{
+    width: 100%;
+    background: var(--card-bg);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 40px 28px 32px;
+    box-shadow: 0 20px 45px -20px var(--shadow);
+    text-align: center;
+  }
+
+  .titulo{
+    font-family: 'Playfair Display', 'Georgia', serif;
+    font-weight: 700;
+    font-size: clamp(1.6rem, 6vw, 2.1rem);
+    line-height: 1.25;
+    color: var(--ink);
+    margin: 0 0 20px;
+    word-wrap: break-word;
+  }
+
+  .divisor{
+    width: 48px;
+    height: 3px;
+    border-radius: 3px;
+    background: var(--accent);
+    margin: 0 auto 24px;
+  }
+
+  .mensagem{
+    font-size: 1em;
+    line-height: 1.75;
+    color: var(--ink-soft);
+    white-space: pre-line;
+    text-align: left;
+    word-wrap: break-word;
+  }
+
+  .timeline{
+    width: 100%;
+    margin-top: 32px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--line);
+    text-align: left;
+  }
+
+  .timeline-titulo{
+    font-size: 0.78em;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 20px 0 16px;
+    font-weight: 600;
+  }
+
+  .timeline-lista{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .timeline-item{
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .timeline-marker{
+    flex: 0 0 auto;
+    width: 9px;
+    height: 9px;
+    margin-top: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .timeline-conteudo{
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .timeline-data{
+    display: block;
+    font-size: 0.78em;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 2px;
+  }
+
+  .timeline-texto{
+    font-size: 0.94em;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    white-space: pre-line;
+    word-wrap: break-word;
+  }
+
+  .rodape{
+    margin-top: 28px;
+    text-align: center;
+  }
+
+  .rodape a{
+    font-size: 0.78em;
+    color: var(--ink-faint);
+    text-decoration: none;
+    letter-spacing: 0.02em;
+  }
+
+  .rodape a:hover{
+    color: var(--accent);
+    text-decoration: underline;
+  }
+
+  @media (max-width: 380px){
+    .card{
+      padding: 32px 20px 26px;
+      border-radius: 18px;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <div class="page">
+    <div class="card">
+      <h1 class="titulo">{{ page.titulo }}</h1>
+      <div class="divisor"></div>
+      <div class="mensagem">{{ page.mensagem }}</div>
+
+      {% if timeline_events %}
+      <div class="timeline">
+        <p class="timeline-titulo">Linha do tempo</p>
+        <ul class="timeline-lista">
+          {% for evento in timeline_events %}
+          <li class="timeline-item">
+            <span class="timeline-marker"></span>
+            <div class="timeline-conteudo">
+              <span class="timeline-data">{{ evento.data }}</span>
+              <span class="timeline-texto">{{ evento.texto }}</span>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="rodape">
+      <a href="https://qrcodebrindes.com" target="_blank" rel="noopener">Feito com QR Code Brindes</a>
+    </div>
+  </div>
+
+</body>
+</html>
