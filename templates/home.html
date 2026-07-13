@@ -581,21 +581,33 @@ footer a:hover{color:#fff}
 
         <div class="modelos-grid">
             <div class="modelos-templates">
-                <div class="grid-cards">
-                    {% for tpl in templates %}
-                    <div class="card-template">
-                        <div class="card-template-img">
-                            {% if tpl.preview_url %}
-                            <img src="{{ tpl.preview_url }}" alt="{{ tpl.nome }}" loading="lazy">
-                            {% endif %}
-                        </div>
-                        <div class="card-template-body">
-                            <span class="badge-tpl {{ 'pago' if tpl.tier == 'pago' else 'gratis' }}">{{ 'Pago' if tpl.tier == 'pago' else 'Grátis' }}</span>
-                            <h3>{{ tpl.nome }}</h3>
-                            <a class="link-arrow" href="{{ url_for('demo_template', template_slug=tpl.slug) }}" target="_blank">Ver exemplo ao vivo →</a>
-                        </div>
+                <div class="section-toolbar" style="justify-content:flex-end;margin-bottom:16px;">
+                    <div class="view-toggle">
+                        <button class="view-btn active" title="Carrossel" onclick="setViewTpl('carrossel')"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="6" height="10" rx="1"/><rect x="9" y="7" width="6" height="10" rx="1"/><rect x="16" y="7" width="6" height="10" rx="1"/></svg></button>
+                        <button class="view-btn" title="Grade" onclick="setViewTpl('grade')"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
                     </div>
-                    {% endfor %}
+                </div>
+                <div class="carousel-wrap" id="wrap-tpl">
+                    <div class="carousel" id="grid-tpl">
+                        {% for tpl in templates %}
+                        <div class="card-template" style="flex:0 0 200px;scroll-snap-align:start;">
+                            <div class="card-template-img">
+                                {% if tpl.preview_url %}
+                                <img src="{{ tpl.preview_url }}" alt="{{ tpl.nome }}" loading="lazy">
+                                {% endif %}
+                            </div>
+                            <div class="card-template-body">
+                                <span class="badge-tpl {{ 'pago' if tpl.tier == 'pago' else 'gratis' }}">{{ 'Pago' if tpl.tier == 'pago' else 'Grátis' }}</span>
+                                <h3>{{ tpl.nome }}</h3>
+                                <a class="link-arrow" href="{{ url_for('demo_template', template_slug=tpl.slug) }}" target="_blank">Ver exemplo ao vivo →</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="carousel-nav" id="nav-tpl">
+                        <button type="button" class="carousel-arrow" onclick="moverCarrossel('grid-tpl',-1)">&#8592;</button>
+                        <button type="button" class="carousel-arrow" onclick="moverCarrossel('grid-tpl',1)">&#8594;</button>
+                    </div>
                 </div>
             </div>
 
@@ -839,6 +851,25 @@ footer a:hover{color:#fff}
 </div>
 
 <script>
+function setViewTpl(modo){
+    var grid = document.getElementById('grid-tpl');
+    var nav  = document.getElementById('nav-tpl');
+    var btns = document.getElementById('wrap-tpl').previousElementSibling.querySelectorAll('.view-btn');
+    btns[0].classList.toggle('active', modo==='carrossel');
+    btns[1].classList.toggle('active', modo==='grade');
+    if(modo==='grade'){
+        grid.classList.remove('carousel');
+        grid.classList.add('grid-cards');
+        document.querySelectorAll('#grid-tpl .card-template').forEach(function(c){ c.style.flex=''; c.style.scrollSnapAlign=''; });
+        if(nav) nav.style.display='none';
+    } else {
+        grid.classList.add('carousel');
+        grid.classList.remove('grid-cards');
+        document.querySelectorAll('#grid-tpl .card-template').forEach(function(c){ c.style.flex='0 0 200px'; c.style.scrollSnapAlign='start'; });
+        if(nav) nav.style.display='';
+    }
+}
+
 function toggleMobileNav(open){
     document.getElementById('mobile-nav').classList.toggle('open', open);
     document.body.style.overflow = open ? 'hidden' : '';
