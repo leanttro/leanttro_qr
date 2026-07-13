@@ -292,23 +292,29 @@ header{
 .card-brinde h3{font-size:1em;line-height:1.3;font-weight:600}
 
 .card-empresa{
-    flex:0 0 220px;scroll-snap-align:start;text-align:center;
+    display:flex;flex-direction:column;
     background:var(--chrome-1);border:1px solid var(--line);border-radius:var(--radius);
-    padding:24px 18px;transition:transform .18s, box-shadow .18s;
+    overflow:hidden;transition:transform .18s, box-shadow .18s;
 }
 .card-empresa:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
 .card-empresa-logo{
-    width:64px;height:64px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);
-    margin:0 auto 14px;display:flex;align-items:center;justify-content:center;overflow:hidden;
-    font-family:'Montserrat',sans-serif;font-weight:700;color:var(--ink-soft);
+    aspect-ratio:1/1;background:var(--surface-2);position:relative;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Montserrat',sans-serif;font-weight:700;font-size:1.6em;color:var(--ink-soft);
 }
 .card-empresa-logo img{width:100%;height:100%;object-fit:cover}
-.card-empresa h3{font-size:.98em;margin-bottom:4px}
-.card-empresa .cidade{font-size:.84em;color:var(--ink-soft)}
+.card-empresa-body{padding:16px;display:flex;flex-direction:column;gap:5px;flex:1}
+.card-empresa h3{font-size:1em;font-weight:600}
+.card-empresa .cidade{font-size:.86em;color:var(--ink-soft)}
 .badge-destaque{
-    display:inline-block;margin-top:10px;font-size:.7em;font-family:'Montserrat',sans-serif;
-    color:var(--chrome-4);background:var(--surface-2);padding:3px 9px;border-radius:999px;
+    position:absolute;top:10px;left:10px;font-size:.7em;font-family:'Montserrat',sans-serif;
+    color:#fff;background:var(--ink-black);padding:3px 10px;border-radius:999px;
 }
+.card-empresa .btn-ver{
+    margin-top:auto;padding-top:12px;font-weight:600;font-size:.87em;color:var(--ink-black);
+    display:inline-flex;align-items:center;gap:4px;
+}
+.card-empresa:hover .btn-ver{gap:8px;transition:gap .15s}
 
 .empty-state{
     border:1px dashed var(--line-strong);border-radius:var(--radius);
@@ -317,16 +323,19 @@ header{
 .empty-state strong{display:block;color:var(--ink-black);font-family:'Montserrat',sans-serif;font-size:1.1em;margin-bottom:6px}
 
 .card-tipo{
-    flex:0 0 200px;scroll-snap-align:start;text-align:center;
+    display:flex;flex-direction:column;
     background:var(--chrome-1);border:1px solid var(--line);border-radius:var(--radius);
-    padding:22px 16px;transition:transform .18s, box-shadow .18s;
+    overflow:hidden;transition:transform .18s, box-shadow .18s;
 }
 .card-tipo:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+.card-tipo-img{aspect-ratio:4/3;background:var(--surface-2);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.card-tipo-img img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+.card-tipo:hover .card-tipo-img img{transform:scale(1.06)}
 .card-tipo-icon{
-    width:52px;height:52px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);
-    margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:1.3em;
+    width:52px;height:52px;border-radius:12px;background:var(--surface);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:1.3em;
 }
-.card-tipo h3{font-size:.96em;line-height:1.3}
+.card-tipo h3{padding:14px 16px;font-size:.96em;line-height:1.3;font-weight:600}
 
 /* ============ CHIPS + GRID (padrão de filtro do AgênciaStart, adaptado ao design system) ============ */
 .chip-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:28px}
@@ -339,6 +348,38 @@ header{
 .chip-cat.active{background:var(--ink-black);border-color:var(--ink-black);color:#fff}
 .grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px}
 .grid-loading{color:var(--ink-faint);font-size:.92em;padding:8px 0}
+
+/* Filtro de cidade em dropdown (slicer), inspirado no filtro de categoria do index_cestas */
+.cidade-slicer{position:relative;max-width:320px;margin-bottom:28px;z-index:5}
+.slicer-toggle{
+    width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:var(--chrome-1);border:1px solid var(--line-strong);border-radius:10px;
+    padding:13px 18px;font-family:'Montserrat',sans-serif;font-size:.92em;font-weight:600;
+    color:var(--ink);cursor:pointer;transition:border-color .2s;
+}
+.slicer-toggle:hover, .slicer-toggle.open{border-color:var(--ink-black)}
+.slicer-label{display:flex;align-items:center;gap:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slicer-label strong{color:var(--ink-black)}
+.slicer-chevron{transition:transform .25s;color:var(--ink-faint);flex-shrink:0}
+.slicer-toggle.open .slicer-chevron{transform:rotate(180deg)}
+.slicer-panel{
+    display:none;flex-direction:column;gap:2px;
+    position:absolute;top:calc(100% + 8px);left:0;right:0;
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    box-shadow:var(--shadow-md);max-height:280px;overflow-y:auto;z-index:6;padding:8px;
+}
+.slicer-panel.open{display:flex}
+.slicer-panel button{
+    width:100%;text-align:left;border:none;border-radius:8px;
+    padding:10px 14px;background:transparent;color:var(--ink);font-family:'Montserrat',sans-serif;
+    font-size:.9em;cursor:pointer;display:flex;align-items:center;gap:10px;
+}
+.slicer-panel button:hover{background:var(--surface-2)}
+.slicer-panel button.active{background:var(--surface-2);color:var(--ink-black);font-weight:600}
+.slicer-panel button.active::after{content:'✓';margin-left:auto}
+.slicer-backdrop{display:none;position:fixed;inset:0;background:transparent;z-index:4}
+.slicer-backdrop.open{display:block}
+@media (max-width:600px){.cidade-slicer{max-width:100%}}
 
 /* ============ TEMPLATES ("Monte sua página com QR code") ============ */
 .card-template{
@@ -629,7 +670,14 @@ footer a:hover{color:#fff}
             <p>Fabricantes e gráficas de sublimação, DTF, laser, silk e UV, prontos pra receber seu pedido de orçamento.</p>
         </div>
 
-        <div class="chip-row" id="chips-empresas"></div>
+        <div class="cidade-slicer" id="cidade-slicer">
+            <button type="button" class="slicer-toggle" id="slicer-toggle-cidade" onclick="toggleCidadeSlicer()" aria-haspopup="listbox" aria-expanded="false" aria-controls="filtros-cidade">
+                <span class="slicer-label">📍 Cidade: <strong id="slicer-cidade-label">Todas as cidades</strong></span>
+                <span class="slicer-chevron">▾</span>
+            </button>
+            <div class="slicer-panel" id="filtros-cidade" role="listbox" aria-label="Filtrar por cidade"></div>
+            <div class="slicer-backdrop" id="slicer-backdrop-cidade" onclick="closeCidadeSlicer()"></div>
+        </div>
         <div class="grid-cards" id="grid-empresas">
             <p class="grid-loading">Carregando empresas...</p>
         </div>
@@ -816,22 +864,27 @@ function cardBrindeHTML(b){
 }
 
 function cardTipoHTML(t){
+    const foto = t.imagem_url
+        ? '<img src="' + t.imagem_url + '" alt="' + escaparHtml(t.nome) + '" loading="lazy">'
+        : '<div class="card-tipo-icon">🖨️</div>';
     return '<a class="card-tipo" href="/impressao/' + encodeURIComponent(t.slug) + '">' +
-        '<div class="card-tipo-icon">🖨️</div>' +
+        '<div class="card-tipo-img">' + foto + '</div>' +
         '<h3>' + escaparHtml(t.nome) + '</h3>' +
     '</a>';
 }
 
 function cardEmpresaHTML(e){
     const logo = e.logo_url
-        ? '<img src="' + e.logo_url + '" alt="' + escaparHtml(e.nome) + '">'
+        ? '<img src="' + e.logo_url + '" alt="' + escaparHtml(e.nome) + '" loading="lazy">'
         : escaparHtml((e.nome || '?')[0].toUpperCase());
     const destaque = e.plano === 'destaque' ? '<span class="badge-destaque">destaque</span>' : '';
     return '<a class="card-empresa" href="/empresa/' + encodeURIComponent(e.slug) + '">' +
-        '<div class="card-empresa-logo">' + logo + '</div>' +
-        '<h3>' + escaparHtml(e.nome) + '</h3>' +
-        (e.cidade ? '<div class="cidade">' + escaparHtml(e.cidade) + '</div>' : '') +
-        destaque +
+        '<div class="card-empresa-logo">' + logo + destaque + '</div>' +
+        '<div class="card-empresa-body">' +
+            '<h3>' + escaparHtml(e.nome) + '</h3>' +
+            (e.cidade ? '<div class="cidade">📍 ' + escaparHtml(e.cidade) + '</div>' : '') +
+            '<span class="btn-ver">Ver detalhes →</span>' +
+        '</div>' +
     '</a>';
 }
 
@@ -886,6 +939,44 @@ function filtrarEmpresasPorCidade(cidade){
     renderGrid('grid-empresas', 'empty-empresas', filtradas, cardEmpresaHTML);
 }
 
+// Filtro de cidade em dropdown (mesmo padrão do slicer de categoria usado em outras páginas do site)
+function toggleCidadeSlicer(){
+    const panel = document.getElementById('filtros-cidade');
+    if (panel.classList.contains('open')) closeCidadeSlicer(); else openCidadeSlicer();
+}
+function openCidadeSlicer(){
+    document.getElementById('filtros-cidade').classList.add('open');
+    document.getElementById('slicer-backdrop-cidade').classList.add('open');
+    document.getElementById('slicer-toggle-cidade').classList.add('open');
+    document.getElementById('slicer-toggle-cidade').setAttribute('aria-expanded', 'true');
+}
+function closeCidadeSlicer(){
+    document.getElementById('filtros-cidade').classList.remove('open');
+    document.getElementById('slicer-backdrop-cidade').classList.remove('open');
+    document.getElementById('slicer-toggle-cidade').classList.remove('open');
+    document.getElementById('slicer-toggle-cidade').setAttribute('aria-expanded', 'false');
+}
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeCidadeSlicer(); });
+
+function renderSlicerCidade(cidades){
+    const panel = document.getElementById('filtros-cidade');
+    if (!panel) return;
+    let html = '<button type="button" class="active" data-valor="">Todas as cidades</button>';
+    cidades.forEach(function(c){
+        html += '<button type="button" data-valor="' + escaparHtml(c) + '">' + escaparHtml(c) + '</button>';
+    });
+    panel.innerHTML = html;
+    panel.querySelectorAll('button').forEach(function(btn){
+        btn.addEventListener('click', function(){
+            panel.querySelectorAll('button').forEach(function(b){ b.classList.remove('active'); });
+            btn.classList.add('active');
+            document.getElementById('slicer-cidade-label').textContent = btn.dataset.valor || 'Todas as cidades';
+            closeCidadeSlicer();
+            filtrarEmpresasPorCidade(btn.dataset.valor || null);
+        });
+    });
+}
+
 fetch('/api/brindes')
     .then(function(r){ return r.json(); })
     .then(function(data){
@@ -906,7 +997,7 @@ fetch('/api/empresas')
     .then(function(r){ return r.json(); })
     .then(function(data){
         TODAS_EMPRESAS = Array.isArray(data) ? data : [];
-        renderChips('chips-empresas', valoresUnicos(TODAS_EMPRESAS, 'cidade'), null, filtrarEmpresasPorCidade);
+        renderSlicerCidade(valoresUnicos(TODAS_EMPRESAS, 'cidade'));
         renderGrid('grid-empresas', 'empty-empresas', TODAS_EMPRESAS, cardEmpresaHTML);
     })
     .catch(function(){ renderGrid('grid-empresas', 'empty-empresas', [], cardEmpresaHTML); });
