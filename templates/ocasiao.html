@@ -1,77 +1,312 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ ocasiao.nome }} | QRCodeBrindes</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap');
-        :root { --paper: #DCE5DA; --ink: #1F3D2E; --coral: #E8604C; --gold: #C9A227; }
-        body { background-color: var(--paper); color: var(--ink); font-family: 'Inter', sans-serif; }
-        .font-display { font-family: 'Fraunces', serif; }
-        .font-mono { font-family: 'IBM Plex Mono', monospace; }
-        .tag {
-            position: relative;
-            background: #F6F3E9;
-            border-radius: 0.5rem 1.5rem 1.5rem 0.5rem;
-            box-shadow: 0 14px 30px -10px rgba(31, 61, 46, 0.3);
-            transition: transform .2s ease;
-        }
-        .tag:hover { transform: translateY(-4px); }
-        .tag::before {
-            content: '';
-            position: absolute;
-            top: 16px; left: 16px;
-            width: 12px; height: 12px;
-            border-radius: 50%;
-            background: var(--paper);
-            border: 2px solid var(--ink);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ ocasiao.nome }} | QR Code Brindes</title>
+<meta name="description" content="{{ (ocasiao.descricao or ('Brindes personalizados com QR code para ' ~ ocasiao.nome ~ '. Curadoria do QR Code Brindes.'))[:160] }}">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<meta name="theme-color" content="#ffffff">
+<meta name="author" content="QR Code Brindes">
+
+<link rel="icon" type="image/png" href="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png">
+<link rel="apple-touch-icon" href="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="QR Code Brindes">
+<meta property="og:url" content="https://qrcodebrindes.com/ocasiao/{{ ocasiao.slug }}">
+<meta property="og:title" content="{{ ocasiao.nome }} | QR Code Brindes">
+<meta property="og:description" content="{{ (ocasiao.descricao or ('Brindes personalizados com QR code para ' ~ ocasiao.nome ~ '.'))[:160] }}">
+<meta property="og:locale" content="pt_BR">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+    --bg:#ffffff;--surface:#f6f6f8;--surface-2:#eeeef1;
+    --ink:#17171a;--ink-soft:#63636c;--ink-faint:#9797a0;
+    --line:#e2e2e7;--line-strong:#cfcfd6;
+    --chrome-1:#fcfcfd;--chrome-2:#d7d7dd;--chrome-3:#9a9aa2;--chrome-4:#4a4a52;
+    --ink-black:#111113;--focus:#3b6ef0;--radius:14px;
+    --shadow-sm:0 1px 2px rgba(20,20,25,.06);
+    --shadow-md:0 8px 24px rgba(20,20,25,.08);
+    --shadow-lg:0 24px 64px rgba(20,20,25,.14);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Montserrat',sans-serif;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+.container{max-width:1180px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:'Montserrat',sans-serif;margin:0;color:var(--ink-black)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:3px;border-radius:4px}
+
+/* HEADER */
+header{
+    position:sticky;top:0;z-index:60;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;
+    padding:10px 24px;gap:16px;
+}
+.header-logo a{display:flex;align-items:center;gap:10px}
+.header-logo img{height:88px;width:auto}
+.desktop-nav ul{list-style:none;display:flex;gap:30px;margin:0;padding:0;align-items:center}
+.desktop-nav a{font-size:.94em;font-weight:500;color:var(--ink-soft);transition:color .15s}
+.desktop-nav a:hover{color:var(--ink-black)}
+.header-actions{display:flex;align-items:center;gap:14px}
+.btn-nav-cta{
+    background:linear-gradient(180deg, var(--chrome-1) 0%, #e3e3e8 55%, var(--chrome-2) 100%);
+    color:var(--ink-black);padding:11px 22px;border-radius:10px;font-size:.9em;font-weight:700;
+    border:1px solid var(--line-strong);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 0 1px 3px rgba(20,20,25,.1);
+    transition:transform .15s, box-shadow .15s, background .15s;display:inline-block;
+}
+.btn-nav-cta:hover{
+    background:linear-gradient(180deg, #ffffff 0%, var(--chrome-2) 55%, var(--chrome-3) 100%);
+    transform:translateY(-1px);box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 0 6px 16px rgba(20,20,25,.16);
+}
+.hamburger-btn{display:none;background:none;border:1px solid var(--line);border-radius:8px;width:40px;height:40px;align-items:center;justify-content:center;cursor:pointer}
+.hamburger-btn span{display:block;width:18px;height:2px;background:var(--ink);position:relative}
+.hamburger-btn span::before,.hamburger-btn span::after{content:"";position:absolute;left:0;width:18px;height:2px;background:var(--ink)}
+.hamburger-btn span::before{top:-6px}
+.hamburger-btn span::after{top:6px}
+.mobile-nav-overlay{
+    position:fixed;inset:0;background:#0c0c0e;z-index:100;
+    display:flex;flex-direction:column;padding:24px;
+    transform:translateY(-100%);transition:transform .3s ease;
+}
+.mobile-nav-overlay.open{transform:translateY(0)}
+.mobile-nav-close{align-self:flex-end;background:none;border:1px solid rgba(255,255,255,.25);color:#fff;width:40px;height:40px;border-radius:8px;font-size:1.1em;cursor:pointer}
+.mobile-nav-overlay nav ul{list-style:none;padding:0;margin:60px 0 0;display:flex;flex-direction:column;gap:8px}
+.mobile-nav-overlay nav a{display:block;padding:16px 4px;font-size:1.4em;color:#fff;font-family:'Montserrat',sans-serif;font-weight:600;border-bottom:1px solid rgba(255,255,255,.1)}
+.mobile-nav-overlay .btn-nav-cta{display:inline-block;margin-top:24px;background:#fff;color:#0c0c0e;border-color:#fff}
+@media (max-width:900px){
+    header{flex-direction:column;padding:14px 20px 12px;gap:8px}
+    .header-logo{width:100%;display:flex;justify-content:center}
+    .header-logo a{justify-content:center}
+    .header-logo img{height:80px}
+    .header-actions{width:100%;justify-content:center}
+    .desktop-nav{display:none}
+    .hamburger-btn{display:flex}
+}
+
+/* ANÚNCIOS */
+.anuncio-wrap{padding:28px 24px;display:flex;justify-content:center}
+.anuncio-wrap img{max-height:100px;width:auto;border-radius:10px;box-shadow:var(--shadow-sm)}
+
+/* PAGE HEAD */
+.page-head{background:var(--surface);border-bottom:1px solid var(--line);padding:56px 0}
+.eyebrow{
+    display:inline-flex;align-items:baseline;gap:12px;font-size:.78em;font-weight:700;
+    letter-spacing:.22em;text-transform:uppercase;color:var(--chrome-4);margin-bottom:16px;
+}
+.eyebrow::before{content:"";display:inline-block;width:34px;height:1px;background:linear-gradient(90deg,transparent,var(--chrome-3));transform:translateY(-3px)}
+.page-head h1{font-size:clamp(1.8em,3.6vw,2.6em);line-height:1.15;margin-bottom:14px}
+.page-head p{color:var(--ink-soft);font-size:1.05em;line-height:1.6;max-width:60ch}
+
+/* SECTION / CARROSSEL */
+.section{padding:56px 0}
+.carousel-wrap{position:relative}
+.carousel{
+    display:flex;gap:20px;overflow-x:auto;scroll-snap-type:x mandatory;
+    padding-bottom:10px;margin:0 -24px;padding-left:24px;padding-right:24px;
+    scrollbar-width:thin;
+}
+.carousel::-webkit-scrollbar{height:6px}
+.carousel::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:6px}
+.carousel-nav{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+.carousel-arrow{
+    width:40px;height:40px;border-radius:50%;border:1px solid var(--line-strong);
+    background:var(--chrome-1);cursor:pointer;font-size:1.1em;color:var(--ink-black);
+    display:flex;align-items:center;justify-content:center;transition:transform .15s, box-shadow .15s;
+}
+.carousel-arrow:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm)}
+.card-brinde{
+    flex:0 0 260px;scroll-snap-align:start;
+    background:var(--chrome-1);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;transition:transform .18s, box-shadow .18s;
+}
+.card-brinde:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+.card-brinde-img{aspect-ratio:4/3;background:var(--surface-2);overflow:hidden}
+.card-brinde-img img{width:100%;height:100%;object-fit:cover}
+.card-brinde-body{padding:16px}
+.card-brinde-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.card-brinde-tags span{font-size:.72em;color:var(--ink-soft);background:var(--surface-2);padding:3px 8px;border-radius:999px}
+.card-brinde h3{font-size:1em;line-height:1.3;font-weight:600}
+
+.empty-state{
+    border:1px dashed var(--line-strong);border-radius:var(--radius);
+    padding:36px 28px;text-align:center;color:var(--ink-soft);background:var(--surface);
+}
+.empty-state strong{display:block;color:var(--ink-black);font-size:1.1em;margin-bottom:6px}
+
+.section-foot{margin-top:36px}
+.link-arrow{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:.95em;color:var(--ink-black);border-bottom:1px solid var(--ink-black);padding-bottom:2px}
+.link-arrow:hover{gap:10px;transition:gap .15s}
+
+/* FOOTER */
+footer{background:var(--ink-black);color:#e6e6e9;padding:52px 0 28px}
+.footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px;margin-bottom:40px}
+.footer-logo{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.footer-logo img{height:32px}
+.footer-logo span{font-weight:700;color:#fff}
+footer p{color:#9a9aa4;font-size:.92em;line-height:1.6;max-width:36ch;margin:0}
+footer h4{font-size:.78em;text-transform:uppercase;letter-spacing:.06em;color:#7a7a84;margin-bottom:14px;font-weight:600}
+footer ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+footer a{color:#c9c9ce;font-size:.94em}
+footer a:hover{color:#fff}
+.footer-bottom{border-top:1px solid #2a2a2e;padding-top:22px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.82em;color:#7a7a84}
+@media (max-width:700px){.footer-grid{grid-template-columns:1fr;gap:28px}}
+</style>
 </head>
-<body class="min-h-screen">
+<body>
 
-    <header class="max-w-6xl mx-auto px-6 py-6 flex justify-between items-center">
-        <a href="/" class="font-display text-xl font-semibold tracking-tight">QRCode<span style="color: var(--coral)">Brindes</span></a>
-        <a href="/gerar-qr" class="font-mono text-xs uppercase tracking-widest px-5 py-3 rounded-full text-white shadow-md" style="background-color: var(--ink)">Criar QR code</a>
-    </header>
+<!-- HEADER -->
+<header>
+    <div class="header-logo">
+        <a href="{{ url_for('index') }}" aria-label="QR Code Brindes — página inicial">
+            <img src="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png" alt="QR Code Brindes">
+        </a>
+    </div>
+    <nav class="desktop-nav" aria-label="Navegação principal">
+        <ul>
+            <li><a href="{{ url_for('index') }}#catalogo">Catálogo de brindes</a></li>
+            <li><a href="{{ url_for('diretorio_publico') }}">Diretório de empresas</a></li>
+        </ul>
+    </nav>
+    <div class="header-actions">
+        <a class="btn-nav-cta" href="{{ url_for('gerar_qr') }}">Criar meu QR</a>
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Abrir menu" onclick="toggleMobileNav(true)"><span></span></button>
+    </div>
+</header>
 
-    <section class="max-w-6xl mx-auto px-6 pt-6 pb-14 text-center">
-        <p class="font-mono text-xs uppercase tracking-[0.2em] mb-3" style="color: var(--coral)">Curadoria de brindes</p>
-        <h1 class="font-display text-4xl font-semibold mb-4">{{ ocasiao.nome }}</h1>
+<!-- MOBILE NAV -->
+<div class="mobile-nav-overlay" id="mobile-nav" role="dialog" aria-modal="true">
+    <button class="mobile-nav-close" onclick="toggleMobileNav(false)" aria-label="Fechar menu">&#x2715;</button>
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('index') }}#catalogo" onclick="toggleMobileNav(false)">Catálogo de brindes</a></li>
+            <li><a href="{{ url_for('diretorio_publico') }}" onclick="toggleMobileNav(false)">Diretório de empresas</a></li>
+        </ul>
+        <a class="btn-nav-cta" href="{{ url_for('gerar_qr') }}" onclick="toggleMobileNav(false)">Criar meu QR</a>
+    </nav>
+</div>
+
+{% if anuncio_topo %}
+<div class="anuncio-wrap">
+    <a href="{{ anuncio_topo.link }}" target="_blank" rel="noopener sponsored">
+        <img src="{{ anuncio_topo.foto_url }}" alt="{{ anuncio_topo.titulo or 'Publicidade' }}">
+    </a>
+</div>
+{% endif %}
+
+<!-- PAGE HEAD -->
+<section class="page-head">
+    <div class="container">
+        <span class="eyebrow">Curadoria de brindes</span>
+        <h1>{{ ocasiao.nome }}</h1>
         {% if ocasiao.descricao %}
-        <p class="max-w-xl mx-auto" style="color: #3E5A4B">{{ ocasiao.descricao }}</p>
+        <p>{{ ocasiao.descricao }}</p>
+        {% else %}
+        <p>Brindes personalizados com QR code para {{ ocasiao.nome }}. Escolha a ideia certa e deixe sua marca.</p>
         {% endif %}
-    </section>
+    </div>
+</section>
 
-    <section class="max-w-6xl mx-auto px-6 pb-24">
+{% if anuncio_meio %}
+<div class="anuncio-wrap">
+    <a href="{{ anuncio_meio.link }}" target="_blank" rel="noopener sponsored">
+        <img src="{{ anuncio_meio.foto_url }}" alt="{{ anuncio_meio.titulo or 'Publicidade' }}">
+    </a>
+</div>
+{% endif %}
+
+<!-- BRINDES -->
+<section class="section">
+    <div class="container">
         {% if brindes %}
-        <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {% for b in brindes %}
-            <a href="/brinde/{{ b.slug }}" class="tag block p-5 pt-8">
-                <div class="w-full aspect-square rounded-xl overflow-hidden mb-4 bg-white">
-                    <img src="{{ b.imagem_url or 'https://placehold.co/400x400?text=Brinde' }}" class="w-full h-full object-cover">
-                </div>
-                <p class="font-display text-lg font-semibold leading-snug mb-1">{{ b.nome }}</p>
-                {% if b.tipo_nome %}
-                <p class="font-mono text-[10px] uppercase tracking-widest" style="color: #8A8060">{{ b.tipo_nome }}</p>
-                {% endif %}
-            </a>
-            {% endfor %}
+        <div class="carousel-wrap">
+            <div class="carousel" id="carrossel-brindes">
+                {% for b in brindes %}
+                <a class="card-brinde" href="{{ url_for('brinde_publico', slug=b.slug) }}">
+                    <div class="card-brinde-img">
+                        {% if b.imagem_url %}
+                        <img src="{{ b.imagem_url }}" alt="{{ b.nome }}" loading="lazy">
+                        {% endif %}
+                    </div>
+                    <div class="card-brinde-body">
+                        <div class="card-brinde-tags">
+                            {% if b.tipo_nome %}<span>{{ b.tipo_nome }}</span>{% endif %}
+                        </div>
+                        <h3>{{ b.nome }}</h3>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            <div class="carousel-nav">
+                <button type="button" class="carousel-arrow" aria-label="Anterior" onclick="moverCarrossel(-1)">&#8592;</button>
+                <button type="button" class="carousel-arrow" aria-label="Próximo" onclick="moverCarrossel(1)">&#8594;</button>
+            </div>
         </div>
         {% else %}
-        <div class="tag p-10 text-center max-w-md mx-auto">
-            <p class="font-display text-lg font-semibold mb-2">Ainda sem brindes por aqui</p>
-            <p class="text-sm" style="color: #5C7B6A">Em breve a gente adiciona ideias curadas pra essa ocasião.</p>
+        <div class="empty-state">
+            <strong>Ainda não há brindes cadastrados nessa ocasião</strong>
+            Volte em breve ou explore o catálogo completo.
         </div>
         {% endif %}
-    </section>
 
-    <footer class="py-10 text-center">
-        <p class="font-display text-sm font-semibold mb-1">QRCodeBrindes</p>
-        <p class="font-mono text-[10px]" style="color: #8A8060">presente físico, história digital</p>
-    </footer>
+        <div class="section-foot">
+            <a class="link-arrow" href="{{ url_for('index') }}#catalogo">← Ver catálogo completo</a>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <div class="container footer-grid">
+        <div>
+            <div class="footer-logo">
+                <img src="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png" alt="">
+                <span>QR Code Brindes</span>
+            </div>
+            <p>QR code dinâmico, catálogo de brindes personalizados e diretório de fabricantes, tudo em um lugar só.</p>
+        </div>
+        <div>
+            <h4>Navegação</h4>
+            <ul>
+                <li><a href="{{ url_for('index') }}#catalogo">Catálogo de brindes</a></li>
+                <li><a href="{{ url_for('diretorio_publico') }}">Diretório de empresas</a></li>
+            </ul>
+        </div>
+        <div>
+            <h4>Sua conta</h4>
+            <ul>
+                <li><a href="{{ url_for('gerar_qr') }}">Criar meu QR</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="container footer-bottom">
+        <span>© {{ current_year or '' }} QR Code Brindes</span>
+        <span>Feito pra durar mais que o brinde</span>
+    </div>
+</footer>
+
+<script>
+function toggleMobileNav(open){
+    document.getElementById('mobile-nav').classList.toggle('open', open);
+    document.body.style.overflow = open ? 'hidden' : '';
+}
+document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') toggleMobileNav(false);
+});
+function moverCarrossel(direcao){
+    var track = document.getElementById('carrossel-brindes');
+    if (!track) return;
+    var card = track.querySelector('.card-brinde');
+    var largura = card ? (card.offsetWidth + 20) : 280;
+    track.scrollBy({ left: direcao * largura * 2, behavior: 'smooth' });
+}
+</script>
 
 </body>
 </html>
