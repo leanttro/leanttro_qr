@@ -341,19 +341,19 @@ def gerar_qr():
 
         if not slug or not senha:
             flash('Preencha o link (slug) e a senha.', 'error')
-            return render_template('gerar_qr.html', templates=carregar_templates())
+            return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year)
 
         if get_pagina_by_slug(slug):
             flash('Esse link já está em uso, escolha outro.', 'error')
-            return render_template('gerar_qr.html', templates=carregar_templates())
+            return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year)
 
         if tipo_destino == 'pagina' and not email:
             flash('Email é obrigatório para criar uma página própria (usado para pagamento e recuperação).', 'error')
-            return render_template('gerar_qr.html', templates=carregar_templates())
+            return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year)
 
         if tipo_destino == 'link' and not destino_url:
             flash('Cole o link de destino.', 'error')
-            return render_template('gerar_qr.html', templates=carregar_templates())
+            return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year)
 
         if tipo_destino == 'pagina':
             tpl_escolhido = get_template_por_slug(template_slug)
@@ -364,6 +364,7 @@ def gerar_qr():
                     'pagamento_pendente.html',
                     template=tpl_escolhido,
                     link_pagamento=LINK_PAGAMENTO_TEMPLATES,
+                    current_year=datetime.now().year,
                 )
 
         pagina_id = execute_returning("""
@@ -384,7 +385,7 @@ def gerar_qr():
         flash('QR code criado com sucesso!', 'success')
         return redirect(f'/{slug}/painel')
 
-    return render_template('gerar_qr.html', templates=carregar_templates())
+    return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year)
 
 
 # --- REDIRECIONADOR DO QR FÍSICO ---
@@ -713,7 +714,8 @@ def empresa_publica(slug):
     if not empresa:
         abort(404)
     return render_template('negocio_brindes.html', empresa=empresa,
-                            anuncio_topo=get_anuncio('topo'))
+                            anuncio_topo=get_anuncio('topo'),
+                            current_year=datetime.now().year)
 
 
 # --- PÁGINA POR TIPO DE IMPRESSÃO (Parte 2) ---
@@ -730,7 +732,8 @@ def impressao_publica(slug):
         ORDER BY b.created_at DESC
     """, (tipo['id'],))
     return render_template('impressao.html', tipo=tipo, brindes=brindes,
-                            anuncio_topo=get_anuncio('topo'))
+                            anuncio_topo=get_anuncio('topo'),
+                            current_year=datetime.now().year)
 
 
 # --- PÁGINA POR CIDADE (Parte 3) ---
@@ -744,7 +747,8 @@ def cidade_publica(slug):
     if not empresas:
         abort(404)
     return render_template('cidade.html', cidade_nome=empresas[0]['cidade'],
-                            empresas=empresas, anuncio_topo=get_anuncio('topo'))
+                            empresas=empresas, anuncio_topo=get_anuncio('topo'),
+                            current_year=datetime.now().year)
 
 
 # =====================================================================
