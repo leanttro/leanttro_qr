@@ -233,6 +233,9 @@ def get_template_por_slug(slug):
     return next((t for t in carregar_templates() if t['slug'] == slug), None)
 
 
+app.jinja_env.globals['get_template_por_slug'] = get_template_por_slug
+
+
 def enviar_email(destinatario, assunto, corpo_texto):
     """Envia um e-mail simples via SMTP. Retorna (sucesso: bool, erro: str|None).
     Se SMTP não estiver configurado no .env, retorna sucesso=False com uma mensagem clara,
@@ -562,15 +565,39 @@ def painel_pagina(slug):
     if session.get('pagina_id') != pagina['id']:
         return redirect(f'/{slug}/login')
 
+    templates_disponiveis = carregar_templates()
+
     if request.method == 'POST':
+        template_slug = request.form.get('template', pagina.get('template', 'classic'))
+        tpl_selecionado = get_template_por_slug(template_slug)
+        campos_tpl = (tpl_selecionado or {}).get('campos', [])
+        tipos_presentes = {c.get('tipo') for c in campos_tpl}
+
+        # Só mexe em foto_url se o template atual realmente tiver campo de
+        # imagem — evita apagar o valor antigo quando o campo nem aparece
+        # no formulário (ex: template "Simples").
         foto_url = pagina.get('foto_url')
-        f = request.files.get('foto')
-        if f and f.filename:
-            nova_url = upload_imgur(f)
-            if nova_url:
-                foto_url = nova_url
-            else:
-                flash('Dados salvos, mas houve erro ao enviar a foto.', 'error')
+        if 'imagem' in tipos_presentes:
+            f = request.files.get('foto')
+            if f and f.filename:
+                nova_url = upload_imgur(f)
+                if nova_url:
+                    foto_url = nova_url
+                else:
+                    flash('Dados salvos, mas houve erro ao enviar a foto.', 'error')
+
+        # Timeline: só grava se o template atual tiver o campo, validando o
+        # JSON serializado pelo JS antes de mandar pro banco.
+        timeline_json = pagina.get('timeline_json')
+        if 'timeline' in tipos_presentes:
+            timeline_raw = request.form.get('timeline_json', '')
+            try:
+                linhas = json.loads(timeline_raw) if timeline_raw else []
+                if not isinstance(linhas, list):
+                    linhas = []
+            except (ValueError, TypeError):
+                linhas = []
+            timeline_json = psycopg2.extras.Json(linhas)
 
         execute("""
             UPDATE brindes_paginas
@@ -579,15 +606,17 @@ def painel_pagina(slug):
                 foto_url = %s,
                 template = %s,
                 destino_url = %s,
-                tipo_destino = %s
+                tipo_destino = %s,
+                timeline_json = %s
             WHERE id = %s
         """, (
             request.form.get('titulo', ''),
             request.form.get('mensagem', ''),
             foto_url,
-            request.form.get('template', pagina.get('template', 'classic')),
+            template_slug,
             request.form.get('destino_url') or None,
             request.form.get('tipo_destino', pagina.get('tipo_destino')),
+            timeline_json,
             pagina['id'],
         ))
 
@@ -596,12 +625,15 @@ def painel_pagina(slug):
 
     total_scans = query_one("SELECT COUNT(*) as total FROM brindes_scans WHERE pagina_id = %s", (pagina['id'],))
     pagina_atualizada = get_pagina_by_slug(slug)
+    campos_por_template = {t['slug']: t.get('campos', []) for t in templates_disponiveis}
 
     return render_template(
         'painel.html',
         pagina=pagina_atualizada,
         total_scans=total_scans['total'] if total_scans else 0,
         qr_url=f"/{slug}/qr.png",
+        templates=templates_disponiveis,
+        campos_por_template=campos_por_template,
     )
 
 
