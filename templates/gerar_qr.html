@@ -115,6 +115,10 @@ footer{background:var(--ink-black);color:#e6e6e9;padding:40px 0 24px;margin-top:
 .footer-bottom{max-width:880px;margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.82em;color:#7a7a84}
 
 @media (max-width:600px){.form-card{padding:22px}}
+
+/* ANÚNCIO */
+.anuncio-wrap{padding:28px 24px 0;display:flex;justify-content:center}
+.anuncio-wrap img{max-height:100px;width:auto;border-radius:10px;box-shadow:var(--shadow-sm)}
 </style>
 </head>
 <body>
@@ -127,6 +131,14 @@ footer{background:var(--ink-black);color:#e6e6e9;padding:40px 0 24px;margin-top:
         </a>
     </div>
 </header>
+
+{% if anuncio_topo %}
+<div class="anuncio-wrap">
+    <a href="{{ anuncio_topo.link }}" target="_blank" rel="noopener sponsored">
+        <img src="{{ anuncio_topo.foto_url }}" alt="{{ anuncio_topo.titulo or 'Publicidade' }}">
+    </a>
+</div>
+{% endif %}
 
 <!-- PAGE HEAD -->
 <section class="page-head">
