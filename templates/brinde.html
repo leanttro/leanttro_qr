@@ -245,18 +245,14 @@ footer a:hover{color:#fff}
                 {% endif %}
             </div>
             <div class="brinde-hero-info">
-                {% if brinde.ocasiao_nome or brinde.tipo_nome %}
+                {% if brinde.ocasiao_nome or tipos_impressao %}
                 <div class="tag-row">
                     {% if brinde.ocasiao_nome %}
                     <a class="tag-pill" href="{{ url_for('ocasiao_publica', slug=brinde.ocasiao_slug) }}">{{ brinde.ocasiao_nome }}</a>
                     {% endif %}
-                    {% if brinde.tipo_nome %}
-                        {% if brinde.tipo_slug %}
-                        <a class="tag-pill" href="{{ url_for('impressao_publica', slug=brinde.tipo_slug) }}">{{ brinde.tipo_nome }}</a>
-                        {% else %}
-                        <span class="tag-pill">{{ brinde.tipo_nome }}</span>
-                        {% endif %}
-                    {% endif %}
+                    {% for t in tipos_impressao %}
+                    <a class="tag-pill" href="{{ url_for('impressao_publica', slug=t.slug) }}">{{ t.nome }}</a>
+                    {% endfor %}
                 </div>
                 {% endif %}
                 <h1>{{ brinde.nome }}</h1>
