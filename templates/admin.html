@@ -738,6 +738,7 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
                 <td><span class="badge {{ 'badge-green' if t.get('ativo', True) else 'badge-gray' }}">{{ 'Ativo' if t.get('ativo', True) else 'Inativo' }}</span></td>
                 <td class="td-actions">
                   <a class="btn-link" style="color:var(--accent);" href="/demo/{{ t.slug }}" target="_blank">Ver exemplo</a>
+                  <button class="btn-link" style="color:var(--accent);" onclick="editarTemplate('{{ t.slug }}')">Editar</button>
                   <form method="POST" action="/admin/templates/{{ t.slug }}/toggle"><button class="btn-link" style="color:#7c5cbf;">{{ 'Desativar' if t.get('ativo', True) else 'Ativar' }}</button></form>
                 </td>
               </tr>
@@ -1058,6 +1059,66 @@ async function editarOcasiao(id) {
     });
   } catch (e) {
     mostrarToast('Erro ao carregar ocasião.', 'error');
+    fecharDrawer();
+  }
+}
+
+// ── Templates: drawer de edição (nome, preview_url, tier, preco) ──
+// campos/demo continuam só editáveis por arquivo — não entram no formulário.
+// Tabela renderizada pelo Jinja, então recarregamos a seção ao salvar.
+function formularioTemplate() {
+  return `
+  <form id="drawerForm">
+    <div class="form-grid">
+      <div class="field form-full"><label>Nome *</label><input name="nome" required placeholder="Ex: Cardápio Clássico"></div>
+      <div class="field form-full"><label>URL da imagem de capa</label><input name="preview_url" placeholder="https://..."></div>
+      <div class="field">
+        <label>Tier *</label>
+        <select name="tier" required onchange="alternarCampoPreco(this)">
+          <option value="gratis">Grátis</option>
+          <option value="pago">Pago</option>
+        </select>
+      </div>
+      <div class="field" id="campoPrecoTemplate" style="display:none;">
+        <label>Preço (R$)</label>
+        <input type="number" name="preco" step="0.01" min="0" placeholder="0.00">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" onclick="fecharDrawer()">Cancelar</button>
+      <button type="submit" class="btn btn-primary">Salvar template</button>
+    </div>
+  </form>`;
+}
+
+// Mostra/esconde o campo Preço conforme o Tier selecionado (mesmo comportamento
+// condicional já usado em outros formulários do projeto, ex: tipo_destino em gerar_qr.html).
+function alternarCampoPreco(selectTier) {
+  const campo = document.getElementById('campoPrecoTemplate');
+  const pago = selectTier.value === 'pago';
+  campo.style.display = pago ? 'flex' : 'none';
+  campo.querySelector('input[name=preco]').disabled = !pago;
+}
+
+async function editarTemplate(slug) {
+  document.getElementById('drawerTitle').textContent = 'Carregando...';
+  document.getElementById('drawerBody').innerHTML = '<div class="loading"><div class="spinner"></div>Carregando...</div>';
+  abrirDrawer();
+  try {
+    const r = await fetch(`/admin/templates/${slug}/editar`);
+    const dados = await r.json();
+    document.getElementById('drawerTitle').textContent = 'Editar template';
+    document.getElementById('drawerBody').innerHTML = formularioTemplate();
+    const form = document.getElementById('drawerForm');
+    preencherFormulario(form, dados);
+    alternarCampoPreco(form.elements['tier']);
+    configurarEnvio(form, `/admin/templates/${slug}/editar`, {
+      mensagemSucesso: 'Template salvo com sucesso!',
+      textoBotao: 'Salvar template',
+      aoSalvar: () => recarregarSecao('templates'),
+    });
+  } catch (e) {
+    mostrarToast('Erro ao carregar template.', 'error');
     fecharDrawer();
   }
 }
