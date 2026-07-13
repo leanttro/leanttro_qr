@@ -67,20 +67,46 @@ header{
     .desktop-nav{display:none}
 }
 
-/* PAGE HEAD */
-.page-head{background:var(--surface);border-bottom:1px solid var(--line);padding:56px 0}
 .eyebrow{
     display:inline-flex;align-items:baseline;gap:12px;font-size:.78em;font-weight:700;
     letter-spacing:.22em;text-transform:uppercase;color:var(--chrome-4);margin-bottom:16px;
 }
 .eyebrow::before{content:"";display:inline-block;width:34px;height:1px;background:linear-gradient(90deg,transparent,var(--chrome-3));transform:translateY(-3px)}
-.page-head h1{font-size:clamp(1.8em,3.6vw,2.6em);line-height:1.15;margin-bottom:14px}
-.page-head p{color:var(--ink-soft);font-size:1.05em;line-height:1.6;max-width:60ch}
 
-/* SECTION / GRID */
+/* HERO DO TIPO — foto grande + explicação */
+.tipo-hero{background:var(--surface);border-bottom:1px solid var(--line);padding:0}
+.tipo-hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;padding:56px 0}
+.tipo-hero-img{
+    aspect-ratio:4/3;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;box-shadow:var(--shadow-md);
+}
+.tipo-hero-img img{width:100%;height:100%;object-fit:cover}
+.tipo-hero-text .eyebrow{margin-bottom:16px}
+.tipo-hero-text h1{font-size:clamp(1.8em,3.6vw,2.6em);line-height:1.15;margin-bottom:16px}
+.tipo-hero-text p{color:var(--ink-soft);font-size:1.05em;line-height:1.65;max-width:56ch}
+@media (max-width:860px){
+    .tipo-hero-grid{grid-template-columns:1fr;padding:36px 0}
+}
+
+/* SECTION / CARROSSEL */
 .section{padding:56px 0}
-.grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px}
+.carousel-wrap{position:relative}
+.carousel{
+    display:flex;gap:20px;overflow-x:auto;scroll-snap-type:x mandatory;
+    padding-bottom:10px;margin:0 -24px;padding-left:24px;padding-right:24px;
+    scrollbar-width:thin;
+}
+.carousel::-webkit-scrollbar{height:6px}
+.carousel::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:6px}
+.carousel-nav{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+.carousel-arrow{
+    width:40px;height:40px;border-radius:50%;border:1px solid var(--line-strong);
+    background:var(--chrome-1);cursor:pointer;font-size:1.1em;color:var(--ink-black);
+    display:flex;align-items:center;justify-content:center;transition:transform .15s, box-shadow .15s;
+}
+.carousel-arrow:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm)}
 .card-brinde{
+    flex:0 0 260px;scroll-snap-align:start;
     background:var(--chrome-1);border:1px solid var(--line);border-radius:var(--radius);
     overflow:hidden;transition:transform .18s, box-shadow .18s;
 }
@@ -147,12 +173,19 @@ footer a:hover{color:#fff}
 </div>
 {% endif %}
 
-<!-- PAGE HEAD -->
-<section class="page-head">
-    <div class="container">
-        <span class="eyebrow">Tipo de impressão</span>
-        <h1>Brindes em {{ tipo.nome }}</h1>
-        <p>Ideias de brinde personalizado com QR code embutido, impressas em {{ tipo.nome }}.</p>
+<!-- HERO DO TIPO — foto grande + explicação -->
+<section class="tipo-hero">
+    <div class="container tipo-hero-grid">
+        <div class="tipo-hero-img">
+            {% if tipo.imagem_url %}
+            <img src="{{ tipo.imagem_url }}" alt="{{ tipo.nome }}">
+            {% endif %}
+        </div>
+        <div class="tipo-hero-text">
+            <span class="eyebrow">Tipo de impressão</span>
+            <h1>{{ tipo.nome }}</h1>
+            <p>{{ tipo.descricao or ('Ideias de brinde personalizado com QR code embutido, impressas em ' ~ tipo.nome ~ '.') }}</p>
+        </div>
     </div>
 </section>
 
@@ -160,22 +193,28 @@ footer a:hover{color:#fff}
 <section class="section">
     <div class="container">
         {% if brindes %}
-        <div class="grid-cards">
-            {% for brinde in brindes %}
-            <a class="card-brinde" href="{{ url_for('brinde_publico', slug=brinde.slug) }}">
-                <div class="card-brinde-img">
-                    {% if brinde.imagem_url %}
-                    <img src="{{ brinde.imagem_url }}" alt="{{ brinde.nome }}" loading="lazy">
-                    {% endif %}
-                </div>
-                <div class="card-brinde-body">
-                    <div class="card-brinde-tags">
-                        {% if brinde.ocasiao_nome %}<span>{{ brinde.ocasiao_nome }}</span>{% endif %}
+        <div class="carousel-wrap">
+            <div class="carousel" id="carrossel-brindes">
+                {% for brinde in brindes %}
+                <a class="card-brinde" href="{{ url_for('brinde_publico', slug=brinde.slug) }}">
+                    <div class="card-brinde-img">
+                        {% if brinde.imagem_url %}
+                        <img src="{{ brinde.imagem_url }}" alt="{{ brinde.nome }}" loading="lazy">
+                        {% endif %}
                     </div>
-                    <h3>{{ brinde.nome }}</h3>
-                </div>
-            </a>
-            {% endfor %}
+                    <div class="card-brinde-body">
+                        <div class="card-brinde-tags">
+                            {% if brinde.ocasiao_nome %}<span>{{ brinde.ocasiao_nome }}</span>{% endif %}
+                        </div>
+                        <h3>{{ brinde.nome }}</h3>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            <div class="carousel-nav">
+                <button type="button" class="carousel-arrow" aria-label="Anterior" onclick="moverCarrosselTipo(-1)">&#8592;</button>
+                <button type="button" class="carousel-arrow" aria-label="Próximo" onclick="moverCarrosselTipo(1)">&#8594;</button>
+            </div>
         </div>
         {% else %}
         <div class="empty-state">
@@ -189,6 +228,16 @@ footer a:hover{color:#fff}
         </div>
     </div>
 </section>
+
+<script>
+function moverCarrosselTipo(direcao){
+    var track = document.getElementById('carrossel-brindes');
+    if (!track) return;
+    var card = track.querySelector('.card-brinde');
+    var largura = card ? (card.offsetWidth + 20) : 280;
+    track.scrollBy({ left: direcao * largura * 2, behavior: 'smooth' });
+}
+</script>
 
 <!-- FOOTER -->
 <footer>
