@@ -872,6 +872,57 @@ def api_tipos_impressao():
     return jsonify(tipos)
 
 
+# --- CADASTRO PÚBLICO DE EMPRESA ---
+@app.route('/cadastrar-empresa', methods=['POST'])
+def cadastrar_empresa_publico():
+    if not check_limit(f"cad_empresa_{get_ip()}", 5, 3600):
+        return jsonify({'ok': False, 'erro': 'Muitas tentativas. Tente mais tarde.'}), 429
+
+    nome     = request.form.get('nome', '').strip()
+    cidade   = request.form.get('cidade', '').strip()
+    bairro   = request.form.get('bairro', '').strip()
+    whatsapp = request.form.get('whatsapp', '').strip()
+    telefone = request.form.get('telefone', '').strip()
+    instagram= request.form.get('instagram', '').strip()
+    site_url = request.form.get('site_url', '').strip()
+    descricao= request.form.get('descricao', '').strip()
+    logo_url = request.form.get('logo_url', '').strip()
+
+    if not nome:
+        return jsonify({'ok': False, 'erro': 'Nome da empresa é obrigatório.'}), 400
+
+    # Monta slug único com sufixo aleatório para evitar conflito
+    from slugify import slugify as _slugify
+    import random, string
+    base_slug = _slugify(nome, allow_unicode=False)
+    sufixo    = ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
+    slug      = f"{base_slug}-{sufixo}"
+
+    cidade_slug = slugify_cidade(cidade) if cidade else ''
+
+    # Adiciona bairro à descrição se preenchido
+    desc_final = descricao
+    if bairro:
+        desc_final = f"📍 {bairro}\n\n{desc_final}".strip()
+    if instagram:
+        desc_final = f"{desc_final}\n\n📸 {instagram}".strip()
+
+    try:
+        execute("""
+            INSERT INTO brindes_empresas
+                (nome, slug, telefone, whatsapp, site, cidade, cidade_slug, descricao, logo_url, plano, ativo)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'gratis', FALSE)
+        """, (
+            nome, slug,
+            telefone or None, whatsapp or None, site_url or None,
+            cidade or None, cidade_slug,
+            desc_final or None, logo_url or None,
+        ))
+        return jsonify({'ok': True})
+    except Exception as ex:
+        return jsonify({'ok': False, 'erro': 'Erro ao salvar. Tente novamente.'}), 500
+
+
 # --- PÁGINA POR CIDADE (Parte 3) ---
 @app.route('/cidade/<slug>')
 def cidade_publica(slug):
@@ -922,7 +973,8 @@ def _admin_contexto_base():
         'total_paginas': query_one("SELECT COUNT(*) as c FROM brindes_paginas")['c'],
         'total_scans': query_one("SELECT COUNT(*) as c FROM brindes_scans")['c'],
         'total_brindes': query_one("SELECT COUNT(*) as c FROM brindes_brindes")['c'],
-        'total_empresas': query_one("SELECT COUNT(*) as c FROM brindes_empresas")['c'],
+        'total_empresas': query_one("SELECT COUNT(*) as c FROM brindes_empresas WHERE ativo = TRUE")['c'],
+        'empresas_pendentes': query_one("SELECT COUNT(*) as c FROM brindes_empresas WHERE ativo = FALSE")['c'],
         'leads_pendentes': query_one("SELECT COUNT(*) as c FROM brindes_leads WHERE status = 'pendente'")['c'],
     }
     ocasioes = query_all("SELECT * FROM brindes_ocasioes ORDER BY nome")
@@ -940,7 +992,8 @@ def _admin_contexto_base():
         GROUP BY b.id, o.nome
         ORDER BY b.created_at DESC
     """)
-    empresas = query_all("SELECT * FROM brindes_empresas ORDER BY nome")
+    empresas = query_all("SELECT * FROM brindes_empresas WHERE ativo = TRUE ORDER BY nome")
+    empresas_pendentes = query_all("SELECT * FROM brindes_empresas WHERE ativo = FALSE ORDER BY created_at DESC")
     leads = query_all("""
         SELECT l.*, b.nome as brinde_nome, e.nome as empresa_nome
         FROM brindes_leads l
@@ -966,8 +1019,8 @@ def _admin_contexto_base():
 
     return dict(
         stats=stats, ocasioes=ocasioes, tipos=tipos,
-        brindes=brindes, empresas=empresas, leads=leads, paginas=paginas,
-        templates=templates, cidades=cidades,
+        brindes=brindes, empresas=empresas, empresas_pendentes=empresas_pendentes,
+        leads=leads, paginas=paginas, templates=templates, cidades=cidades,
     )
 
 
@@ -1346,6 +1399,14 @@ def admin_brindes_delete(item_id):
     execute("DELETE FROM brindes_brindes WHERE id = %s", (item_id,))
     return redirect('/admin#brindes')
 
+
+
+@app.route("/admin/empresas/<int:item_id>/aprovar", methods=["POST"])
+@admin_required
+def admin_empresas_aprovar(item_id):
+    execute("UPDATE brindes_empresas SET ativo = TRUE WHERE id = %s", (item_id,))
+    flash("Empresa aprovada e publicada no diretório.", "success")
+    return redirect("/admin#empresas")
 
 # --- EMPRESAS (diretório) ---
 @app.route('/admin/empresas/add', methods=['POST'])
