@@ -203,6 +203,7 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
 .td-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 .td-actions form { display: inline; }
 .td-img { width: 38px; height: 38px; border-radius: 6px; object-fit: cover; background: var(--surface2); display: block; }
+.td-img-fallback { align-items: center; justify-content: center; font-weight: 600; font-size: 14px; color: var(--accent-dark); background: var(--accent-light); }
 
 /* ── Badges ── */
 .badge { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 20px; font-size: 11.5px; font-weight: 500; line-height: 1.6; }
@@ -317,6 +318,10 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><line x1="17.5" y1="14" x2="17.5" y2="21"/><line x1="14" y1="17.5" x2="21" y2="17.5"/></svg>
       Páginas (usuários)
     </button>
+    <button class="nav-item" data-section="templates">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      Templates
+    </button>
 
     <div class="nav-section">Monetização</div>
     <button class="nav-item" data-section="anuncios">
@@ -412,21 +417,26 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
       <div class="card">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Nome</th><th>Slug</th><th>Sazonal</th><th>Status</th><th>Ações</th></tr></thead>
+            <thead><tr><th>Foto</th><th>Nome</th><th>Slug</th><th>Sazonal</th><th>Status</th><th>Ações</th></tr></thead>
             <tbody>
               {% for o in ocasioes %}
               <tr>
+                <td>
+                  {% if o.imagem_url %}<img class="td-img" src="{{ o.imagem_url }}" alt="">
+                  {% else %}<div class="td-img td-img-fallback">{{ (o.nome or '?')[0]|upper }}</div>{% endif %}
+                </td>
                 <td style="font-weight:600;">{{ o.nome }}</td>
                 <td class="td-muted">{{ o.slug }}</td>
                 <td>{{ 'Sim' if o.sazonal else 'Não' }}</td>
                 <td><span class="badge {{ 'badge-green' if o.ativo else 'badge-gray' }}">{{ 'Ativo' if o.ativo else 'Inativo' }}</span></td>
                 <td class="td-actions">
-                  <form method="POST" action="/admin/ocasioes/{{ o.id }}/toggle"><button class="btn-link" style="color:var(--accent);">{{ 'Desativar' if o.ativo else 'Ativar' }}</button></form>
+                  <button class="btn-link" style="color:var(--accent);" onclick="editarOcasiao({{ o.id }})">Editar</button>
+                  <form method="POST" action="/admin/ocasioes/{{ o.id }}/toggle"><button class="btn-link" style="color:#7c5cbf;">{{ 'Desativar' if o.ativo else 'Ativar' }}</button></form>
                   <form method="POST" action="/admin/ocasioes/{{ o.id }}/delete" onsubmit="return confirm('Excluir esta ocasião?');"><button class="btn-link" style="color:var(--red);">Excluir</button></form>
                 </td>
               </tr>
               {% else %}
-              <tr><td colspan="5" class="empty-state">Nenhuma ocasião cadastrada.</td></tr>
+              <tr><td colspan="6" class="empty-state">Nenhuma ocasião cadastrada.</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -442,7 +452,10 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
           <form method="POST" action="/admin/tipos-impressao/add" class="form-grid cols-3">
             <div class="field"><label>Nome</label><input type="text" name="nome" required placeholder="Ex: Sublimação"></div>
             <div class="field"><label>Slug</label><input type="text" name="slug" required placeholder="sublimacao"></div>
-            <div class="field"><button type="submit" class="btn btn-primary">Adicionar</button></div>
+            <div class="field"><label>URL da imagem</label><input type="text" name="imagem_url" placeholder="https://..."></div>
+            <div class="form-full">
+              <button type="submit" class="btn btn-primary">Adicionar</button>
+            </div>
           </form>
         </div>
       </div>
@@ -450,20 +463,25 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
       <div class="card">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Nome</th><th>Slug</th><th>Status</th><th>Ações</th></tr></thead>
+            <thead><tr><th>Foto</th><th>Nome</th><th>Slug</th><th>Status</th><th>Ações</th></tr></thead>
             <tbody>
               {% for t in tipos %}
               <tr>
+                <td>
+                  {% if t.imagem_url %}<img class="td-img" src="{{ t.imagem_url }}" alt="">
+                  {% else %}<div class="td-img td-img-fallback">{{ (t.nome or '?')[0]|upper }}</div>{% endif %}
+                </td>
                 <td style="font-weight:600;">{{ t.nome }}</td>
                 <td class="td-muted">{{ t.slug }}</td>
                 <td><span class="badge {{ 'badge-green' if t.ativo else 'badge-gray' }}">{{ 'Ativo' if t.ativo else 'Inativo' }}</span></td>
                 <td class="td-actions">
-                  <form method="POST" action="/admin/tipos-impressao/{{ t.id }}/toggle"><button class="btn-link" style="color:var(--accent);">{{ 'Desativar' if t.ativo else 'Ativar' }}</button></form>
+                  <button class="btn-link" style="color:var(--accent);" onclick="editarTipo({{ t.id }})">Editar</button>
+                  <form method="POST" action="/admin/tipos-impressao/{{ t.id }}/toggle"><button class="btn-link" style="color:#7c5cbf;">{{ 'Desativar' if t.ativo else 'Ativar' }}</button></form>
                   <form method="POST" action="/admin/tipos-impressao/{{ t.id }}/delete" onsubmit="return confirm('Excluir este tipo?');"><button class="btn-link" style="color:var(--red);">Excluir</button></form>
                 </td>
               </tr>
               {% else %}
-              <tr><td colspan="4" class="empty-state">Nenhum tipo cadastrado.</td></tr>
+              <tr><td colspan="5" class="empty-state">Nenhum tipo cadastrado.</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -509,13 +527,17 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
             <tbody>
               {% for b in brindes %}
               <tr>
-                <td><img class="td-img" src="{{ b.imagem_url or 'https://placehold.co/60x60?text=%20' }}" alt=""></td>
+                <td>
+                  {% if b.imagem_url %}<img class="td-img" src="{{ b.imagem_url }}" alt="">
+                  {% else %}<div class="td-img td-img-fallback">{{ (b.nome or '?')[0]|upper }}</div>{% endif %}
+                </td>
                 <td style="font-weight:600;">{{ b.nome }}</td>
                 <td class="td-muted">{{ b.ocasiao_nome or '—' }}</td>
                 <td class="td-muted">{{ b.tipo_nome or '—' }}</td>
                 <td><span class="badge {{ 'badge-green' if b.ativo else 'badge-gray' }}">{{ 'Ativo' if b.ativo else 'Inativo' }}</span></td>
                 <td class="td-actions">
-                  <form method="POST" action="/admin/brindes/{{ b.id }}/toggle"><button class="btn-link" style="color:var(--accent);">{{ 'Desativar' if b.ativo else 'Ativar' }}</button></form>
+                  <button class="btn-link" style="color:var(--accent);" onclick="editarBrinde({{ b.id }})">Editar</button>
+                  <form method="POST" action="/admin/brindes/{{ b.id }}/toggle"><button class="btn-link" style="color:#7c5cbf;">{{ 'Desativar' if b.ativo else 'Ativar' }}</button></form>
                   <form method="POST" action="/admin/brindes/{{ b.id }}/delete" onsubmit="return confirm('Excluir este brinde?');"><button class="btn-link" style="color:var(--red);">Excluir</button></form>
                 </td>
               </tr>
@@ -556,22 +578,27 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
       <div class="card">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Nome</th><th>Cidade</th><th>Plano</th><th>Status</th><th>Ações</th></tr></thead>
+            <thead><tr><th>Logo</th><th>Nome</th><th>Cidade</th><th>Plano</th><th>Status</th><th>Ações</th></tr></thead>
             <tbody>
               {% for e in empresas %}
               <tr>
+                <td>
+                  {% if e.logo_url %}<img class="td-img" src="{{ e.logo_url }}" alt="">
+                  {% else %}<div class="td-img td-img-fallback">{{ (e.nome or '?')[0]|upper }}</div>{% endif %}
+                </td>
                 <td style="font-weight:600;">{{ e.nome }}</td>
                 <td class="td-muted">{{ e.cidade or '—' }}</td>
                 <td><span class="badge {{ 'badge-amber' if e.plano == 'destaque' else 'badge-gray' }}">{{ e.plano }}</span></td>
                 <td><span class="badge {{ 'badge-green' if e.ativo else 'badge-gray' }}">{{ 'Ativo' if e.ativo else 'Inativo' }}</span></td>
                 <td class="td-actions">
+                  <button class="btn-link" style="color:var(--accent);" onclick="editarEmpresa({{ e.id }})">Editar</button>
                   <form method="POST" action="/admin/empresas/{{ e.id }}/toggle-plano"><button class="btn-link" style="color:var(--amber);">{{ 'Tirar destaque' if e.plano == 'destaque' else 'Destacar' }}</button></form>
-                  <form method="POST" action="/admin/empresas/{{ e.id }}/toggle"><button class="btn-link" style="color:var(--accent);">{{ 'Desativar' if e.ativo else 'Ativar' }}</button></form>
+                  <form method="POST" action="/admin/empresas/{{ e.id }}/toggle"><button class="btn-link" style="color:#7c5cbf;">{{ 'Desativar' if e.ativo else 'Ativar' }}</button></form>
                   <form method="POST" action="/admin/empresas/{{ e.id }}/delete" onsubmit="return confirm('Excluir esta empresa?');"><button class="btn-link" style="color:var(--red);">Excluir</button></form>
                 </td>
               </tr>
               {% else %}
-              <tr><td colspan="5" class="empty-state">Nenhuma empresa cadastrada.</td></tr>
+              <tr><td colspan="6" class="empty-state">Nenhuma empresa cadastrada.</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -686,6 +713,41 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
       </div>
     </div>
 
+    <!-- ═══════════════ TEMPLATES (só leitura + ativar/desativar) ═══════════════ -->
+    <div class="section" id="sec-templates">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Templates de página</span>
+          <span class="td-muted" style="font-size:12px;">Os templates são adicionados direto na pasta do projeto — aqui só é possível ativar/desativar.</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Preview</th><th>Nome</th><th>Tier</th><th>Preço</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody>
+              {% for t in templates %}
+              <tr>
+                <td>
+                  {% if t.preview_url %}<img class="td-img" src="{{ t.preview_url }}" alt="">
+                  {% else %}<div class="td-img td-img-fallback">{{ (t.nome or '?')[0]|upper }}</div>{% endif %}
+                </td>
+                <td style="font-weight:600;">{{ t.nome }}</td>
+                <td><span class="badge {{ 'badge-amber' if t.tier == 'pago' else 'badge-gray' }}">{{ 'Pago' if t.tier == 'pago' else 'Grátis' }}</span></td>
+                <td class="td-muted">{{ 'R$ %.2f'|format(t.preco) if t.tier == 'pago' and t.preco else '—' }}</td>
+                <td><span class="badge {{ 'badge-green' if t.get('ativo', True) else 'badge-gray' }}">{{ 'Ativo' if t.get('ativo', True) else 'Inativo' }}</span></td>
+                <td class="td-actions">
+                  <a class="btn-link" style="color:var(--accent);" href="/demo/{{ t.slug }}" target="_blank">Ver exemplo</a>
+                  <form method="POST" action="/admin/templates/{{ t.slug }}/toggle"><button class="btn-link" style="color:#7c5cbf;">{{ 'Desativar' if t.get('ativo', True) else 'Ativar' }}</button></form>
+                </td>
+              </tr>
+              {% else %}
+              <tr><td colspan="6" class="empty-state">Nenhum template encontrado em templates/paginas/.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -705,8 +767,9 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script>
-// Ocasiões disponíveis, pra popular o select de segmentação do formulário de anúncio.
+// Ocasiões e tipos de impressão disponíveis, pra popular os selects dos formulários (anúncios, brindes).
 const OCASIOES = {{ ocasioes|tojson }};
+const TIPOS = {{ tipos|tojson }};
 
 // ── Navegação entre seções (mesmo padrão do admin anterior, agora com sidebar) ──
 const navItems = document.querySelectorAll('.nav-item');
@@ -714,7 +777,7 @@ const sections = document.querySelectorAll('.section');
 const titulos = {
   dashboard: 'Dashboard', ocasioes: 'Ocasiões', tipos: 'Tipos de impressão',
   brindes: 'Brindes', empresas: 'Empresas', paginas: 'Páginas (usuários)',
-  leads: 'Leads', anuncios: 'Anúncios',
+  leads: 'Leads', anuncios: 'Anúncios', templates: 'Templates',
 };
 
 function ativarSecao(nome) {
@@ -730,8 +793,13 @@ function ativarSecao(nome) {
 
 navItems.forEach(btn => btn.addEventListener('click', () => ativarSecao(btn.dataset.section)));
 
+// A seção ativa pode vir do hash (navegação dentro do SPA, ex: /admin#brindes)
+// ou do próprio Flask (ex: acesso direto a /admin/templates, que renderiza
+// admin.html com secao_ativa='templates').
+const secaoAtivaInicial = {{ secao_ativa|tojson }};
 const hashInicial = window.location.hash.replace('#', '');
 if (hashInicial && titulos[hashInicial]) ativarSecao(hashInicial);
+else if (secaoAtivaInicial && secaoAtivaInicial !== 'dashboard' && titulos[secaoAtivaInicial]) ativarSecao(secaoAtivaInicial);
 
 // ── Toast ──
 function mostrarToast(msg, tipo) {
@@ -864,7 +932,15 @@ function preencherFormulario(form, dados) {
   }
 }
 
-function configurarEnvio(form, url, ehEdicao) {
+// configurarEnvio: padrão reaproveitado por TODAS as entidades editáveis via drawer
+// (anúncios, ocasiões, tipos de impressão, brindes, empresas). `opcoes` permite
+// customizar a mensagem de sucesso e o que fazer depois de salvar (recarregar
+// lista via fetch, ou recarregar a página quando a seção é renderizada pelo Jinja).
+function configurarEnvio(form, url, opcoes) {
+  opcoes = opcoes || {};
+  const mensagemSucesso = opcoes.mensagemSucesso || 'Salvo com sucesso!';
+  const aoSalvar = opcoes.aoSalvar || (() => {});
+  const textoBotao = opcoes.textoBotao || 'Salvar';
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
     const btn = form.querySelector('[type=submit]');
@@ -875,17 +951,24 @@ function configurarEnvio(form, url, ehEdicao) {
       const data = await r.json().catch(() => ({}));
       if (r.ok && data.ok) {
         fecharDrawer();
-        mostrarToast('Anúncio salvo com sucesso!', 'success');
-        await carregarAnuncios();
+        mostrarToast(mensagemSucesso, 'success');
+        await aoSalvar();
       } else {
-        mostrarToast(data.erro || 'Erro ao salvar anúncio.', 'error');
+        mostrarToast(data.erro || 'Erro ao salvar.', 'error');
       }
     } catch (err) {
       mostrarToast('Erro de conexão.', 'error');
     }
     btn.disabled = false;
-    btn.textContent = 'Salvar anúncio';
+    btn.textContent = textoBotao;
   });
+}
+
+// Recarrega a página inteira mantendo a seção atual — usado pelas entidades
+// cuja tabela é renderizada pelo Jinja (não via fetch/JSON como Anúncios).
+function recarregarSecao(nome) {
+  location.hash = nome;
+  location.reload();
 }
 
 function abrirDrawerAnuncio() {
@@ -893,7 +976,11 @@ function abrirDrawerAnuncio() {
   document.getElementById('drawerBody').innerHTML = formularioAnuncio();
   abrirDrawer();
   const form = document.getElementById('drawerForm');
-  configurarEnvio(form, '/admin/anuncios/novo', false);
+  configurarEnvio(form, '/admin/anuncios/novo', {
+    mensagemSucesso: 'Anúncio salvo com sucesso!',
+    textoBotao: 'Salvar anúncio',
+    aoSalvar: carregarAnuncios,
+  });
 }
 
 async function editarAnuncio(id) {
@@ -907,9 +994,195 @@ async function editarAnuncio(id) {
     document.getElementById('drawerBody').innerHTML = formularioAnuncio();
     const form = document.getElementById('drawerForm');
     preencherFormulario(form, dados);
-    configurarEnvio(form, `/admin/anuncios/${id}/editar`, true);
+    configurarEnvio(form, `/admin/anuncios/${id}/editar`, {
+      mensagemSucesso: 'Anúncio salvo com sucesso!',
+      textoBotao: 'Salvar anúncio',
+      aoSalvar: carregarAnuncios,
+    });
   } catch (e) {
     mostrarToast('Erro ao carregar anúncio.', 'error');
+    fecharDrawer();
+  }
+}
+
+// ── Ocasiões, Tipos de impressão, Brindes, Empresas: drawer de edição ──
+// Mesmo padrão de editarAnuncio()/configurarEnvio() acima. As tabelas dessas
+// 4 seções são renderizadas pelo Jinja (não via fetch), então ao salvar a
+// gente recarrega a página inteira (recarregarSecao) em vez de re-buscar a lista.
+
+function formularioOcasiao() {
+  return `
+  <form id="drawerForm">
+    <div class="form-grid">
+      <div class="field form-full"><label>Nome *</label><input name="nome" required placeholder="Ex: Casamento"></div>
+      <div class="field"><label>Slug *</label><input name="slug" required placeholder="casamento"></div>
+      <div class="field" style="flex-direction:row; align-items:center;">
+        <label class="checkbox-label" style="width:100%; margin-top:19px;"><input type="checkbox" name="sazonal"> Sazonal</label>
+      </div>
+      <div class="field form-full"><label>URL da imagem</label><input name="imagem_url" placeholder="https://..."></div>
+      <div class="field form-full"><label>Descrição</label><textarea name="descricao"></textarea></div>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" onclick="fecharDrawer()">Cancelar</button>
+      <button type="submit" class="btn btn-primary">Salvar ocasião</button>
+    </div>
+  </form>`;
+}
+
+async function editarOcasiao(id) {
+  document.getElementById('drawerTitle').textContent = 'Carregando...';
+  document.getElementById('drawerBody').innerHTML = '<div class="loading"><div class="spinner"></div>Carregando...</div>';
+  abrirDrawer();
+  try {
+    const r = await fetch(`/admin/ocasioes/${id}/editar`);
+    const dados = await r.json();
+    document.getElementById('drawerTitle').textContent = 'Editar ocasião';
+    document.getElementById('drawerBody').innerHTML = formularioOcasiao();
+    const form = document.getElementById('drawerForm');
+    preencherFormulario(form, dados);
+    configurarEnvio(form, `/admin/ocasioes/${id}/editar`, {
+      mensagemSucesso: 'Ocasião salva com sucesso!',
+      textoBotao: 'Salvar ocasião',
+      aoSalvar: () => recarregarSecao('ocasioes'),
+    });
+  } catch (e) {
+    mostrarToast('Erro ao carregar ocasião.', 'error');
+    fecharDrawer();
+  }
+}
+
+function formularioTipo() {
+  return `
+  <form id="drawerForm">
+    <div class="form-grid">
+      <div class="field"><label>Nome *</label><input name="nome" required placeholder="Ex: Sublimação"></div>
+      <div class="field"><label>Slug *</label><input name="slug" required placeholder="sublimacao"></div>
+      <div class="field form-full"><label>URL da imagem</label><input name="imagem_url" placeholder="https://..."></div>
+      <div class="field form-full"><label>Descrição</label><textarea name="descricao"></textarea></div>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" onclick="fecharDrawer()">Cancelar</button>
+      <button type="submit" class="btn btn-primary">Salvar tipo</button>
+    </div>
+  </form>`;
+}
+
+async function editarTipo(id) {
+  document.getElementById('drawerTitle').textContent = 'Carregando...';
+  document.getElementById('drawerBody').innerHTML = '<div class="loading"><div class="spinner"></div>Carregando...</div>';
+  abrirDrawer();
+  try {
+    const r = await fetch(`/admin/tipos-impressao/${id}/editar`);
+    const dados = await r.json();
+    document.getElementById('drawerTitle').textContent = 'Editar tipo de impressão';
+    document.getElementById('drawerBody').innerHTML = formularioTipo();
+    const form = document.getElementById('drawerForm');
+    preencherFormulario(form, dados);
+    configurarEnvio(form, `/admin/tipos-impressao/${id}/editar`, {
+      mensagemSucesso: 'Tipo de impressão salvo com sucesso!',
+      textoBotao: 'Salvar tipo',
+      aoSalvar: () => recarregarSecao('tipos'),
+    });
+  } catch (e) {
+    mostrarToast('Erro ao carregar tipo de impressão.', 'error');
+    fecharDrawer();
+  }
+}
+
+function formularioBrinde() {
+  const opcoesOcasiao = OCASIOES.map(o => `<option value="${o.id}">${escaparHtml(o.nome)}</option>`).join('');
+  const opcoesTipo = TIPOS.map(t => `<option value="${t.id}">${escaparHtml(t.nome)}</option>`).join('');
+  return `
+  <form id="drawerForm">
+    <div class="form-grid">
+      <div class="field form-full"><label>Nome *</label><input name="nome" required placeholder="Ex: Caneca com QR code"></div>
+      <div class="field"><label>Slug *</label><input name="slug" required></div>
+      <div class="field"><label>URL da imagem</label><input name="imagem_url" placeholder="https://..."></div>
+      <div class="field">
+        <label>Ocasião</label>
+        <select name="ocasiao_id"><option value="">—</option>${opcoesOcasiao}</select>
+      </div>
+      <div class="field">
+        <label>Tipo de impressão</label>
+        <select name="tipo_impressao_id"><option value="">—</option>${opcoesTipo}</select>
+      </div>
+      <div class="field form-full"><label>Descrição</label><textarea name="descricao"></textarea></div>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" onclick="fecharDrawer()">Cancelar</button>
+      <button type="submit" class="btn btn-primary">Salvar brinde</button>
+    </div>
+  </form>`;
+}
+
+async function editarBrinde(id) {
+  document.getElementById('drawerTitle').textContent = 'Carregando...';
+  document.getElementById('drawerBody').innerHTML = '<div class="loading"><div class="spinner"></div>Carregando...</div>';
+  abrirDrawer();
+  try {
+    const r = await fetch(`/admin/brindes/${id}/editar`);
+    const dados = await r.json();
+    document.getElementById('drawerTitle').textContent = 'Editar brinde';
+    document.getElementById('drawerBody').innerHTML = formularioBrinde();
+    const form = document.getElementById('drawerForm');
+    preencherFormulario(form, dados);
+    configurarEnvio(form, `/admin/brindes/${id}/editar`, {
+      mensagemSucesso: 'Brinde salvo com sucesso!',
+      textoBotao: 'Salvar brinde',
+      aoSalvar: () => recarregarSecao('brindes'),
+    });
+  } catch (e) {
+    mostrarToast('Erro ao carregar brinde.', 'error');
+    fecharDrawer();
+  }
+}
+
+function formularioEmpresa() {
+  return `
+  <form id="drawerForm">
+    <div class="form-grid">
+      <div class="field"><label>Nome *</label><input name="nome" required></div>
+      <div class="field"><label>Slug *</label><input name="slug" required></div>
+      <div class="field"><label>E-mail</label><input type="email" name="email"></div>
+      <div class="field"><label>Telefone</label><input name="telefone"></div>
+      <div class="field"><label>WhatsApp</label><input name="whatsapp"></div>
+      <div class="field"><label>Site</label><input name="site" placeholder="https://..."></div>
+      <div class="field"><label>Cidade</label><input name="cidade"></div>
+      <div class="field">
+        <label>Plano</label>
+        <select name="plano">
+          <option value="gratis">Grátis</option>
+          <option value="destaque">Destaque</option>
+        </select>
+      </div>
+      <div class="field form-full"><label>URL do logo</label><input name="logo_url" placeholder="https://..."></div>
+      <div class="field form-full"><label>Descrição</label><textarea name="descricao"></textarea></div>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" onclick="fecharDrawer()">Cancelar</button>
+      <button type="submit" class="btn btn-primary">Salvar empresa</button>
+    </div>
+  </form>`;
+}
+
+async function editarEmpresa(id) {
+  document.getElementById('drawerTitle').textContent = 'Carregando...';
+  document.getElementById('drawerBody').innerHTML = '<div class="loading"><div class="spinner"></div>Carregando...</div>';
+  abrirDrawer();
+  try {
+    const r = await fetch(`/admin/empresas/${id}/editar`);
+    const dados = await r.json();
+    document.getElementById('drawerTitle').textContent = 'Editar empresa';
+    document.getElementById('drawerBody').innerHTML = formularioEmpresa();
+    const form = document.getElementById('drawerForm');
+    preencherFormulario(form, dados);
+    configurarEnvio(form, `/admin/empresas/${id}/editar`, {
+      mensagemSucesso: 'Empresa salva com sucesso!',
+      textoBotao: 'Salvar empresa',
+      aoSalvar: () => recarregarSecao('empresas'),
+    });
+  } catch (e) {
+    mostrarToast('Erro ao carregar empresa.', 'error');
     fecharDrawer();
   }
 }
