@@ -277,41 +277,69 @@ def gerar_timeline_events(pagina):
     return pagina.get("timeline_json") or []
 
 
-# --- ANÚNCIOS (mesmo padrão do hub, adaptado: sem hub_id, sem cidade/bairro) ---
-def get_anuncio(posicao, ocasiao_id=None):
+# --- ANÚNCIOS (multi-escopo: ocasião, tipo de impressão, cidade, funcionalidades) ---
+def get_anuncio(posicao, ocasiao_id=None, tipo_impressao_id=None, cidade_slug=None, contexto='catalogo'):
     """Retorna 1 anúncio ativo pra posição informada ('topo' ou 'meio'), dentro
-    da vigência (data_inicio/data_fim). Se ocasiao_id for passado, prioriza um
-    anúncio segmentado pra essa ocasião, mas também aceita um genérico
-    (ocasiao_id NULL no banco = vale pra qualquer ocasião). Sem ocasiao_id
-    (ex.: home, diretório), só considera anúncios genéricos."""
+    da vigência (data_inicio/data_fim) e do escopo da página atual.
+
+    Cada anúncio pode ter até 4 filtros de escopo, todos opcionais e
+    combinados com E (AND) entre si:
+      - ocasiao_id             -> só aparece na(s) página(s) daquela ocasião
+      - tipo_impressao_id      -> só aparece na página daquele tipo de impressão
+      - cidade_slug            -> só aparece na(s) página(s) daquela cidade
+      - apenas_funcionalidades -> só aparece nas páginas de ferramenta do site
+        (gerar-qr, painel, demo), nunca no catálogo público
+
+    Um anúncio sem NENHUM escopo preenchido aparece em QUALQUER página
+    (é o "todas as páginas" da UI do admin). Quando mais de um anúncio
+    ativo bate com a página atual, o mais específico (mais escopos
+    preenchidos) tem prioridade sobre o genérico.
+
+    `contexto`:
+      - 'catalogo'       -> home, ocasião, brinde, tipo de impressão,
+        cidade, empresa, diretório. Nunca mostra anúncios marcados como
+        apenas_funcionalidades.
+      - 'funcionalidade' -> gerar-qr, painel, demo. Só mostra anúncios
+        marcados como apenas_funcionalidades OU totalmente genéricos.
+    """
     hoje = datetime.now().date()
 
-    if ocasiao_id:
-        sql = """
-            SELECT a.*, o.nome as ocasiao_nome
-            FROM brindes_anuncios a
-            LEFT JOIN brindes_ocasioes o ON o.id = a.ocasiao_id
-            WHERE a.ativo = TRUE AND a.posicao = %s
-              AND (a.data_inicio IS NULL OR a.data_inicio <= %s)
-              AND (a.data_fim IS NULL OR a.data_fim >= %s)
-              AND (a.ocasiao_id IS NULL OR a.ocasiao_id = %s)
-            ORDER BY (a.ocasiao_id IS NOT NULL) DESC, RANDOM()
-            LIMIT 1
-        """
-        return query_one(sql, (posicao, hoje, hoje, ocasiao_id))
+    condicoes = [
+        "a.ativo = TRUE", "a.posicao = %s",
+        "(a.data_inicio IS NULL OR a.data_inicio <= %s)",
+        "(a.data_fim IS NULL OR a.data_fim >= %s)",
+    ]
+    params = [posicao, hoje, hoje]
 
-    sql = """
+    if contexto == 'funcionalidade':
+        condicoes.append("""(
+            a.apenas_funcionalidades = TRUE
+            OR (a.apenas_funcionalidades = FALSE AND a.ocasiao_id IS NULL
+                AND a.tipo_impressao_id IS NULL AND a.cidade_slug IS NULL)
+        )""")
+    else:
+        condicoes.append("a.apenas_funcionalidades = FALSE")
+        condicoes.append("(a.ocasiao_id IS NULL OR a.ocasiao_id = %s)")
+        params.append(ocasiao_id)
+        condicoes.append("(a.tipo_impressao_id IS NULL OR a.tipo_impressao_id = %s)")
+        params.append(tipo_impressao_id)
+        condicoes.append("(a.cidade_slug IS NULL OR a.cidade_slug = %s)")
+        params.append(cidade_slug)
+
+    sql = f"""
         SELECT a.*, o.nome as ocasiao_nome
         FROM brindes_anuncios a
         LEFT JOIN brindes_ocasioes o ON o.id = a.ocasiao_id
-        WHERE a.ativo = TRUE AND a.posicao = %s
-          AND (a.data_inicio IS NULL OR a.data_inicio <= %s)
-          AND (a.data_fim IS NULL OR a.data_fim >= %s)
-          AND a.ocasiao_id IS NULL
-        ORDER BY RANDOM()
+        WHERE {' AND '.join(condicoes)}
+        ORDER BY (
+            (a.ocasiao_id IS NOT NULL)::int +
+            (a.tipo_impressao_id IS NOT NULL)::int +
+            (a.cidade_slug IS NOT NULL)::int +
+            (a.apenas_funcionalidades IS TRUE)::int
+        ) DESC, RANDOM()
         LIMIT 1
     """
-    return query_one(sql, (posicao, hoje, hoje))
+    return query_one(sql, tuple(params))
 
 
 # --- ROTA RAIZ ---
@@ -347,19 +375,19 @@ def gerar_qr():
 
         if not slug or not senha:
             flash('Preencha o link (slug) e a senha.', 'error')
-            return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year)
+            return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year, anuncio_topo=get_anuncio('topo', contexto='funcionalidade'))
 
         if get_pagina_by_slug(slug):
             flash('Esse link já está em uso, escolha outro.', 'error')
-            return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year)
+            return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year, anuncio_topo=get_anuncio('topo', contexto='funcionalidade'))
 
         if tipo_destino == 'pagina' and not email:
             flash('Email é obrigatório para criar uma página própria (usado para pagamento e recuperação).', 'error')
-            return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year)
+            return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year, anuncio_topo=get_anuncio('topo', contexto='funcionalidade'))
 
         if tipo_destino == 'link' and not destino_url:
             flash('Cole o link de destino.', 'error')
-            return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year)
+            return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year, anuncio_topo=get_anuncio('topo', contexto='funcionalidade'))
 
         if tipo_destino == 'pagina':
             tpl_escolhido = get_template_por_slug(template_slug)
@@ -391,7 +419,7 @@ def gerar_qr():
         flash('QR code criado com sucesso!', 'success')
         return redirect(f'/{slug}/painel')
 
-    return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year)
+    return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year, anuncio_topo=get_anuncio('topo', contexto='funcionalidade'))
 
 
 # --- REDIRECIONADOR DO QR FÍSICO ---
@@ -458,6 +486,7 @@ def demo_template(template_slug):
         timeline_events=pagina_fake.get('timeline', []),
         current_year=datetime.now().year,
         font_css="'Inter', sans-serif", font_size_val="1.1rem",
+        anuncio_topo=get_anuncio('topo', contexto='funcionalidade'),
     )
 
 
@@ -634,6 +663,7 @@ def painel_pagina(slug):
         qr_url=f"/{slug}/qr.png",
         templates=templates_disponiveis,
         campos_por_template=campos_por_template,
+        anuncio_topo=get_anuncio('topo', contexto='funcionalidade'),
     )
 
 
@@ -763,8 +793,17 @@ def empresa_publica(slug):
     empresa = query_one("SELECT * FROM brindes_empresas WHERE slug = %s AND ativo = TRUE", (slug,))
     if not empresa:
         abort(404)
+
+    # Proteção destaque: empresa no plano 'destaque' pagou pra ter a própria
+    # página sem publicidade de terceiros — nunca busca/mostra anúncio de
+    # outra empresa aqui, ponto final. Empresas no plano grátis continuam
+    # podendo receber anúncio genérico ou segmentado pela cidade delas.
+    anuncio_topo = None
+    if empresa.get('plano') != 'destaque':
+        anuncio_topo = get_anuncio('topo', cidade_slug=empresa.get('cidade_slug'))
+
     return render_template('negocio_brindes.html', empresa=empresa,
-                            anuncio_topo=get_anuncio('topo'),
+                            anuncio_topo=anuncio_topo,
                             current_year=datetime.now().year)
 
 
@@ -785,7 +824,7 @@ def impressao_publica(slug):
         ORDER BY b.created_at DESC
     """, (tipo['id'],))
     return render_template('impressao.html', tipo=tipo, brindes=brindes,
-                            anuncio_topo=get_anuncio('topo'),
+                            anuncio_topo=get_anuncio('topo', tipo_impressao_id=tipo['id']),
                             current_year=datetime.now().year)
 
 
@@ -844,7 +883,7 @@ def cidade_publica(slug):
     if not empresas:
         abort(404)
     return render_template('cidade.html', cidade_nome=empresas[0]['cidade'],
-                            empresas=empresas, anuncio_topo=get_anuncio('topo'),
+                            empresas=empresas, anuncio_topo=get_anuncio('topo', cidade_slug=slug),
                             current_year=datetime.now().year)
 
 
@@ -917,11 +956,18 @@ def _admin_contexto_base():
         ORDER BY p.created_at DESC
     """)
     templates = carregar_templates()
+    # Cidades distintas com slug preenchido, pra popular o select de escopo
+    # de anúncio por cidade (usa as mesmas cidades já cadastradas em empresas).
+    cidades = query_all("""
+        SELECT DISTINCT cidade, cidade_slug FROM brindes_empresas
+        WHERE cidade_slug IS NOT NULL AND cidade_slug != ''
+        ORDER BY cidade
+    """)
 
     return dict(
         stats=stats, ocasioes=ocasioes, tipos=tipos,
         brindes=brindes, empresas=empresas, leads=leads, paginas=paginas,
-        templates=templates,
+        templates=templates, cidades=cidades,
     )
 
 
@@ -1420,9 +1466,10 @@ def admin_leads_status(item_id):
 @admin_required
 def admin_anuncios_listar():
     anuncios = query_all("""
-        SELECT a.*, o.nome as ocasiao_nome
+        SELECT a.*, o.nome as ocasiao_nome, t.nome as tipo_impressao_nome
         FROM brindes_anuncios a
         LEFT JOIN brindes_ocasioes o ON o.id = a.ocasiao_id
+        LEFT JOIN brindes_tipos_impressao t ON t.id = a.tipo_impressao_id
         ORDER BY a.created_at DESC
     """)
     return jsonify(anuncios)
@@ -1436,6 +1483,9 @@ def admin_anuncios_novo():
     foto_url = request.form.get('foto_url', '').strip()
     link = request.form.get('link', '').strip()
     ocasiao_id = request.form.get('ocasiao_id') or None
+    tipo_impressao_id = request.form.get('tipo_impressao_id') or None
+    cidade_slug = request.form.get('cidade_slug') or None
+    apenas_funcionalidades = 'apenas_funcionalidades' in request.form
     data_inicio = request.form.get('data_inicio') or None
     data_fim = request.form.get('data_fim') or None
     ativo = 'ativo' in request.form
@@ -1446,9 +1496,11 @@ def admin_anuncios_novo():
     try:
         execute("""
             INSERT INTO brindes_anuncios
-                (titulo, posicao, foto_url, link, ocasiao_id, data_inicio, data_fim, ativo)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (titulo, posicao, foto_url, link, ocasiao_id, data_inicio, data_fim, ativo))
+                (titulo, posicao, foto_url, link, ocasiao_id, tipo_impressao_id,
+                 cidade_slug, apenas_funcionalidades, data_inicio, data_fim, ativo)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (titulo, posicao, foto_url, link, ocasiao_id, tipo_impressao_id,
+              cidade_slug, apenas_funcionalidades, data_inicio, data_fim, ativo))
         return jsonify({'ok': True})
     except Exception:
         return jsonify({'erro': 'Erro ao salvar o anúncio.'}), 400
@@ -1471,6 +1523,9 @@ def admin_anuncios_editar(item_id):
     foto_url = request.form.get('foto_url', '').strip()
     link = request.form.get('link', '').strip()
     ocasiao_id = request.form.get('ocasiao_id') or None
+    tipo_impressao_id = request.form.get('tipo_impressao_id') or None
+    cidade_slug = request.form.get('cidade_slug') or None
+    apenas_funcionalidades = 'apenas_funcionalidades' in request.form
     data_inicio = request.form.get('data_inicio') or None
     data_fim = request.form.get('data_fim') or None
     ativo = 'ativo' in request.form
@@ -1482,9 +1537,11 @@ def admin_anuncios_editar(item_id):
         execute("""
             UPDATE brindes_anuncios
             SET titulo = %s, posicao = %s, foto_url = %s, link = %s,
-                ocasiao_id = %s, data_inicio = %s, data_fim = %s, ativo = %s
+                ocasiao_id = %s, tipo_impressao_id = %s, cidade_slug = %s,
+                apenas_funcionalidades = %s, data_inicio = %s, data_fim = %s, ativo = %s
             WHERE id = %s
-        """, (titulo, posicao, foto_url, link, ocasiao_id, data_inicio, data_fim, ativo, item_id))
+        """, (titulo, posicao, foto_url, link, ocasiao_id, tipo_impressao_id,
+              cidade_slug, apenas_funcionalidades, data_inicio, data_fim, ativo, item_id))
         return jsonify({'ok': True})
     except Exception:
         return jsonify({'erro': 'Erro ao salvar o anúncio.'}), 400
