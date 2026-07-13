@@ -328,6 +328,33 @@ header{
 }
 .card-tipo h3{font-size:.96em;line-height:1.3}
 
+/* ============ CHIPS + GRID (padrão de filtro do AgênciaStart, adaptado ao design system) ============ */
+.chip-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:28px}
+.chip-cat{
+    padding:8px 18px;border-radius:999px;border:1px solid var(--line-strong);
+    background:var(--chrome-1);color:var(--ink-soft);font-family:'Montserrat',sans-serif;
+    font-size:.86em;font-weight:600;cursor:pointer;transition:all .15s;
+}
+.chip-cat:hover{border-color:var(--ink-black);color:var(--ink-black)}
+.chip-cat.active{background:var(--ink-black);border-color:var(--ink-black);color:#fff}
+.grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px}
+.grid-loading{color:var(--ink-faint);font-size:.92em;padding:8px 0}
+
+/* ============ TEMPLATES ("Monte sua página com QR code") ============ */
+.card-template{
+    background:var(--chrome-1);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;transition:transform .18s, box-shadow .18s;display:flex;flex-direction:column;
+}
+.card-template:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+.card-template-img{aspect-ratio:3/4;background:var(--surface-2);overflow:hidden;max-height:240px}
+.card-template-img img{width:100%;height:100%;object-fit:cover}
+.card-template-body{padding:16px;display:flex;flex-direction:column;gap:10px;flex:1}
+.card-template-body h3{font-size:1em}
+.badge-tpl{align-self:flex-start;font-size:.72em;font-family:'Montserrat',sans-serif;padding:3px 10px;border-radius:999px}
+.badge-tpl.gratis{background:var(--surface-2);color:var(--ink-soft)}
+.badge-tpl.pago{background:var(--ink-black);color:#fff}
+.card-template .btn-gerar{margin-top:auto;justify-content:center;font-size:.9em}
+
 /* ============ FOOTER ============ */
 footer{background:var(--ink-black);color:#e6e6e9;padding:52px 0 28px}
 .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px;margin-bottom:40px}
@@ -455,6 +482,36 @@ footer a:hover{color:#fff}
 </div>
 {% endif %}
 
+<!-- MONTE SUA PÁGINA COM QR CODE -->
+{% if templates %}
+<section class="section" id="modelos">
+    <div class="container">
+        <div class="section-head">
+            <span class="eyebrow">Modelo visual pronto</span>
+            <h2>Monte sua página com QR code</h2>
+            <p>Escolha um modelo pronto, personalize com sua mensagem e foto, e gere um QR code que abre direto nessa página.</p>
+        </div>
+
+        <div class="grid-cards">
+            {% for tpl in templates %}
+            <div class="card-template">
+                <div class="card-template-img">
+                    {% if tpl.preview_url %}
+                    <img src="{{ tpl.preview_url }}" alt="{{ tpl.nome }}" loading="lazy">
+                    {% endif %}
+                </div>
+                <div class="card-template-body">
+                    <span class="badge-tpl {{ 'pago' if tpl.tier == 'pago' else 'gratis' }}">{{ 'Pago' if tpl.tier == 'pago' else 'Grátis' }}</span>
+                    <h3>{{ tpl.nome }}</h3>
+                    <a class="btn-gerar" href="{{ url_for('gerar_qr') }}">Criar minha página →</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
 <!-- PÁGINAS EXTRAS -->
 <section class="section" id="paginas-extras">
     <div class="container extras-grid">
@@ -516,33 +573,14 @@ footer a:hover{color:#fff}
             <p>Uma seleção real de brindes por ocasião e tipo de impressão — pra você se inspirar ou já pedir orçamento.</p>
         </div>
 
-        {% if brindes_destaque and brindes_destaque|length >= 3 %}
-        <div class="carousel-wrap">
-            <div class="carousel">
-                {% for brinde in brindes_destaque %}
-                <a class="card-brinde" href="{{ url_for('brinde_publico', slug=brinde.slug) }}">
-                    <div class="card-brinde-img">
-                        {% if brinde.imagem_url %}
-                        <img src="{{ brinde.imagem_url }}" alt="{{ brinde.nome }}" loading="lazy">
-                        {% endif %}
-                    </div>
-                    <div class="card-brinde-body">
-                        <div class="card-brinde-tags">
-                            {% if brinde.ocasiao_nome %}<span>{{ brinde.ocasiao_nome }}</span>{% endif %}
-                            {% if brinde.tipo_nome %}<span>{{ brinde.tipo_nome }}</span>{% endif %}
-                        </div>
-                        <h3>{{ brinde.nome }}</h3>
-                    </div>
-                </a>
-                {% endfor %}
-            </div>
+        <div class="chip-row" id="chips-brindes"></div>
+        <div class="grid-cards" id="grid-brindes">
+            <p class="grid-loading">Carregando brindes...</p>
         </div>
-        {% else %}
-        <div class="empty-state">
+        <div class="empty-state" id="empty-brindes" style="display:none;">
             <strong>O catálogo está sendo montado</strong>
             Em breve você encontra aqui ideias reais de brinde com QR embutido, por ocasião e tipo de impressão.
         </div>
-        {% endif %}
 
         <div class="section-foot">
             <a class="link-arrow" href="{{ url_for('diretorio_publico') }}">Ver diretório completo de empresas →</a>
@@ -559,23 +597,13 @@ footer a:hover{color:#fff}
             <p>Sublimação, DTF, laser, silk, UV — encontre brindes organizados pelo processo de fabricação.</p>
         </div>
 
-        {% if tipos_destaque %}
-        <div class="carousel-wrap">
-            <div class="carousel">
-                {% for tipo in tipos_destaque %}
-                <a class="card-tipo" href="{{ url_for('impressao_publica', slug=tipo.slug) }}">
-                    <div class="card-tipo-icon">🖨️</div>
-                    <h3>{{ tipo.nome }}</h3>
-                </a>
-                {% endfor %}
-            </div>
+        <div class="grid-cards" id="grid-tipos">
+            <p class="grid-loading">Carregando tipos de impressão...</p>
         </div>
-        {% else %}
-        <div class="empty-state">
+        <div class="empty-state" id="empty-tipos" style="display:none;">
             <strong>Os tipos de impressão estão sendo cadastrados</strong>
             Em breve você encontra aqui os brindes organizados por técnica de impressão.
         </div>
-        {% endif %}
     </div>
 </section>
 
@@ -596,31 +624,14 @@ footer a:hover{color:#fff}
             <p>Fabricantes e gráficas de sublimação, DTF, laser, silk e UV, prontos pra receber seu pedido de orçamento.</p>
         </div>
 
-        {% if empresas_destaque and empresas_destaque|length >= 3 %}
-        <div class="carousel-wrap">
-            <div class="carousel">
-                {% for empresa in empresas_destaque %}
-                <a class="card-empresa" href="{{ url_for('empresa_publica', slug=empresa.slug) }}">
-                    <div class="card-empresa-logo">
-                        {% if empresa.logo_url %}
-                        <img src="{{ empresa.logo_url }}" alt="{{ empresa.nome }}">
-                        {% else %}
-                        {{ empresa.nome[0]|upper }}
-                        {% endif %}
-                    </div>
-                    <h3>{{ empresa.nome }}</h3>
-                    {% if empresa.cidade %}<div class="cidade">{{ empresa.cidade }}</div>{% endif %}
-                    <span class="badge-destaque">destaque</span>
-                </a>
-                {% endfor %}
-            </div>
+        <div class="chip-row" id="chips-empresas"></div>
+        <div class="grid-cards" id="grid-empresas">
+            <p class="grid-loading">Carregando empresas...</p>
         </div>
-        {% else %}
-        <div class="empty-state">
+        <div class="empty-state" id="empty-empresas" style="display:none;">
             <strong>O diretório está crescendo</strong>
             Em breve você encontra aqui as empresas parceiras prontas pra fabricar seu brinde.
         </div>
-        {% endif %}
 
         <div class="section-foot">
             <a class="link-arrow" href="{{ url_for('diretorio_publico') }}">Ver todas as empresas →</a>
@@ -769,6 +780,131 @@ document.addEventListener('keydown', function(e){
         toggleMobileNav(false);
     }
 });
+
+// ══════════════════════════════════════════════════════════════
+// CATÁLOGO (Brindes, Tipos de impressão, Empresas) — chip + grid
+// carregado via fetch em /api/brindes, /api/tipos-impressao e
+// /api/empresas. Sem limiar mínimo: a seção sempre aparece, só
+// varia o quanto tem dentro do grid.
+// ══════════════════════════════════════════════════════════════
+function escaparHtml(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+        return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+    });
+}
+
+let TODOS_BRINDES = [];
+let TODAS_EMPRESAS = [];
+
+function cardBrindeHTML(b){
+    const tags = [];
+    if (b.ocasiao_nome) tags.push('<span>' + escaparHtml(b.ocasiao_nome) + '</span>');
+    (b.tipos_nomes || []).forEach(function(t){ tags.push('<span>' + escaparHtml(t) + '</span>'); });
+    const img = b.imagem_url ? '<img src="' + b.imagem_url + '" alt="' + escaparHtml(b.nome) + '" loading="lazy">' : '';
+    return '<a class="card-brinde" href="/brinde/' + encodeURIComponent(b.slug) + '">' +
+        '<div class="card-brinde-img">' + img + '</div>' +
+        '<div class="card-brinde-body">' +
+            '<div class="card-brinde-tags">' + tags.join('') + '</div>' +
+            '<h3>' + escaparHtml(b.nome) + '</h3>' +
+        '</div>' +
+    '</a>';
+}
+
+function cardTipoHTML(t){
+    return '<a class="card-tipo" href="/impressao/' + encodeURIComponent(t.slug) + '">' +
+        '<div class="card-tipo-icon">🖨️</div>' +
+        '<h3>' + escaparHtml(t.nome) + '</h3>' +
+    '</a>';
+}
+
+function cardEmpresaHTML(e){
+    const logo = e.logo_url
+        ? '<img src="' + e.logo_url + '" alt="' + escaparHtml(e.nome) + '">'
+        : escaparHtml((e.nome || '?')[0].toUpperCase());
+    const destaque = e.plano === 'destaque' ? '<span class="badge-destaque">destaque</span>' : '';
+    return '<a class="card-empresa" href="/empresa/' + encodeURIComponent(e.slug) + '">' +
+        '<div class="card-empresa-logo">' + logo + '</div>' +
+        '<h3>' + escaparHtml(e.nome) + '</h3>' +
+        (e.cidade ? '<div class="cidade">' + escaparHtml(e.cidade) + '</div>' : '') +
+        destaque +
+    '</a>';
+}
+
+function renderGrid(gridId, emptyId, itens, cardFn){
+    const grid = document.getElementById(gridId);
+    const vazio = document.getElementById(emptyId);
+    if (!grid) return;
+    if (!itens.length){
+        grid.innerHTML = '';
+        grid.style.display = 'none';
+        if (vazio) vazio.style.display = '';
+        return;
+    }
+    grid.style.display = '';
+    if (vazio) vazio.style.display = 'none';
+    grid.innerHTML = itens.map(cardFn).join('');
+}
+
+function renderChips(rowId, valores, ativo, aoFiltrar){
+    const row = document.getElementById(rowId);
+    if (!row) return;
+    let html = '<button type="button" class="chip-cat' + (!ativo ? ' active' : '') + '" data-valor="">Todos</button>';
+    valores.forEach(function(v){
+        html += '<button type="button" class="chip-cat' + (v === ativo ? ' active' : '') + '" data-valor="' + escaparHtml(v) + '">' + escaparHtml(v) + '</button>';
+    });
+    row.innerHTML = html;
+    row.querySelectorAll('.chip-cat').forEach(function(chip){
+        chip.addEventListener('click', function(){
+            row.querySelectorAll('.chip-cat').forEach(function(c){ c.classList.remove('active'); });
+            chip.classList.add('active');
+            aoFiltrar(chip.dataset.valor || null);
+        });
+    });
+}
+
+function valoresUnicos(lista, chave){
+    const vistos = [];
+    lista.forEach(function(item){
+        const v = item[chave];
+        if (v && vistos.indexOf(v) === -1) vistos.push(v);
+    });
+    return vistos;
+}
+
+function filtrarBrindesPorOcasiao(ocasiao){
+    const filtrados = ocasiao ? TODOS_BRINDES.filter(function(b){ return b.ocasiao_nome === ocasiao; }) : TODOS_BRINDES;
+    renderGrid('grid-brindes', 'empty-brindes', filtrados, cardBrindeHTML);
+}
+
+function filtrarEmpresasPorCidade(cidade){
+    const filtradas = cidade ? TODAS_EMPRESAS.filter(function(e){ return e.cidade === cidade; }) : TODAS_EMPRESAS;
+    renderGrid('grid-empresas', 'empty-empresas', filtradas, cardEmpresaHTML);
+}
+
+fetch('/api/brindes')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+        TODOS_BRINDES = Array.isArray(data) ? data : [];
+        renderChips('chips-brindes', valoresUnicos(TODOS_BRINDES, 'ocasiao_nome'), null, filtrarBrindesPorOcasiao);
+        renderGrid('grid-brindes', 'empty-brindes', TODOS_BRINDES, cardBrindeHTML);
+    })
+    .catch(function(){ renderGrid('grid-brindes', 'empty-brindes', [], cardBrindeHTML); });
+
+fetch('/api/tipos-impressao')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+        renderGrid('grid-tipos', 'empty-tipos', Array.isArray(data) ? data : [], cardTipoHTML);
+    })
+    .catch(function(){ renderGrid('grid-tipos', 'empty-tipos', [], cardTipoHTML); });
+
+fetch('/api/empresas')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+        TODAS_EMPRESAS = Array.isArray(data) ? data : [];
+        renderChips('chips-empresas', valoresUnicos(TODAS_EMPRESAS, 'cidade'), null, filtrarEmpresasPorCidade);
+        renderGrid('grid-empresas', 'empty-empresas', TODAS_EMPRESAS, cardEmpresaHTML);
+    })
+    .catch(function(){ renderGrid('grid-empresas', 'empty-empresas', [], cardEmpresaHTML); });
 </script>
 
 </body>
