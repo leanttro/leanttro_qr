@@ -346,6 +346,15 @@ header{
 }
 .chip-cat:hover{border-color:var(--ink-black);color:var(--ink-black)}
 .chip-cat.active{background:var(--ink-black);border-color:var(--ink-black);color:#fff}
+.chip-ocasiao-wrap{display:inline-flex;align-items:center;border-radius:999px;border:1px solid var(--line-strong);overflow:hidden;transition:border-color .15s}
+.chip-ocasiao-wrap:hover{border-color:var(--ink-black)}
+.chip-ocasiao-wrap .chip-cat{border:none;border-radius:0;padding-right:10px}
+.chip-ocasiao-wrap.active-wrap{border-color:var(--ink-black)}
+.chip-ocasiao-wrap.active-wrap .chip-cat{background:var(--ink-black);color:#fff}
+.chip-ocasiao-link{display:flex;align-items:center;padding:0 10px;height:100%;font-size:.78em;color:var(--ink-faint);border-left:1px solid var(--line-strong);background:var(--chrome-1);transition:background .15s,color .15s;white-space:nowrap}
+.chip-ocasiao-link:hover{background:var(--surface-2);color:var(--ink-black)}
+.chip-ocasiao-wrap.active-wrap .chip-ocasiao-link{border-left-color:rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:rgba(255,255,255,.7)}
+.chip-ocasiao-wrap.active-wrap .chip-ocasiao-link:hover{background:rgba(255,255,255,.2);color:#fff}
 .grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px}
 .grid-loading{color:var(--ink-faint);font-size:.92em;padding:8px 0}
 
@@ -903,18 +912,33 @@ function renderGrid(gridId, emptyId, itens, cardFn){
     grid.innerHTML = itens.map(cardFn).join('');
 }
 
-function renderChips(rowId, valores, ativo, aoFiltrar){
+function slugify(str){
+    return String(str).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+function renderChips(rowId, valores, ativo, aoFiltrar, comLink){
     const row = document.getElementById(rowId);
     if (!row) return;
     let html = '<button type="button" class="chip-cat' + (!ativo ? ' active' : '') + '" data-valor="">Todos</button>';
     valores.forEach(function(v){
-        html += '<button type="button" class="chip-cat' + (v === ativo ? ' active' : '') + '" data-valor="' + escaparHtml(v) + '">' + escaparHtml(v) + '</button>';
+        const isAtivo = v === ativo;
+        if(comLink){
+            const slug = slugify(v);
+            html += '<span class="chip-ocasiao-wrap' + (isAtivo?' active-wrap':'') + '">' +
+                '<button type="button" class="chip-cat" data-valor="' + escaparHtml(v) + '">' + escaparHtml(v) + '</button>' +
+                '<a class="chip-ocasiao-link" href="/ocasiao/' + slug + '" title="Ver página de ' + escaparHtml(v) + '">ver →</a>' +
+            '</span>';
+        } else {
+            html += '<button type="button" class="chip-cat' + (isAtivo?' active':'') + '" data-valor="' + escaparHtml(v) + '">' + escaparHtml(v) + '</button>';
+        }
     });
     row.innerHTML = html;
     row.querySelectorAll('.chip-cat').forEach(function(chip){
         chip.addEventListener('click', function(){
             row.querySelectorAll('.chip-cat').forEach(function(c){ c.classList.remove('active'); });
+            row.querySelectorAll('.chip-ocasiao-wrap').forEach(function(w){ w.classList.remove('active-wrap'); });
             chip.classList.add('active');
+            const wrap = chip.closest('.chip-ocasiao-wrap');
+            if(wrap) wrap.classList.add('active-wrap');
             aoFiltrar(chip.dataset.valor || null);
         });
     });
@@ -981,7 +1005,7 @@ fetch('/api/brindes')
     .then(function(r){ return r.json(); })
     .then(function(data){
         TODOS_BRINDES = Array.isArray(data) ? data : [];
-        renderChips('chips-brindes', valoresUnicos(TODOS_BRINDES, 'ocasiao_nome'), null, filtrarBrindesPorOcasiao);
+        renderChips('chips-brindes', valoresUnicos(TODOS_BRINDES, 'ocasiao_nome'), null, filtrarBrindesPorOcasiao, true);
         renderGrid('grid-brindes', 'empty-brindes', TODOS_BRINDES, cardBrindeHTML);
     })
     .catch(function(){ renderGrid('grid-brindes', 'empty-brindes', [], cardBrindeHTML); });
@@ -1003,402 +1027,221 @@ fetch('/api/empresas')
     .catch(function(){ renderGrid('grid-empresas', 'empty-empresas', [], cardEmpresaHTML); });
 </script>
 
-<!-- ════════════════════════════════════════════════════════
-     BOTÃO FLUTUANTE WHATSAPP
-     ════════════════════════════════════════════════════════ -->
+<!-- WPP FLUTUANTE -->
 <a id="btn-wpp"
    href="https://wa.me/5511913324827?text=Olá,+vim+pelo+QR+Code+Brindes!"
    target="_blank" rel="noopener"
-   style="
-     position:fixed; bottom:80px; left:20px; z-index:999;
-     background:#25D366; color:#fff; border-radius:50px;
-     padding:11px 18px; display:flex; align-items:center; gap:8px;
-     font-family:'Montserrat',sans-serif; font-size:13px; font-weight:700;
-     box-shadow:0 4px 20px rgba(0,0,0,.2); text-decoration:none;
-     transition:box-shadow .2s, transform .15s;
-   "
+   title="WhatsApp"
+   style="position:fixed;bottom:76px;right:20px;z-index:999;background:#25D366;color:#fff;border-radius:50%;width:46px;height:46px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.2);text-decoration:none;transition:box-shadow .2s,transform .15s;"
    onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 28px rgba(0,0,0,.28)'"
    onmouseout="this.style.transform='';this.style.boxShadow='0 4px 20px rgba(0,0,0,.2)'"
 >
-  <svg width="18" height="18" viewBox="0 0 32 32" fill="currentColor"><path d="M16 0C7.163 0 0 7.163 0 16c0 2.822.736 5.47 2.027 7.773L0 32l8.476-2.004A15.935 15.935 0 0016 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm0 29.333a13.27 13.27 0 01-6.766-1.847l-.485-.289-5.03 1.188 1.21-4.895-.317-.502A13.267 13.267 0 012.667 16C2.667 8.636 8.636 2.667 16 2.667S29.333 8.636 29.333 16 23.364 29.333 16 29.333zm7.27-9.953c-.398-.199-2.355-1.162-2.72-1.295-.365-.133-.631-.199-.897.2-.266.398-1.031 1.295-1.264 1.561-.232.265-.465.298-.863.1-.398-.2-1.68-.619-3.2-1.974-1.183-1.054-1.981-2.355-2.213-2.753-.232-.398-.025-.614.174-.812.179-.178.398-.465.597-.698.2-.232.266-.398.398-.664.133-.265.067-.498-.033-.697-.1-.2-.897-2.162-1.23-2.96-.323-.777-.651-.672-.897-.684l-.764-.013c-.266 0-.697.1-1.063.498-.365.399-1.394 1.362-1.394 3.322s1.427 3.853 1.626 4.119c.2.265 2.808 4.287 6.803 6.013.951.41 1.692.655 2.271.839.954.303 1.822.26 2.509.158.765-.114 2.355-.963 2.687-1.893.332-.93.332-1.727.232-1.893-.099-.166-.365-.265-.763-.464z"/></svg>
-  WhatsApp
+  <svg width="20" height="20" viewBox="0 0 32 32" fill="currentColor"><path d="M16 0C7.163 0 0 7.163 0 16c0 2.822.736 5.47 2.027 7.773L0 32l8.476-2.004A15.935 15.935 0 0016 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm0 29.333a13.27 13.27 0 01-6.766-1.847l-.485-.289-5.03 1.188 1.21-4.895-.317-.502A13.267 13.267 0 012.667 16C2.667 8.636 8.636 2.667 16 2.667S29.333 8.636 29.333 16 23.364 29.333 16 29.333zm7.27-9.953c-.398-.199-2.355-1.162-2.72-1.295-.365-.133-.631-.199-.897.2-.266.398-1.031 1.295-1.264 1.561-.232.265-.465.298-.863.1-.398-.2-1.68-.619-3.2-1.974-1.183-1.054-1.981-2.355-2.213-2.753-.232-.398-.025-.614.174-.812.179-.178.398-.465.597-.698.2-.232.266-.398.398-.664.133-.265.067-.498-.033-.697-.1-.2-.897-2.162-1.23-2.96-.323-.777-.651-.672-.897-.684l-.764-.013c-.266 0-.697.1-1.063.498-.365.399-1.394 1.362-1.394 3.322s1.427 3.853 1.626 4.119c.2.265 2.808 4.287 6.803 6.013.951.41 1.692.655 2.271.839.954.303 1.822.26 2.509.158.765-.114 2.355-.963 2.687-1.893.332-.93.332-1.727.232-1.893-.099-.166-.365-.265-.763-.464z"/></svg>
 </a>
 
-<!-- ════════════════════════════════════════════════════════
-     BOTÃO FLUTUANTE CADASTRAR EMPRESA
-     ════════════════════════════════════════════════════════ -->
+<!-- CADASTRAR EMPRESA FLUTUANTE -->
 <button
-  id="btn-cadastrar-empresa"
   onclick="document.getElementById('modal-cadastro-empresa').classList.remove('modal-oculto')"
-  style="
-    position:fixed; bottom:20px; right:80px; z-index:998;
-    background:var(--ink-black); color:#fff; border:none;
-    border-radius:50px; padding:11px 18px;
-    font-size:13px; font-weight:700; cursor:pointer;
-    box-shadow:0 4px 16px rgba(0,0,0,.25);
-    display:flex; align-items:center; gap:8px;
-    font-family:'Montserrat',sans-serif;
-    transition:transform .15s, box-shadow .15s;
-  "
+  title="Cadastre sua empresa"
+  style="position:fixed;bottom:130px;right:20px;z-index:998;background:var(--ink-black);color:#fff;border:none;border-radius:50%;width:46px;height:46px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.25);cursor:pointer;transition:transform .15s,box-shadow .15s;"
   onmouseover="this.style.transform='translateY(-2px)'"
   onmouseout="this.style.transform=''"
 >
-  <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-  Cadastre sua empresa
+  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
 </button>
 
-<!-- ════════════════════════════════════════════════════════
-     MODAL CADASTRO DE EMPRESA
-     ════════════════════════════════════════════════════════ -->
-<div id="modal-cadastro-empresa" class="modal-oculto" style="
-  position:fixed; inset:0; z-index:9999;
-  background:rgba(0,0,0,.55); backdrop-filter:blur(3px);
-  display:flex; align-items:center; justify-content:center; padding:16px;
-">
-  <div style="
-    background:#fff; border-radius:16px;
-    width:100%; max-width:540px; max-height:92vh;
-    overflow-y:auto; padding:32px 28px; position:relative;
-    box-shadow:0 20px 60px rgba(0,0,0,.3);
-    font-family:'Montserrat',sans-serif;
-  ">
-    <button onclick="fecharModalEmpresa()" style="
-      position:absolute; top:16px; right:16px;
-      background:#f0f0f0; border:none; border-radius:50%;
-      width:32px; height:32px; cursor:pointer; font-size:20px;
-      line-height:32px; text-align:center; color:#555;
-    ">×</button>
+<!-- TRADUZIR FLUTUANTE -->
+<button id="translate-btn" onclick="toggleTranslateDrawer()" title="Traduzir"
+  style="position:fixed;bottom:20px;right:20px;z-index:999;background:#fff;border:none;border-radius:50%;width:46px;height:46px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,.18);cursor:pointer;transition:box-shadow .2s,transform .15s;"
+  onmouseover="this.style.transform='translateY(-2px)'"
+  onmouseout="this.style.transform=''"
+>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--ink-black)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+</button>
 
-    <h2 style="margin:0 0 4px; font-size:20px; font-weight:800; color:var(--ink-black);">Cadastre sua empresa de brindes</h2>
-    <p style="margin:0 0 24px; color:var(--ink-soft); font-size:13px;">
-      Fabricante, gráfica ou fornecedor? Apareça no diretório gratuitamente. Após análise, publicamos em breve.
-    </p>
-
-    <!-- Sucesso -->
-    <div id="empresa-sucesso" style="display:none; text-align:center; padding:32px 0;">
-      <div style="font-size:52px;">🎉</div>
-      <h3 style="color:var(--ink-black); margin:12px 0 8px; font-size:18px;">Cadastro enviado!</h3>
-      <p style="color:var(--ink-soft); margin:0 0 24px;">Vamos analisar e publicar em breve. Obrigado!</p>
-      <button onclick="fecharModalEmpresa()" style="
-        background:var(--ink-black); color:#fff; border:none; border-radius:8px;
-        padding:12px 28px; font-size:14px; cursor:pointer; font-weight:700;
-        font-family:'Montserrat',sans-serif;
-      ">Fechar</button>
+<!-- DRAWER TRADUÇÃO -->
+<div id="translate-drawer" style="position:fixed;bottom:74px;right:20px;z-index:1000;background:#fff;border-radius:16px;box-shadow:0 8px 40px rgba(0,0,0,.2);width:280px;max-height:420px;display:none;flex-direction:column;overflow:hidden;">
+    <div style="padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;">
+        <input id="td-search" type="text" placeholder="Buscar idioma…" oninput="filterLangs(this.value)"
+          style="flex:1;border:1.5px solid var(--line-strong);border-radius:8px;padding:8px 12px;font-family:'Montserrat',sans-serif;font-size:13px;outline:none;">
+        <button onclick="toggleTranslateDrawer()" style="background:none;border:none;color:#aaa;font-size:18px;cursor:pointer;">✕</button>
     </div>
+    <div id="td-list" style="overflow-y:auto;flex:1;padding:6px 0;"></div>
+</div>
 
-    <!-- Formulário -->
-    <form id="form-empresa" onsubmit="enviarCadastroEmpresa(event)" style="display:flex; flex-direction:column; gap:14px;">
+<style>
+.modal-oculto{display:none!important}
+.cad-label{display:block;font-size:12px;font-weight:700;color:var(--ink);margin-bottom:5px}
+.cad-inp{width:100%;padding:10px 12px;border:1.5px solid var(--line-strong);border-radius:8px;font-size:13px;box-sizing:border-box;outline:none;transition:border .15s;font-family:'Montserrat',sans-serif;background:#fff;color:var(--ink)}
+.cad-inp:focus{border-color:var(--ink-black)}
+@keyframes spin-i{to{transform:rotate(360deg)}}
+.td-item{padding:9px 18px;font-size:13px;cursor:pointer;color:var(--ink);transition:background .1s;display:flex;align-items:center;gap:10px}
+.td-item:hover{background:var(--surface)}
+.td-item.active{color:var(--ink-black);font-weight:600;background:var(--surface-2)}
+#google_translate_element{position:absolute;visibility:hidden;pointer-events:none}
+.goog-te-banner-frame,.skiptranslate{display:none!important}
+body{top:0!important}
+</style>
 
-      <div>
-        <label class="cad-label">Nome da empresa <span style="color:#e53935">*</span></label>
-        <input name="nome" required maxlength="255" placeholder="Ex: Brindes Express SP" class="cad-inp">
+<!-- MODAL CADASTRO EMPRESA -->
+<div id="modal-cadastro-empresa" class="modal-oculto" style="position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;padding:32px 28px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.3);font-family:'Montserrat',sans-serif;">
+    <button onclick="fecharModalEmpresa()" style="position:absolute;top:16px;right:16px;background:#f0f0f0;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:20px;line-height:32px;text-align:center;color:#555;">×</button>
+    <h2 style="margin:0 0 4px;font-size:20px;font-weight:800;color:var(--ink-black);">Cadastre sua empresa de brindes</h2>
+    <p style="margin:0 0 24px;color:var(--ink-soft);font-size:13px;">Fabricante, gráfica ou fornecedor? Apareça no diretório gratuitamente. Após análise, publicamos em breve.</p>
+    <div id="empresa-sucesso" style="display:none;text-align:center;padding:32px 0;">
+      <div style="font-size:52px;">🎉</div>
+      <h3 style="color:var(--ink-black);margin:12px 0 8px;font-size:18px;">Cadastro enviado!</h3>
+      <p style="color:var(--ink-soft);margin:0 0 24px;">Vamos analisar e publicar em breve. Obrigado!</p>
+      <button onclick="fecharModalEmpresa()" style="background:var(--ink-black);color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:14px;cursor:pointer;font-weight:700;font-family:'Montserrat',sans-serif;">Fechar</button>
+    </div>
+    <form id="form-empresa" onsubmit="enviarCadastroEmpresa(event)" style="display:flex;flex-direction:column;gap:14px;">
+      <div><label class="cad-label">Nome da empresa <span style="color:#e53935">*</span></label><input name="nome" required maxlength="255" placeholder="Ex: Brindes Express SP" class="cad-inp"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div><label class="cad-label">Cidade</label><input name="cidade" maxlength="255" placeholder="São Paulo" class="cad-inp"></div>
+        <div><label class="cad-label">Bairro</label><input name="bairro" maxlength="255" placeholder="Centro" class="cad-inp"></div>
       </div>
-
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-        <div>
-          <label class="cad-label">Cidade</label>
-          <input name="cidade" maxlength="255" placeholder="São Paulo" class="cad-inp">
-        </div>
-        <div>
-          <label class="cad-label">Bairro</label>
-          <input name="bairro" maxlength="255" placeholder="Centro" class="cad-inp">
-        </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div><label class="cad-label">WhatsApp</label><input name="whatsapp" maxlength="50" placeholder="(11) 99999-9999" class="cad-inp"></div>
+        <div><label class="cad-label">Telefone</label><input name="telefone" maxlength="50" placeholder="(11) 3333-3333" class="cad-inp"></div>
       </div>
-
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-        <div>
-          <label class="cad-label">WhatsApp</label>
-          <input name="whatsapp" maxlength="50" placeholder="(11) 99999-9999" class="cad-inp">
-        </div>
-        <div>
-          <label class="cad-label">Telefone</label>
-          <input name="telefone" maxlength="50" placeholder="(11) 3333-3333" class="cad-inp">
-        </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div><label class="cad-label">Instagram</label><input name="instagram" maxlength="255" placeholder="@suaempresa" class="cad-inp"></div>
+        <div><label class="cad-label">Site</label><input name="site_url" maxlength="255" placeholder="https://seusite.com" class="cad-inp"></div>
       </div>
-
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-        <div>
-          <label class="cad-label">Instagram</label>
-          <input name="instagram" maxlength="255" placeholder="@suaempresa" class="cad-inp">
-        </div>
-        <div>
-          <label class="cad-label">Site</label>
-          <input name="site_url" maxlength="255" placeholder="https://seusite.com" class="cad-inp">
-        </div>
-      </div>
-
-      <div>
-        <label class="cad-label">Descrição</label>
-        <textarea name="descricao" rows="3" maxlength="1000" class="cad-inp"
-                  placeholder="Especialidades, produtos, diferenciais..." style="resize:vertical;"></textarea>
-      </div>
-
-      <!-- Upload de logo via Imgur -->
+      <div><label class="cad-label">Descrição</label><textarea name="descricao" rows="3" maxlength="1000" class="cad-inp" placeholder="Especialidades, produtos, diferenciais..." style="resize:vertical;"></textarea></div>
       <div>
         <label class="cad-label">Logo da empresa</label>
-        <div id="emp-imgur-area" style="
-          border:2px dashed #ddd; border-radius:10px; padding:18px;
-          text-align:center; cursor:pointer; background:#fafafa;
-          transition:border-color .2s, background .2s;
-        "
+        <div id="emp-imgur-area" style="border:2px dashed #ddd;border-radius:10px;padding:18px;text-align:center;cursor:pointer;background:#fafafa;transition:border-color .2s,background .2s;"
           onclick="document.getElementById('emp-file-input').click()"
-          ondragover="empDragOver(event)" ondragleave="empDragLeave(event)" ondrop="empDrop(event)"
-        >
+          ondragover="empDragOver(event)" ondragleave="empDragLeave(event)" ondrop="empDrop(event)">
           <input type="file" id="emp-file-input" accept="image/*" style="display:none" onchange="empUpload(this.files[0])">
-          <div id="emp-imgur-idle">
-            <svg width="28" height="28" fill="none" stroke="#bbb" stroke-width="1.5" viewBox="0 0 24 24" style="margin-bottom:6px;"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-            <p style="margin:0; font-size:12px; color:#888;">Clique ou arraste a logo aqui<br><span style="color:#bbb;">JPG, PNG, WebP — máx. 10 MB</span></p>
-          </div>
-          <div id="emp-imgur-loading" style="display:none;">
-            <div style="width:24px;height:24px;border:3px solid #eee;border-top-color:#111;border-radius:50%;animation:spin-imgur .7s linear infinite;margin:0 auto 6px;"></div>
-            <p style="margin:0;font-size:12px;color:#888;">Enviando...</p>
-          </div>
-          <div id="emp-imgur-preview" style="display:none;">
-            <img id="emp-preview-img" src="" alt="Preview" style="max-height:100px;max-width:100%;border-radius:8px;object-fit:contain;">
-            <button type="button" onclick="empLimpar(event)" style="display:block;margin:6px auto 0;background:none;border:none;color:#e53935;font-size:12px;cursor:pointer;">✕ Remover</button>
-          </div>
+          <div id="emp-imgur-idle"><svg width="28" height="28" fill="none" stroke="#bbb" stroke-width="1.5" viewBox="0 0 24 24" style="margin-bottom:6px;"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><p style="margin:0;font-size:12px;color:#888;">Clique ou arraste a logo aqui<br><span style="color:#bbb;">JPG, PNG, WebP — máx. 10 MB</span></p></div>
+          <div id="emp-imgur-loading" style="display:none;"><div style="width:24px;height:24px;border:3px solid #eee;border-top-color:#111;border-radius:50%;animation:spin-i .7s linear infinite;margin:0 auto 6px;"></div><p style="margin:0;font-size:12px;color:#888;">Enviando...</p></div>
+          <div id="emp-imgur-preview" style="display:none;"><img id="emp-preview-img" src="" alt="" style="max-height:100px;max-width:100%;border-radius:8px;object-fit:contain;"><button type="button" onclick="empLimpar(event)" style="display:block;margin:6px auto 0;background:none;border:none;color:#e53935;font-size:12px;cursor:pointer;">✕ Remover</button></div>
         </div>
         <div id="emp-imgur-erro" style="display:none;color:#c0392b;font-size:12px;margin-top:4px;"></div>
         <input type="hidden" name="logo_url" id="emp-logo-url">
       </div>
-
-      <div id="empresa-erro" style="display:none; color:#c0392b; font-size:13px;
-           background:#fdf0ef; border:1px solid #f5c6c6; border-radius:8px; padding:10px 12px;"></div>
-
-      <button type="submit" id="btn-submit-empresa" style="
-        background:var(--ink-black); color:#fff; border:none; border-radius:10px;
-        padding:14px; font-size:15px; font-weight:700; cursor:pointer;
-        font-family:'Montserrat',sans-serif; transition:background .2s; margin-top:4px;
-      ">Enviar cadastro</button>
+      <div id="empresa-erro" style="display:none;color:#c0392b;font-size:13px;background:#fdf0ef;border:1px solid #f5c6c6;border-radius:8px;padding:10px 12px;"></div>
+      <button type="submit" id="btn-submit-empresa" style="background:var(--ink-black);color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Montserrat',sans-serif;margin-top:4px;">Enviar cadastro</button>
     </form>
   </div>
 </div>
 
-<style>
-  .modal-oculto { display:none !important; }
-  .cad-label { display:block; font-size:12px; font-weight:700; color:var(--ink); margin-bottom:5px; }
-  .cad-inp {
-    width:100%; padding:10px 12px;
-    border:1.5px solid var(--line-strong); border-radius:8px;
-    font-size:13px; box-sizing:border-box;
-    outline:none; transition:border .15s;
-    font-family:'Montserrat',sans-serif;
-    background:#fff; color:var(--ink);
-  }
-  .cad-inp:focus { border-color:var(--ink-black); }
-  @keyframes spin-imgur { to { transform:rotate(360deg); } }
-</style>
-
-<script>
-// ── Imgur upload (logo empresa) ────────────────────────────
-const IMGUR_CLIENT_ID = '546c25a59c58ad7';
-
-function empDragOver(e){ e.preventDefault(); document.getElementById('emp-imgur-area').style.borderColor='var(--ink-black)'; document.getElementById('emp-imgur-area').style.background='#f6f6f8'; }
-function empDragLeave(){ document.getElementById('emp-imgur-area').style.borderColor='#ddd'; document.getElementById('emp-imgur-area').style.background='#fafafa'; }
-function empDrop(e){ e.preventDefault(); empDragLeave(); const f=e.dataTransfer.files[0]; if(f) empUpload(f); }
-
-async function empUpload(file) {
-  if (!file) return;
-  if (file.size > 10*1024*1024) { document.getElementById('emp-imgur-erro').textContent='Imagem muito grande (máx. 10 MB).'; document.getElementById('emp-imgur-erro').style.display='block'; return; }
-  document.getElementById('emp-imgur-erro').style.display='none';
-  document.getElementById('emp-imgur-idle').style.display='none';
-  document.getElementById('emp-imgur-preview').style.display='none';
-  document.getElementById('emp-imgur-loading').style.display='block';
-  try {
-    const body=new FormData(); body.append('image',file);
-    const res=await fetch('https://api.imgur.com/3/image',{method:'POST',headers:{Authorization:'Client-ID '+IMGUR_CLIENT_ID},body});
-    const data=await res.json();
-    if(!res.ok||!data.success) throw new Error(data.data?.error||'Erro no Imgur');
-    const url=data.data.link;
-    document.getElementById('emp-logo-url').value=url;
-    document.getElementById('emp-preview-img').src=url;
-    document.getElementById('emp-imgur-loading').style.display='none';
-    document.getElementById('emp-imgur-preview').style.display='block';
-    document.getElementById('emp-imgur-area').style.borderColor='var(--ink-black)';
-  } catch(err) {
-    document.getElementById('emp-imgur-loading').style.display='none';
-    document.getElementById('emp-imgur-idle').style.display='block';
-    document.getElementById('emp-imgur-erro').textContent='Falha no upload: '+(err.message||'tente novamente.');
-    document.getElementById('emp-imgur-erro').style.display='block';
-  }
-}
-function empLimpar(e){
-  e.stopPropagation();
-  document.getElementById('emp-logo-url').value='';
-  document.getElementById('emp-file-input').value='';
-  document.getElementById('emp-imgur-preview').style.display='none';
-  document.getElementById('emp-imgur-idle').style.display='block';
-  document.getElementById('emp-imgur-area').style.borderColor='#ddd';
-  document.getElementById('emp-imgur-area').style.background='#fafafa';
-}
-
-function fecharModalEmpresa(){
-  document.getElementById('modal-cadastro-empresa').classList.add('modal-oculto');
-  document.getElementById('form-empresa').reset();
-  document.getElementById('form-empresa').style.display='flex';
-  document.getElementById('empresa-sucesso').style.display='none';
-  document.getElementById('empresa-erro').style.display='none';
-  empLimpar({stopPropagation:function(){}});
-}
-document.getElementById('modal-cadastro-empresa').addEventListener('click',function(e){ if(e.target===this) fecharModalEmpresa(); });
-document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!document.getElementById('modal-cadastro-empresa').classList.contains('modal-oculto')) fecharModalEmpresa(); });
-
-async function enviarCadastroEmpresa(e) {
-  e.preventDefault();
-  const btn=document.getElementById('btn-submit-empresa');
-  const erro=document.getElementById('empresa-erro');
-  erro.style.display='none';
-  btn.disabled=true; btn.textContent='Enviando...';
-  try {
-    const res=await fetch('/cadastrar-empresa',{method:'POST',body:new FormData(e.target)});
-    const data=await res.json();
-    if(res.ok&&data.ok){
-      document.getElementById('form-empresa').style.display='none';
-      document.getElementById('empresa-sucesso').style.display='block';
-    } else {
-      erro.textContent=data.erro||'Erro ao enviar. Tente novamente.';
-      erro.style.display='block';
-    }
-  } catch(err){
-    erro.textContent='Erro de conexão. Verifique sua internet e tente novamente.';
-    erro.style.display='block';
-  } finally {
-    btn.disabled=false; btn.textContent='Enviar cadastro';
-  }
-}
-</script>
-
-<!-- ════════════════════════════════════════════════════════
-     BOTÃO FLUTUANTE DE TRADUÇÃO + DRAWER DE IDIOMAS
-     ════════════════════════════════════════════════════════ -->
 <div id="google_translate_element"></div>
-<script>
-function googleTranslateElementInit() {
-    new google.translate.TranslateElement({ pageLanguage: 'pt', autoDisplay: false }, 'google_translate_element');
-}
-</script>
+<script>function googleTranslateElementInit(){new google.translate.TranslateElement({pageLanguage:'pt',autoDisplay:false},'google_translate_element');}</script>
 <script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
-<button id="translate-btn" onclick="toggleTranslateDrawer()">
-    <i class="fas fa-language"></i> Traduzir
-</button>
-
-<div id="translate-drawer">
-    <div class="td-header">
-        <input class="td-search" id="td-search" type="text" placeholder="Buscar idioma…" oninput="filterLangs(this.value)">
-        <button class="td-close" onclick="toggleTranslateDrawer()">&#10005;</button>
-    </div>
-    <div class="td-list" id="td-list"></div>
-</div>
-
-<style>
-    #google_translate_element { position:absolute; visibility:hidden; pointer-events:none; }
-    .goog-te-banner-frame, .skiptranslate { display:none !important; }
-    body { top:0 !important; }
-
-    #translate-btn {
-        position:fixed; bottom:20px; right:20px; z-index:999;
-        background:#fff; border:none; border-radius:50px;
-        padding:10px 18px; display:flex; align-items:center; gap:8px;
-        font-family:'Montserrat',sans-serif; font-size:13px; font-weight:600;
-        color:var(--ink-black); cursor:pointer;
-        box-shadow:0 4px 20px rgba(0,0,0,.18);
-        transition:box-shadow .2s, transform .15s;
-    }
-    #translate-btn:hover { box-shadow:0 6px 28px rgba(0,0,0,.25); transform:translateY(-1px); }
-    #translate-btn i { color:var(--ink-black); font-size:15px; }
-
-    #translate-drawer {
-        position:fixed; bottom:70px; right:20px; z-index:1000;
-        background:#fff; border-radius:16px;
-        box-shadow:0 8px 40px rgba(0,0,0,.2);
-        width:280px; max-height:420px;
-        display:none; flex-direction:column; overflow:hidden;
-    }
-    #translate-drawer.open { display:flex; }
-    .td-header { padding:12px 14px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:8px; }
-    .td-search { flex:1; border:1.5px solid var(--line-strong); border-radius:8px; padding:8px 12px; font-family:'Montserrat',sans-serif; font-size:13px; outline:none; transition:border-color .2s; }
-    .td-search:focus { border-color:var(--ink-black); }
-    .td-close { background:none; border:none; color:#aaa; font-size:18px; cursor:pointer; line-height:1; padding:2px 4px; }
-    .td-close:hover { color:var(--ink-soft); }
-    .td-list { overflow-y:auto; flex:1; padding:6px 0; }
-    .td-item { padding:9px 18px; font-size:13px; cursor:pointer; color:var(--ink); transition:background .1s; display:flex; align-items:center; gap:10px; }
-    .td-item:hover { background:var(--surface); color:var(--ink-black); }
-    .td-item.active { color:var(--ink-black); font-weight:600; background:var(--surface-2); }
-    .td-item .flag { font-size:17px; flex-shrink:0; }
-    .td-empty { padding:24px; text-align:center; color:#bbb; font-size:13px; }
-
-    @media (max-width:480px) {
-        #translate-drawer { width:calc(100vw - 32px); right:16px; bottom:72px; max-height:55vh; }
-        #translate-btn { bottom:16px; right:16px; }
-    }
-</style>
-
 <script>
-const LANGS = [
+const LANGS=[
+    {code:'ar',name:'Arabic',flag:'🇸🇦'},{code:'zh-CN',name:'Chinese',flag:'🇨🇳'},{code:'nl',name:'Dutch',flag:'🇳🇱'},
+    {code:'en',name:'English',flag:'🇬🇧'},{code:'fr',name:'French',flag:'🇫🇷'},{code:'de',name:'German',flag:'🇩🇪'},
+    {code:'hi',name:'Hindi',flag:'🇮🇳'},{code:'id',name:'Indonesian',flag:'🇮🇩'},{code:'it',name:'Italian',flag:'🇮🇹'},
+    {code:'ja',name:'Japanese',flag:'🇯🇵'},{code:'ko',name:'Korean',flag:'🇰🇷'},{code:'pl',name:'Polish',flag:'🇵🇱'},
+    {code:'pt',name:'Português',flag:'🇧🇷'},{code:'ru',name:'Russian',flag:'🇷🇺'},{code:'es',name:'Spanish',flag:'🇪🇸'},
+    {code:'tr',name:'Turkish',flag:'🇹🇷'},{code:'uk',name:'Ukrainian',flag:'🇺🇦'},{code:'vi',name:'Vietnamese',flag:'🇻🇳'},
     {code:'af',name:'Afrikaans',flag:'🇿🇦'},{code:'sq',name:'Albanian',flag:'🇦🇱'},{code:'am',name:'Amharic',flag:'🇪🇹'},
-    {code:'ar',name:'Arabic',flag:'🇸🇦'},{code:'hy',name:'Armenian',flag:'🇦🇲'},{code:'az',name:'Azerbaijani',flag:'🇦🇿'},
-    {code:'eu',name:'Basque',flag:'🏴'},{code:'be',name:'Belarusian',flag:'🇧🇾'},{code:'bn',name:'Bengali',flag:'🇧🇩'},
-    {code:'bs',name:'Bosnian',flag:'🇧🇦'},{code:'bg',name:'Bulgarian',flag:'🇧🇬'},{code:'ca',name:'Catalan',flag:'🏴'},
-    {code:'zh-CN',name:'Chinese (Simplified)',flag:'🇨🇳'},{code:'zh-TW',name:'Chinese (Traditional)',flag:'🇹🇼'},
-    {code:'hr',name:'Croatian',flag:'🇭🇷'},{code:'cs',name:'Czech',flag:'🇨🇿'},{code:'da',name:'Danish',flag:'🇩🇰'},
-    {code:'nl',name:'Dutch',flag:'🇳🇱'},{code:'en',name:'English',flag:'🇬🇧'},{code:'eo',name:'Esperanto',flag:'🌍'},
-    {code:'et',name:'Estonian',flag:'🇪🇪'},{code:'fi',name:'Finnish',flag:'🇫🇮'},{code:'fr',name:'French',flag:'🇫🇷'},
-    {code:'gl',name:'Galician',flag:'🏴'},{code:'ka',name:'Georgian',flag:'🇬🇪'},{code:'de',name:'German',flag:'🇩🇪'},
-    {code:'el',name:'Greek',flag:'🇬🇷'},{code:'gu',name:'Gujarati',flag:'🇮🇳'},{code:'ht',name:'Haitian Creole',flag:'🇭🇹'},
-    {code:'he',name:'Hebrew',flag:'🇮🇱'},{code:'hi',name:'Hindi',flag:'🇮🇳'},{code:'hu',name:'Hungarian',flag:'🇭🇺'},
-    {code:'is',name:'Icelandic',flag:'🇮🇸'},{code:'id',name:'Indonesian',flag:'🇮🇩'},{code:'ga',name:'Irish',flag:'🇮🇪'},
-    {code:'it',name:'Italian',flag:'🇮🇹'},{code:'ja',name:'Japanese',flag:'🇯🇵'},{code:'kn',name:'Kannada',flag:'🇮🇳'},
-    {code:'kk',name:'Kazakh',flag:'🇰🇿'},{code:'ko',name:'Korean',flag:'🇰🇷'},{code:'lv',name:'Latvian',flag:'🇱🇻'},
-    {code:'lt',name:'Lithuanian',flag:'🇱🇹'},{code:'mk',name:'Macedonian',flag:'🇲🇰'},{code:'ms',name:'Malay',flag:'🇲🇾'},
-    {code:'mt',name:'Maltese',flag:'🇲🇹'},{code:'mn',name:'Mongolian',flag:'🇲🇳'},{code:'ne',name:'Nepali',flag:'🇳🇵'},
-    {code:'no',name:'Norwegian',flag:'🇳🇴'},{code:'fa',name:'Persian',flag:'🇮🇷'},{code:'pl',name:'Polish',flag:'🇵🇱'},
-    {code:'pt',name:'Português',flag:'🇧🇷'},{code:'ro',name:'Romanian',flag:'🇷🇴'},{code:'ru',name:'Russian',flag:'🇷🇺'},
-    {code:'sr',name:'Serbian',flag:'🇷🇸'},{code:'sk',name:'Slovak',flag:'🇸🇰'},{code:'sl',name:'Slovenian',flag:'🇸🇮'},
-    {code:'es',name:'Spanish',flag:'🇪🇸'},{code:'sw',name:'Swahili',flag:'🇰🇪'},{code:'sv',name:'Swedish',flag:'🇸🇪'},
-    {code:'tl',name:'Tagalog (Filipino)',flag:'🇵🇭'},{code:'ta',name:'Tamil',flag:'🇮🇳'},{code:'te',name:'Telugu',flag:'🇮🇳'},
-    {code:'th',name:'Thai',flag:'🇹🇭'},{code:'tr',name:'Turkish',flag:'🇹🇷'},{code:'uk',name:'Ukrainian',flag:'🇺🇦'},
-    {code:'ur',name:'Urdu',flag:'🇵🇰'},{code:'vi',name:'Vietnamese',flag:'🇻🇳'},{code:'cy',name:'Welsh',flag:'🏴󠁧󠁢󠁷󠁬󠁳󠁿'},
-    {code:'zh',name:'Chinese',flag:'🇨🇳'},{code:'yo',name:'Yoruba',flag:'🇳🇬'},{code:'zu',name:'Zulu',flag:'🇿🇦'}
+    {code:'hy',name:'Armenian',flag:'🇦🇲'},{code:'az',name:'Azerbaijani',flag:'🇦🇿'},{code:'be',name:'Belarusian',flag:'🇧🇾'},
+    {code:'bn',name:'Bengali',flag:'🇧🇩'},{code:'bs',name:'Bosnian',flag:'🇧🇦'},{code:'bg',name:'Bulgarian',flag:'🇧🇬'},
+    {code:'ca',name:'Catalan',flag:'🏴'},{code:'hr',name:'Croatian',flag:'🇭🇷'},{code:'cs',name:'Czech',flag:'🇨🇿'},
+    {code:'da',name:'Danish',flag:'🇩🇰'},{code:'et',name:'Estonian',flag:'🇪🇪'},{code:'fi',name:'Finnish',flag:'🇫🇮'},
+    {code:'gl',name:'Galician',flag:'🏴'},{code:'ka',name:'Georgian',flag:'🇬🇪'},{code:'el',name:'Greek',flag:'🇬🇷'},
+    {code:'he',name:'Hebrew',flag:'🇮🇱'},{code:'hu',name:'Hungarian',flag:'🇭🇺'},{code:'is',name:'Icelandic',flag:'🇮🇸'},
+    {code:'ga',name:'Irish',flag:'🇮🇪'},{code:'lv',name:'Latvian',flag:'🇱🇻'},{code:'lt',name:'Lithuanian',flag:'🇱🇹'},
+    {code:'ms',name:'Malay',flag:'🇲🇾'},{code:'mt',name:'Maltese',flag:'🇲🇹'},{code:'mn',name:'Mongolian',flag:'🇲🇳'},
+    {code:'ne',name:'Nepali',flag:'🇳🇵'},{code:'no',name:'Norwegian',flag:'🇳🇴'},{code:'fa',name:'Persian',flag:'🇮🇷'},
+    {code:'ro',name:'Romanian',flag:'🇷🇴'},{code:'sr',name:'Serbian',flag:'🇷🇸'},{code:'sk',name:'Slovak',flag:'🇸🇰'},
+    {code:'sl',name:'Slovenian',flag:'🇸🇮'},{code:'sw',name:'Swahili',flag:'🇰🇪'},{code:'sv',name:'Swedish',flag:'🇸🇪'},
+    {code:'tl',name:'Tagalog',flag:'🇵🇭'},{code:'ta',name:'Tamil',flag:'🇮🇳'},{code:'th',name:'Thai',flag:'🇹🇭'},
+    {code:'cy',name:'Welsh',flag:'🏴󠁧󠁢󠁷󠁬󠁳󠁿'},{code:'yo',name:'Yoruba',flag:'🇳🇬'},{code:'zu',name:'Zulu',flag:'🇿🇦'}
 ];
-
 let currentLang='pt', drawerOpen=false;
-
 function renderLangs(list){
     const el=document.getElementById('td-list');
-    if(!list.length){ el.innerHTML='<div class="td-empty">Nenhum idioma encontrado</div>'; return; }
-    el.innerHTML=list.map(l=>'<div class="td-item '+(l.code===currentLang?'active':'')+'" onclick="selectLang(\''+l.code+'\',\''+l.name+'\')"><span class="flag">'+l.flag+'</span> '+l.name+'</div>').join('');
+    if(!list.length){el.innerHTML='<div style="padding:24px;text-align:center;color:#bbb;font-size:13px;">Nenhum idioma encontrado</div>';return;}
+    el.innerHTML=list.map(function(l){return'<div class="td-item'+(l.code===currentLang?' active':'')+'" onclick="selectLang(\''+l.code+'\',\''+l.name+'\')"><span style="font-size:17px">'+l.flag+'</span> '+l.name+'</div>';}).join('');
 }
-function filterLangs(q){ renderLangs(LANGS.filter(function(l){ return l.name.toLowerCase().includes(q.toLowerCase()); })); }
+function filterLangs(q){renderLangs(LANGS.filter(function(l){return l.name.toLowerCase().includes(q.toLowerCase());}));}
 function selectLang(code,name){
     currentLang=code; drawerOpen=false;
-    document.getElementById('translate-drawer').classList.remove('open');
-    var lang=LANGS.find(function(l){ return l.code===code; });
-    document.getElementById('translate-btn').innerHTML='<i class="fas fa-language"></i> '+(lang?lang.flag+' '+name:name);
-    if(code==='pt'){
-        var sel=document.querySelector('.goog-te-combo');
-        if(sel){ sel.value=''; sel.dispatchEvent(new Event('change')); }
-        document.getElementById('translate-btn').innerHTML='<i class="fas fa-language"></i> Traduzir';
-        return;
-    }
-    var tryTranslate=function(attempts){
-        var sel=document.querySelector('.goog-te-combo');
-        if(sel){ sel.value=code; sel.dispatchEvent(new Event('change')); }
-        else if(attempts>0){ setTimeout(function(){ tryTranslate(attempts-1); },300); }
-    };
-    tryTranslate(10);
+    document.getElementById('translate-drawer').style.display='none';
+    if(code==='pt'){var sel=document.querySelector('.goog-te-combo');if(sel){sel.value='';sel.dispatchEvent(new Event('change'));} return;}
+    var tryT=function(n){var sel=document.querySelector('.goog-te-combo');if(sel){sel.value=code;sel.dispatchEvent(new Event('change'));}else if(n>0){setTimeout(function(){tryT(n-1);},300);}};
+    tryT(10);
 }
 function toggleTranslateDrawer(){
     drawerOpen=!drawerOpen;
-    var drawer=document.getElementById('translate-drawer');
-    if(drawerOpen){ drawer.classList.add('open'); renderLangs(LANGS); var s=document.getElementById('td-search'); s.value=''; setTimeout(function(){ s.focus(); },50); }
-    else { drawer.classList.remove('open'); }
+    var d=document.getElementById('translate-drawer');
+    if(drawerOpen){d.style.display='flex';renderLangs(LANGS);var s=document.getElementById('td-search');s.value='';setTimeout(function(){s.focus();},50);}
+    else{d.style.display='none';}
 }
 document.addEventListener('click',function(e){
-    if(drawerOpen&&!document.getElementById('translate-drawer').contains(e.target)&&!document.getElementById('translate-btn').contains(e.target)){
-        drawerOpen=false; document.getElementById('translate-drawer').classList.remove('open');
+    if(drawerOpen&&!document.getElementById('translate-drawer').contains(e.target)&&e.target.id!=='translate-btn'){
+        drawerOpen=false;document.getElementById('translate-drawer').style.display='none';
     }
 });
+
+// Imgur upload logo empresa
+const IMGUR_CLIENT_ID='546c25a59c58ad7';
+function empDragOver(e){e.preventDefault();document.getElementById('emp-imgur-area').style.borderColor='var(--ink-black)';}
+function empDragLeave(){document.getElementById('emp-imgur-area').style.borderColor='#ddd';}
+function empDrop(e){e.preventDefault();empDragLeave();var f=e.dataTransfer.files[0];if(f)empUpload(f);}
+async function empUpload(file){
+    if(!file)return;
+    if(file.size>10*1024*1024){document.getElementById('emp-imgur-erro').textContent='Imagem muito grande (máx. 10 MB).';document.getElementById('emp-imgur-erro').style.display='block';return;}
+    document.getElementById('emp-imgur-erro').style.display='none';
+    document.getElementById('emp-imgur-idle').style.display='none';
+    document.getElementById('emp-imgur-preview').style.display='none';
+    document.getElementById('emp-imgur-loading').style.display='block';
+    try{
+        const body=new FormData();body.append('image',file);
+        const res=await fetch('https://api.imgur.com/3/image',{method:'POST',headers:{Authorization:'Client-ID '+IMGUR_CLIENT_ID},body});
+        const data=await res.json();
+        if(!res.ok||!data.success)throw new Error(data.data?.error||'Erro no Imgur');
+        const url=data.data.link;
+        document.getElementById('emp-logo-url').value=url;
+        document.getElementById('emp-preview-img').src=url;
+        document.getElementById('emp-imgur-loading').style.display='none';
+        document.getElementById('emp-imgur-preview').style.display='block';
+    }catch(err){
+        document.getElementById('emp-imgur-loading').style.display='none';
+        document.getElementById('emp-imgur-idle').style.display='block';
+        document.getElementById('emp-imgur-erro').textContent='Falha no upload: '+(err.message||'tente novamente.');
+        document.getElementById('emp-imgur-erro').style.display='block';
+    }
+}
+function empLimpar(e){
+    e.stopPropagation();
+    document.getElementById('emp-logo-url').value='';
+    document.getElementById('emp-file-input').value='';
+    document.getElementById('emp-imgur-preview').style.display='none';
+    document.getElementById('emp-imgur-idle').style.display='block';
+    document.getElementById('emp-imgur-area').style.borderColor='#ddd';
+}
+function fecharModalEmpresa(){
+    document.getElementById('modal-cadastro-empresa').classList.add('modal-oculto');
+    document.getElementById('form-empresa').reset();
+    document.getElementById('form-empresa').style.display='flex';
+    document.getElementById('empresa-sucesso').style.display='none';
+    document.getElementById('empresa-erro').style.display='none';
+    empLimpar({stopPropagation:function(){}});
+}
+document.getElementById('modal-cadastro-empresa').addEventListener('click',function(e){if(e.target===this)fecharModalEmpresa();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!document.getElementById('modal-cadastro-empresa').classList.contains('modal-oculto'))fecharModalEmpresa();});
+async function enviarCadastroEmpresa(e){
+    e.preventDefault();
+    const btn=document.getElementById('btn-submit-empresa');
+    const erro=document.getElementById('empresa-erro');
+    erro.style.display='none'; btn.disabled=true; btn.textContent='Enviando...';
+    try{
+        const res=await fetch('/cadastrar-empresa',{method:'POST',body:new FormData(e.target)});
+        const data=await res.json();
+        if(res.ok&&data.ok){document.getElementById('form-empresa').style.display='none';document.getElementById('empresa-sucesso').style.display='block';}
+        else{erro.textContent=data.erro||'Erro ao enviar. Tente novamente.';erro.style.display='block';}
+    }catch(err){erro.textContent='Erro de conexão. Tente novamente.';erro.style.display='block';}
+    finally{btn.disabled=false;btn.textContent='Enviar cadastro';}
+}
 </script>
 
 </body>
