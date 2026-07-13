@@ -113,6 +113,33 @@ def execute_returning(sql, params=None):
         conn.close()
 
 
+def sync_brinde_tipos_impressao(brinde_id, tipo_impressao_ids):
+    """Substitui o conjunto de tipos de impressão de um brinde em
+    brindes_brinde_tipos_impressao (M2M). Apaga as relações antigas daquele
+    brinde e insere as novas, tudo numa transação só."""
+    conn = get_db()
+    try:
+        cur = conn.cursor()
+        cur.execute("DELETE FROM brindes_brinde_tipos_impressao WHERE brinde_id = %s", (brinde_id,))
+        for tipo_id in tipo_impressao_ids:
+            cur.execute(
+                "INSERT INTO brindes_brinde_tipos_impressao (brinde_id, tipo_impressao_id) VALUES (%s, %s)",
+                (brinde_id, tipo_id)
+            )
+        conn.commit()
+        cur.close()
+    finally:
+        conn.close()
+
+
+def get_tipos_impressao_ids(brinde_id):
+    rows = query_all(
+        "SELECT tipo_impressao_id FROM brindes_brinde_tipos_impressao WHERE brinde_id = %s",
+        (brinde_id,)
+    )
+    return [r['tipo_impressao_id'] for r in rows]
+
+
 # --- RATE LIMIT ARTESANAL (mesmo padrão do SOS Motoboy) ---
 request_log = {}
 
@@ -287,39 +314,15 @@ def get_anuncio(posicao, ocasiao_id=None):
 # --- ROTA RAIZ ---
 @app.route('/')
 def index():
-    brindes_destaque = query_all("""
-        SELECT b.*, o.nome as ocasiao_nome, o.slug as ocasiao_slug,
-               t.nome as tipo_nome
-        FROM brindes_brindes b
-        LEFT JOIN brindes_ocasioes o ON o.id = b.ocasiao_id
-        LEFT JOIN brindes_tipos_impressao t ON t.id = b.tipo_impressao_id
-        WHERE b.ativo = TRUE
-        ORDER BY b.created_at DESC
-        LIMIT 8
-    """)
-
-    empresas_destaque = query_all("""
-        SELECT * FROM brindes_empresas
-        WHERE ativo = TRUE AND plano = 'destaque'
-        ORDER BY RANDOM()
-        LIMIT 8
-    """)
-
-    tipos_destaque = query_all("""
-        SELECT * FROM brindes_tipos_impressao
-        WHERE ativo = TRUE
-        ORDER BY nome
-        LIMIT 8
-    """)
-
+    # Tipos de impressão, Brindes e Empresas agora são carregados no cliente via
+    # fetch em /api/tipos-impressao, /api/brindes e /api/empresas (padrão de
+    # chip + grid). Sem limiar mínimo de itens: as seções sempre aparecem.
     return render_template(
         'home.html',
         current_year=datetime.now().year,
         anuncio_topo=get_anuncio('topo'),
         anuncio_meio=get_anuncio('meio'),
-        brindes_destaque=brindes_destaque,
-        empresas_destaque=empresas_destaque,
-        tipos_destaque=tipos_destaque,
+        templates=carregar_templates(),
     )
 
 
@@ -612,11 +615,17 @@ def ocasiao_publica(slug):
     if not ocasiao:
         abort(404)
 
+    # Exibição do tipo de impressão migrada pra M2M (brindes_brinde_tipos_impressao),
+    # agregado como string separada por vírgula pra manter compatibilidade com
+    # ocasiao.html (que espera brinde.tipo_nome como um valor só). Só esse ponto
+    # da rota foi ajustado — o resto continua igual.
     brindes = query_all("""
-        SELECT b.*, t.nome as tipo_nome
+        SELECT b.*, string_agg(t.nome, ', ' ORDER BY t.nome) as tipo_nome
         FROM brindes_brindes b
-        LEFT JOIN brindes_tipos_impressao t ON t.id = b.tipo_impressao_id
+        LEFT JOIN brindes_brinde_tipos_impressao bti ON bti.brinde_id = b.id
+        LEFT JOIN brindes_tipos_impressao t ON t.id = bti.tipo_impressao_id
         WHERE b.ocasiao_id = %s AND b.ativo = TRUE
+        GROUP BY b.id
         ORDER BY b.nome
     """, (ocasiao['id'],))
 
@@ -631,18 +640,27 @@ def ocasiao_publica(slug):
 @app.route('/brinde/<slug>')
 def brinde_publico(slug):
     brinde = query_one("""
-        SELECT b.*, o.nome as ocasiao_nome, o.slug as ocasiao_slug, t.nome as tipo_nome
+        SELECT b.*, o.nome as ocasiao_nome, o.slug as ocasiao_slug
         FROM brindes_brindes b
         LEFT JOIN brindes_ocasioes o ON o.id = b.ocasiao_id
-        LEFT JOIN brindes_tipos_impressao t ON t.id = b.tipo_impressao_id
         WHERE b.slug = %s AND b.ativo = TRUE
     """, (slug,))
     if not brinde:
         abort(404)
 
+    # Um brinde pode ter vários tipos de impressão agora (brindes_brinde_tipos_impressao).
+    tipos_impressao = query_all("""
+        SELECT t.id, t.nome, t.slug
+        FROM brindes_brinde_tipos_impressao bti
+        JOIN brindes_tipos_impressao t ON t.id = bti.tipo_impressao_id
+        WHERE bti.brinde_id = %s AND t.ativo = TRUE
+        ORDER BY t.nome
+    """, (brinde['id'],))
+
     return render_template(
         'brinde.html',
         brinde=brinde,
+        tipos_impressao=tipos_impressao,
         anuncio_topo=get_anuncio('topo', brinde.get('ocasiao_id')),
         anuncio_meio=get_anuncio('meio', brinde.get('ocasiao_id')),
     )
@@ -724,16 +742,63 @@ def impressao_publica(slug):
     tipo = query_one("SELECT * FROM brindes_tipos_impressao WHERE slug = %s AND ativo = TRUE", (slug,))
     if not tipo:
         abort(404)
+    # Um brinde pode ter vários tipos de impressão agora — usa a tabela M2M
+    # brindes_brinde_tipos_impressao em vez da coluna legada b.tipo_impressao_id.
     brindes = query_all("""
         SELECT b.*, o.nome as ocasiao_nome, o.slug as ocasiao_slug
         FROM brindes_brindes b
+        JOIN brindes_brinde_tipos_impressao bti ON bti.brinde_id = b.id
         LEFT JOIN brindes_ocasioes o ON o.id = b.ocasiao_id
-        WHERE b.tipo_impressao_id = %s AND b.ativo = TRUE
+        WHERE bti.tipo_impressao_id = %s AND b.ativo = TRUE
         ORDER BY b.created_at DESC
     """, (tipo['id'],))
     return render_template('impressao.html', tipo=tipo, brindes=brindes,
                             anuncio_topo=get_anuncio('topo'),
                             current_year=datetime.now().year)
+
+
+# =====================================================================
+#  API PÚBLICA (JSON) — alimenta o padrão de chip + grid da home
+# =====================================================================
+
+@app.route('/api/brindes')
+def api_brindes():
+    brindes = query_all("""
+        SELECT b.id, b.nome, b.slug, b.imagem_url,
+               o.nome as ocasiao_nome, o.slug as ocasiao_slug,
+               COALESCE(array_agg(t.nome) FILTER (WHERE t.nome IS NOT NULL), '{}') as tipos_nomes,
+               COALESCE(array_agg(t.slug) FILTER (WHERE t.slug IS NOT NULL), '{}') as tipos_slugs
+        FROM brindes_brindes b
+        LEFT JOIN brindes_ocasioes o ON o.id = b.ocasiao_id
+        LEFT JOIN brindes_brinde_tipos_impressao bti ON bti.brinde_id = b.id
+        LEFT JOIN brindes_tipos_impressao t ON t.id = bti.tipo_impressao_id AND t.ativo = TRUE
+        WHERE b.ativo = TRUE
+        GROUP BY b.id, o.nome, o.slug
+        ORDER BY b.created_at DESC
+    """)
+    return jsonify(brindes)
+
+
+@app.route('/api/empresas')
+def api_empresas():
+    empresas = query_all("""
+        SELECT id, nome, slug, logo_url, cidade, cidade_slug, plano
+        FROM brindes_empresas
+        WHERE ativo = TRUE
+        ORDER BY (plano = 'destaque') DESC, RANDOM()
+    """)
+    return jsonify(empresas)
+
+
+@app.route('/api/tipos-impressao')
+def api_tipos_impressao():
+    tipos = query_all("""
+        SELECT id, nome, slug, imagem_url
+        FROM brindes_tipos_impressao
+        WHERE ativo = TRUE
+        ORDER BY nome
+    """)
+    return jsonify(tipos)
 
 
 # --- PÁGINA POR CIDADE (Parte 3) ---
@@ -791,11 +856,17 @@ def _admin_contexto_base():
     }
     ocasioes = query_all("SELECT * FROM brindes_ocasioes ORDER BY nome")
     tipos = query_all("SELECT * FROM brindes_tipos_impressao ORDER BY nome")
+    # Um brinde pode ter vários tipos de impressão agora — agrega via a tabela
+    # M2M brindes_brinde_tipos_impressao em vez da coluna legada b.tipo_impressao_id.
     brindes = query_all("""
-        SELECT b.*, o.nome as ocasiao_nome, t.nome as tipo_nome
+        SELECT b.*, o.nome as ocasiao_nome,
+               COALESCE(array_agg(t.nome) FILTER (WHERE t.nome IS NOT NULL), '{}') as tipos_nomes,
+               COALESCE(array_agg(t.id) FILTER (WHERE t.id IS NOT NULL), '{}') as tipos_ids
         FROM brindes_brindes b
         LEFT JOIN brindes_ocasioes o ON o.id = b.ocasiao_id
-        LEFT JOIN brindes_tipos_impressao t ON t.id = b.tipo_impressao_id
+        LEFT JOIN brindes_brinde_tipos_impressao bti ON bti.brinde_id = b.id
+        LEFT JOIN brindes_tipos_impressao t ON t.id = bti.tipo_impressao_id
+        GROUP BY b.id, o.nome
         ORDER BY b.created_at DESC
     """)
     empresas = query_all("SELECT * FROM brindes_empresas ORDER BY nome")
@@ -1078,7 +1149,10 @@ def admin_brindes_add():
     slug = request.form.get('slug', '').strip().lower()
     descricao = request.form.get('descricao', '')
     ocasiao_id = request.form.get('ocasiao_id') or None
-    tipo_impressao_id = request.form.get('tipo_impressao_id') or None
+    # Um brinde pode ter vários tipos de impressão agora (checkboxes/multi-select).
+    # A coluna legada tipo_impressao_id não é mais preenchida — a fonte de
+    # verdade passa a ser brindes_brinde_tipos_impressao.
+    tipo_impressao_ids = [int(v) for v in request.form.getlist('tipo_impressao_ids') if v]
 
     imagem_url = None
     f = request.files.get('imagem')
@@ -1087,10 +1161,12 @@ def admin_brindes_add():
 
     if nome and slug:
         try:
-            execute("""
-                INSERT INTO brindes_brindes (nome, slug, descricao, ocasiao_id, tipo_impressao_id, imagem_url)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, (nome, slug, descricao, ocasiao_id, tipo_impressao_id, imagem_url))
+            novo_id = execute_returning("""
+                INSERT INTO brindes_brindes (nome, slug, descricao, ocasiao_id, imagem_url)
+                VALUES (%s, %s, %s, %s, %s)
+                RETURNING id
+            """, (nome, slug, descricao, ocasiao_id, imagem_url))
+            sync_brinde_tipos_impressao(novo_id, tipo_impressao_ids)
             flash('Brinde adicionado.', 'success')
         except Exception:
             flash('Erro ao adicionar (slug já existe?).', 'error')
@@ -1105,6 +1181,7 @@ def admin_brindes_editar(item_id):
         abort(404)
 
     if request.method == 'GET':
+        brinde['tipo_impressao_ids'] = get_tipos_impressao_ids(item_id)
         return jsonify(brinde)
 
     nome = request.form.get('nome', '').strip()
@@ -1112,7 +1189,10 @@ def admin_brindes_editar(item_id):
     descricao = request.form.get('descricao', '').strip()
     imagem_url = request.form.get('imagem_url', '').strip()
     ocasiao_id = request.form.get('ocasiao_id') or None
-    tipo_impressao_id = request.form.get('tipo_impressao_id') or None
+    # Vários tipos de impressão por brinde — substitui as relações antigas
+    # em brindes_brinde_tipos_impressao. A coluna legada tipo_impressao_id
+    # não é mais escrita (não é mais a fonte de verdade).
+    tipo_impressao_ids = [int(v) for v in request.form.getlist('tipo_impressao_ids') if v]
 
     if not nome or not slug:
         return jsonify({'erro': 'Preencha nome e slug.'}), 400
@@ -1121,9 +1201,10 @@ def admin_brindes_editar(item_id):
         execute("""
             UPDATE brindes_brindes
             SET nome = %s, slug = %s, descricao = %s, imagem_url = %s,
-                ocasiao_id = %s, tipo_impressao_id = %s
+                ocasiao_id = %s
             WHERE id = %s
-        """, (nome, slug, descricao or None, imagem_url or None, ocasiao_id, tipo_impressao_id, item_id))
+        """, (nome, slug, descricao or None, imagem_url or None, ocasiao_id, item_id))
+        sync_brinde_tipos_impressao(item_id, tipo_impressao_ids)
         return jsonify({'ok': True})
     except Exception:
         return jsonify({'erro': 'Erro ao salvar (slug já existe?).'}), 400
