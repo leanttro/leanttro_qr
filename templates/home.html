@@ -299,26 +299,52 @@ header{
     display:flex;flex-direction:column;
     background:var(--chrome-1);border:1px solid var(--line);border-radius:var(--radius);
     overflow:hidden;transition:transform .18s, box-shadow .18s;
+    flex:0 0 280px;scroll-snap-align:start;
 }
 .card-empresa:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
-.card-empresa-logo{
-    aspect-ratio:1/1;background:var(--surface-2);position:relative;overflow:hidden;
+.card-empresa-foto{
+    aspect-ratio:4/3;background:var(--surface-2);position:relative;overflow:hidden;
     display:flex;align-items:center;justify-content:center;
-    font-family:'Montserrat',sans-serif;font-weight:700;font-size:1.6em;color:var(--ink-soft);
+    font-family:'Montserrat',sans-serif;font-weight:800;font-size:3em;color:var(--chrome-3);
 }
-.card-empresa-logo img{width:100%;height:100%;object-fit:cover}
+.card-empresa-foto img{width:100%;height:100%;object-fit:cover}
 .card-empresa-body{padding:16px;display:flex;flex-direction:column;gap:5px;flex:1}
-.card-empresa h3{font-size:1em;font-weight:600}
-.card-empresa .cidade{font-size:.86em;color:var(--ink-soft)}
+.card-empresa h3{font-size:1em;font-weight:700}
+.card-empresa .cidade{font-size:.84em;color:var(--ink-soft);display:flex;align-items:center;gap:4px}
 .badge-destaque{
     position:absolute;top:10px;left:10px;font-size:.7em;font-family:'Montserrat',sans-serif;
-    color:#fff;background:var(--ink-black);padding:3px 10px;border-radius:999px;
+    color:#fff;background:var(--ink-black);padding:4px 10px;border-radius:999px;font-weight:700;
 }
 .card-empresa .btn-ver{
     margin-top:auto;padding-top:12px;font-weight:600;font-size:.87em;color:var(--ink-black);
-    display:inline-flex;align-items:center;gap:4px;
+    display:inline-flex;align-items:center;gap:4px;border-bottom:1px solid var(--ink-black);padding-bottom:1px;align-self:flex-start;
 }
 .card-empresa:hover .btn-ver{gap:8px;transition:gap .15s}
+
+/* toggle view */
+.section-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px}
+.view-toggle{display:flex;gap:6px}
+.view-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--line-strong);background:var(--chrome-1);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink-soft);transition:all .15s;}
+.view-btn:hover{border-color:var(--ink-black);color:var(--ink-black)}
+.view-btn.active{background:var(--ink-black);border-color:var(--ink-black);color:#fff}
+
+/* carrossel com setas */
+.carousel-wrap{position:relative}
+.carousel{
+    display:flex;gap:20px;overflow-x:auto;scroll-snap-type:x mandatory;
+    padding-bottom:10px;margin:0 -24px;padding-left:24px;padding-right:24px;
+    scrollbar-width:thin;
+}
+.carousel::-webkit-scrollbar{height:6px}
+.carousel::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:6px}
+.carousel-nav{display:flex;gap:10px;justify-content:flex-end;margin-top:16px}
+.carousel-arrow{width:40px;height:40px;border-radius:50%;border:1px solid var(--line-strong);background:var(--chrome-1);cursor:pointer;font-size:1.1em;color:var(--ink-black);display:flex;align-items:center;justify-content:center;transition:transform .15s, box-shadow .15s;}
+.carousel-arrow:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm)}
+
+/* modo grade */
+.modo-grade .card-brinde,
+.modo-grade .card-empresa,
+.modo-grade .card-tipo{flex:unset;scroll-snap-align:unset}
 
 .empty-state{
     border:1px dashed var(--line-strong);border-radius:var(--radius);
@@ -327,7 +353,7 @@ header{
 .empty-state strong{display:block;color:var(--ink-black);font-family:'Montserrat',sans-serif;font-size:1.1em;margin-bottom:6px}
 
 .card-tipo{
-    display:flex;flex-direction:column;
+    display:flex;flex-direction:column;flex:0 0 240px;scroll-snap-align:start;
     background:var(--chrome-1);border:1px solid var(--line);border-radius:var(--radius);
     overflow:hidden;transition:transform .18s, box-shadow .18s;
 }
@@ -632,9 +658,21 @@ footer a:hover{color:#fff}
             <p>Uma seleção real de brindes por ocasião e tipo de impressão — pra você se inspirar ou já pedir orçamento.</p>
         </div>
 
-        <div class="chip-row" id="chips-brindes"></div>
-        <div class="grid-cards" id="grid-brindes">
-            <p class="grid-loading">Carregando brindes...</p>
+        <div class="section-toolbar">
+            <div class="chip-row" id="chips-brindes"></div>
+            <div class="view-toggle">
+                <button class="view-btn active" title="Carrossel" onclick="setView('brindes','carrossel')"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="6" height="10" rx="1"/><rect x="9" y="7" width="6" height="10" rx="1"/><rect x="16" y="7" width="6" height="10" rx="1"/></svg></button>
+                <button class="view-btn" title="Grade" onclick="setView('brindes','grade')"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
+            </div>
+        </div>
+        <div class="carousel-wrap" id="wrap-brindes">
+            <div class="carousel" id="grid-brindes">
+                <p class="grid-loading">Carregando brindes...</p>
+            </div>
+            <div class="carousel-nav" id="nav-brindes">
+                <button type="button" class="carousel-arrow" onclick="moverCarrossel('grid-brindes',-1)">&#8592;</button>
+                <button type="button" class="carousel-arrow" onclick="moverCarrossel('grid-brindes',1)">&#8594;</button>
+            </div>
         </div>
         <div class="empty-state" id="empty-brindes" style="display:none;">
             <strong>O catálogo está sendo montado</strong>
@@ -656,8 +694,20 @@ footer a:hover{color:#fff}
             <p>Sublimação, DTF, laser, silk, UV — encontre brindes organizados pelo processo de fabricação.</p>
         </div>
 
-        <div class="grid-cards" id="grid-tipos">
-            <p class="grid-loading">Carregando tipos de impressão...</p>
+        <div class="section-toolbar" style="justify-content:flex-end">
+            <div class="view-toggle">
+                <button class="view-btn active" title="Carrossel" onclick="setView('tipos','carrossel')"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="6" height="10" rx="1"/><rect x="9" y="7" width="6" height="10" rx="1"/><rect x="16" y="7" width="6" height="10" rx="1"/></svg></button>
+                <button class="view-btn" title="Grade" onclick="setView('tipos','grade')"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
+            </div>
+        </div>
+        <div class="carousel-wrap" id="wrap-tipos">
+            <div class="carousel" id="grid-tipos">
+                <p class="grid-loading">Carregando tipos de impressão...</p>
+            </div>
+            <div class="carousel-nav" id="nav-tipos">
+                <button type="button" class="carousel-arrow" onclick="moverCarrossel('grid-tipos',-1)">&#8592;</button>
+                <button type="button" class="carousel-arrow" onclick="moverCarrossel('grid-tipos',1)">&#8594;</button>
+            </div>
         </div>
         <div class="empty-state" id="empty-tipos" style="display:none;">
             <strong>Os tipos de impressão estão sendo cadastrados</strong>
@@ -683,16 +733,20 @@ footer a:hover{color:#fff}
             <p>Fabricantes e gráficas de sublimação, DTF, laser, silk e UV, prontos pra receber seu pedido de orçamento.</p>
         </div>
 
-        <div class="cidade-slicer" id="cidade-slicer">
-            <button type="button" class="slicer-toggle" id="slicer-toggle-cidade" onclick="toggleCidadeSlicer()" aria-haspopup="listbox" aria-expanded="false" aria-controls="filtros-cidade">
-                <span class="slicer-label">📍 Cidade: <strong id="slicer-cidade-label">Todas as cidades</strong></span>
-                <span class="slicer-chevron">▾</span>
-            </button>
-            <div class="slicer-panel" id="filtros-cidade" role="listbox" aria-label="Filtrar por cidade"></div>
-            <div class="slicer-backdrop" id="slicer-backdrop-cidade" onclick="closeCidadeSlicer()"></div>
+        <div class="section-toolbar" style="justify-content:flex-end">
+            <div class="view-toggle">
+                <button class="view-btn active" title="Carrossel" onclick="setView('empresas','carrossel')"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="6" height="10" rx="1"/><rect x="9" y="7" width="6" height="10" rx="1"/><rect x="16" y="7" width="6" height="10" rx="1"/></svg></button>
+                <button class="view-btn" title="Grade" onclick="setView('empresas','grade')"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
+            </div>
         </div>
-        <div class="grid-cards" id="grid-empresas">
-            <p class="grid-loading">Carregando empresas...</p>
+        <div class="carousel-wrap" id="wrap-empresas">
+            <div class="carousel" id="grid-empresas">
+                <p class="grid-loading">Carregando empresas...</p>
+            </div>
+            <div class="carousel-nav" id="nav-empresas">
+                <button type="button" class="carousel-arrow" onclick="moverCarrossel('grid-empresas',-1)">&#8592;</button>
+                <button type="button" class="carousel-arrow" onclick="moverCarrossel('grid-empresas',1)">&#8594;</button>
+            </div>
         </div>
         <div class="empty-state" id="empty-empresas" style="display:none;">
             <strong>O diretório está crescendo</strong>
@@ -887,18 +941,47 @@ function cardTipoHTML(t){
 }
 
 function cardEmpresaHTML(e){
-    const logo = e.logo_url
+    const foto = e.logo_url
         ? '<img src="' + e.logo_url + '" alt="' + escaparHtml(e.nome) + '" loading="lazy">'
-        : escaparHtml((e.nome || '?')[0].toUpperCase());
-    const destaque = e.plano === 'destaque' ? '<span class="badge-destaque">destaque</span>' : '';
+        : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3em;font-weight:800;color:var(--chrome-3);">' + escaparHtml((e.nome||'?')[0].toUpperCase()) + '</div>';
+    const badge = e.plano === 'destaque' ? '<span class="badge-destaque">destaque</span>' : '';
     return '<a class="card-empresa" href="/empresa/' + encodeURIComponent(e.slug) + '">' +
-        '<div class="card-empresa-logo">' + logo + destaque + '</div>' +
+        '<div class="card-empresa-foto">' + badge + foto + '</div>' +
         '<div class="card-empresa-body">' +
             '<h3>' + escaparHtml(e.nome) + '</h3>' +
             (e.cidade ? '<div class="cidade">📍 ' + escaparHtml(e.cidade) + '</div>' : '') +
             '<span class="btn-ver">Ver detalhes →</span>' +
-        '</div>' +
-    '</a>';
+        '</div></a>';
+}
+
+function moverCarrossel(id, dir){
+    var track = document.getElementById(id);
+    if(!track) return;
+    var card = track.querySelector('[class^="card-"]');
+    var larg = card ? (card.offsetWidth + 20) : 300;
+    track.scrollBy({left: dir * larg * 2, behavior:'smooth'});
+}
+
+function setView(secao, modo){
+    var wrap = document.getElementById('wrap-' + secao);
+    var grid = document.getElementById('grid-' + secao);
+    var nav  = document.getElementById('nav-' + secao);
+    if(!wrap||!grid) return;
+    // botões do toolbar desta seção
+    var btns = wrap.previousElementSibling.querySelectorAll('.view-btn');
+    btns[0].classList.toggle('active', modo==='carrossel');
+    btns[1].classList.toggle('active', modo==='grade');
+    if(modo==='grade'){
+        grid.classList.remove('carousel');
+        grid.classList.add('grid-cards');
+        wrap.classList.add('modo-grade');
+        if(nav) nav.style.display='none';
+    } else {
+        grid.classList.add('carousel');
+        grid.classList.remove('grid-cards');
+        wrap.classList.remove('modo-grade');
+        if(nav) nav.style.display='';
+    }
 }
 
 function renderGrid(gridId, emptyId, itens, cardFn){
@@ -963,7 +1046,8 @@ function filtrarBrindesPorOcasiao(ocasiao){
 }
 
 function filtrarEmpresasPorCidade(cidade){
-    const filtradas = cidade ? TODAS_EMPRESAS.filter(function(e){ return e.cidade === cidade; }) : TODAS_EMPRESAS;
+    const filtradas = (cidade ? TODAS_EMPRESAS.filter(function(e){ return e.cidade === cidade; }) : TODAS_EMPRESAS)
+        .slice().sort(function(a,b){ return (b.plano==='destaque'?1:0)-(a.plano==='destaque'?1:0); });
     renderGrid('grid-empresas', 'empty-empresas', filtradas, cardEmpresaHTML);
 }
 
@@ -1024,8 +1108,7 @@ fetch('/api/tipos-impressao')
 fetch('/api/empresas')
     .then(function(r){ return r.json(); })
     .then(function(data){
-        TODAS_EMPRESAS = Array.isArray(data) ? data : [];
-        renderSlicerCidade(valoresUnicos(TODAS_EMPRESAS, 'cidade'));
+        TODAS_EMPRESAS = Array.isArray(data) ? data.sort(function(a,b){ return (b.plano==='destaque'?1:0)-(a.plano==='destaque'?1:0); }) : [];
         renderGrid('grid-empresas', 'empty-empresas', TODAS_EMPRESAS, cardEmpresaHTML);
     })
     .catch(function(){ renderGrid('grid-empresas', 'empty-empresas', [], cardEmpresaHTML); });
