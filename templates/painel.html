@@ -1,104 +1,458 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel | {{ pagina.slug }}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel | {{ pagina.slug }}</title>
+<meta name="robots" content="noindex, nofollow">
+
+<link rel="icon" type="image/png" href="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+    --bg:#ffffff;
+    --surface:#f6f6f8;
+    --surface-2:#eeeef1;
+    --ink:#17171a;
+    --ink-soft:#63636c;
+    --ink-faint:#9797a0;
+    --line:#e2e2e7;
+    --line-strong:#cfcfd6;
+    --chrome-1:#fcfcfd;
+    --chrome-2:#d7d7dd;
+    --chrome-3:#9a9aa2;
+    --chrome-4:#4a4a52;
+    --ink-black:#111113;
+    --focus:#3b6ef0;
+    --success:#1fae56;
+    --error:#d33b3b;
+    --radius:14px;
+    --shadow-sm:0 1px 2px rgba(20,20,25,.06);
+    --shadow-md:0 8px 24px rgba(20,20,25,.08);
+    --shadow-lg:0 24px 64px rgba(20,20,25,.14);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--surface);color:var(--ink);font-family:'Montserrat',sans-serif;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+.container{max-width:640px;margin:0 auto;padding:0 20px}
+h1,h2,h3{font-family:'Montserrat',sans-serif;margin:0;color:var(--ink-black)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:3px;border-radius:4px}
+
+/* ============ HEADER ============ */
+header{
+    position:sticky;top:0;z-index:60;
+    background:rgba(255,255,255,.92);backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 24px;gap:16px;
+}
+.header-logo a{display:flex;align-items:center;gap:10px}
+.header-logo img{height:60px;width:auto}
+.btn-sair{
+    font-size:.85em;font-weight:700;color:var(--ink-soft);
+    padding:9px 16px;border-radius:10px;border:1px solid var(--line-strong);
+    background:var(--chrome-1);transition:color .15s, border-color .15s;
+}
+.btn-sair:hover{color:var(--ink-black);border-color:var(--ink-black)}
+
+/* ============ WRAP ============ */
+.painel-wrap{padding:32px 0 80px}
+
+/* ============ CARD DO QR ============ */
+.qr-card{
+    background:var(--chrome-1);border:1px solid var(--line);border-radius:var(--radius);
+    padding:28px 24px;text-align:center;margin-bottom:24px;box-shadow:var(--shadow-sm);
+}
+.qr-card .qr-eyebrow{font-size:.78em;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:600;margin-bottom:6px}
+.qr-card .qr-link{font-size:1.5em;font-weight:800;color:var(--ink-black);word-break:break-all}
+.qr-card .qr-link:hover{color:var(--focus)}
+.qr-card .qr-scans{font-size:.88em;color:var(--ink-soft);margin-top:8px}
+.qr-card .qr-scans b{color:var(--ink)}
+.qr-img-wrap{margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.qr-img-wrap img{width:150px;height:150px;border-radius:10px;border:6px solid #fff;box-shadow:var(--shadow-sm);background:#fff}
+.qr-download{font-size:.82em;font-weight:700;color:var(--focus)}
+.qr-download:hover{text-decoration:underline}
+.plano-badge{
+    display:inline-block;margin-top:16px;font-size:.72em;font-weight:700;text-transform:uppercase;
+    letter-spacing:.04em;padding:5px 14px;border-radius:999px;
+}
+.plano-badge.gratis{background:var(--surface-2);color:var(--ink-soft)}
+.plano-badge.pago{background:#e5f7ec;color:var(--success)}
+
+/* ============ FLASH MESSAGES ============ */
+.flash{
+    margin-bottom:20px;padding:14px 16px;border-radius:10px;font-weight:600;font-size:.92em;
+    border:1px solid transparent;
+}
+.flash.success{background:#e5f7ec;color:#157a3c;border-color:#bfe8cf}
+.flash.error{background:#fbe9e9;color:#a52222;border-color:#f3c6c6}
+
+/* ============ CARDS DO FORMULÁRIO ============ */
+.form-card{
+    background:var(--chrome-1);border:1px solid var(--line);border-radius:var(--radius);
+    padding:24px;margin-bottom:20px;
+}
+.form-card h3{
+    font-size:1.02em;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:8px;
+}
+.form-card h3 .step-num{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:22px;height:22px;border-radius:50%;background:var(--ink-black);color:#fff;
+    font-size:.72em;font-weight:700;flex-shrink:0;
+}
+.field-group{margin-bottom:16px}
+.field-group:last-child{margin-bottom:0}
+.field-label{
+    display:block;font-size:.76em;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+    color:var(--ink-faint);margin-bottom:8px;
+}
+.field-input, .field-textarea, .field-select{
+    width:100%;border:1px solid var(--line-strong);border-radius:10px;padding:11px 13px;
+    font-family:'Montserrat',sans-serif;font-size:.95em;color:var(--ink);background:#fff;
+    transition:border-color .15s;
+}
+.field-input:focus, .field-textarea:focus, .field-select:focus{border-color:var(--ink-black);outline:none}
+.field-textarea{resize:vertical;min-height:110px}
+.field-select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2363636c' stroke-width='2'><polyline points='6 9 12 15 18 9'></polyline></svg>");background-repeat:no-repeat;background-position:right 13px center;padding-right:36px}
+
+.radio-row{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px}
+.radio-option{display:flex;align-items:center;gap:8px;font-size:.9em;font-weight:600;cursor:pointer}
+.radio-option input{accent-color:var(--ink-black)}
+
+.foto-preview-row{display:flex;align-items:center;gap:14px}
+.foto-preview{width:64px;height:64px;border-radius:50%;object-fit:cover;background:var(--surface-2);flex-shrink:0;border:1px solid var(--line)}
+.foto-preview-row input[type=file]{font-size:.85em;color:var(--ink-soft)}
+
+.tier-tag{
+    display:inline-block;font-size:.68em;font-weight:700;text-transform:uppercase;
+    letter-spacing:.03em;padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:middle;
+}
+.tier-tag.gratis{background:var(--surface-2);color:var(--ink-soft)}
+.tier-tag.pago{background:#fdf1de;color:#a8701a}
+
+/* ============ TIMELINE ============ */
+.timeline-rows{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.timeline-row{
+    display:grid;grid-template-columns:130px 1fr auto;gap:8px;align-items:center;
+    background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px;
+}
+.timeline-row input{border:1px solid var(--line-strong);border-radius:8px;padding:8px 10px;font-family:'Montserrat',sans-serif;font-size:.88em;background:#fff}
+.timeline-remove{
+    width:30px;height:30px;border-radius:8px;border:1px solid var(--line-strong);background:#fff;
+    color:var(--error);font-weight:700;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+}
+.timeline-remove:hover{background:#fbe9e9;border-color:#f3c6c6}
+.timeline-add{
+    font-size:.85em;font-weight:700;color:var(--ink-black);background:var(--chrome-1);
+    border:1px dashed var(--line-strong);border-radius:10px;padding:10px;width:100%;cursor:pointer;
+}
+.timeline-add:hover{border-color:var(--ink-black)}
+@media (max-width:480px){
+    .timeline-row{grid-template-columns:1fr;}
+}
+
+/* ============ BOTÃO SALVAR ============ */
+.btn-salvar{
+    width:100%;padding:16px;border-radius:12px;border:none;cursor:pointer;
+    background:var(--ink-black);color:#fff;font-family:'Montserrat',sans-serif;
+    font-size:1em;font-weight:700;letter-spacing:.01em;box-shadow:var(--shadow-md);
+    transition:transform .15s, box-shadow .15s;
+}
+.btn-salvar:hover{transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+
+/* ============ FOOTER ============ */
+.painel-footer{text-align:center;padding:32px 0 8px;color:var(--ink-faint)}
+.painel-footer p{font-size:.78em;margin:0 0 4px}
+.painel-footer a{font-size:.8em;font-weight:700;color:var(--ink-soft)}
+.painel-footer a:hover{color:var(--ink-black)}
+
+[data-campo-hidden="true"]{display:none !important}
+</style>
 </head>
-<body class="bg-gray-50 pb-20">
-    <nav class="bg-black text-white p-4">
-        <div class="container mx-auto flex justify-between items-center">
-            <span class="font-bold text-yellow-400">PAINEL QRCODEBRINDES</span>
-            <a href="/{{ pagina.slug }}/logout" class="text-sm font-bold text-gray-400">Sair</a>
-        </div>
-    </nav>
+<body>
 
-    <div class="container mx-auto px-4 mt-6 max-w-lg">
+<header>
+    <div class="header-logo">
+        <a href="{{ url_for('index') }}" aria-label="QR Code Brindes — página inicial">
+            <img src="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png" alt="QR Code Brindes">
+        </a>
+    </div>
+    <a class="btn-sair" href="/{{ pagina.slug }}/logout">Sair</a>
+</header>
 
-        <div class="bg-yellow-50 border border-yellow-200 p-6 rounded-lg mb-6 text-center">
-            <p class="text-xs font-bold text-gray-500 uppercase mb-2">Seu link:</p>
-            <a href="/{{ pagina.slug }}" target="_blank" class="text-2xl font-black text-gray-800 underline hover:text-yellow-600 transition">
-                /{{ pagina.slug }}
-            </a>
-            <p class="text-xs text-gray-600 mt-2">Escaneado ou acessado <span class="font-bold">{{ total_scans }}</span> vez(es).</p>
+<div class="painel-wrap">
+    <div class="container">
 
-            <div class="mt-4 flex flex-col items-center gap-2">
-                <img src="{{ qr_url }}" alt="QR Code" class="w-40 h-40 border-4 border-white shadow-md rounded-lg bg-white">
-                <a href="{{ qr_url }}" download="qrcode-{{ pagina.slug }}.png" class="text-xs font-bold text-blue-600 hover:underline">Baixar QR code (PNG)</a>
+        <!-- QR CARD -->
+        <div class="qr-card">
+            <p class="qr-eyebrow">Seu link</p>
+            <a href="/{{ pagina.slug }}" target="_blank" class="qr-link">/{{ pagina.slug }}</a>
+            <p class="qr-scans">Escaneado ou acessado <b>{{ total_scans }}</b> vez(es).</p>
+
+            <div class="qr-img-wrap">
+                <img src="{{ qr_url }}" alt="QR Code">
+                <a href="{{ qr_url }}" download="qrcode-{{ pagina.slug }}.png" class="qr-download">Baixar QR code (PNG)</a>
             </div>
 
-            <p class="mt-4 inline-block text-[10px] font-bold uppercase px-3 py-1 rounded-full {{ 'bg-green-100 text-green-700' if pagina.plano == 'pago' else 'bg-gray-200 text-gray-600' }}">
-                Plano: {{ pagina.plano }}
-            </p>
+            <span class="plano-badge {{ 'pago' if pagina.plano == 'pago' else 'gratis' }}">Plano: {{ pagina.plano }}</span>
         </div>
 
+        <!-- FLASH MESSAGES -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                <div class="mb-6 p-4 rounded-lg {{ 'bg-red-100 text-red-800 border border-red-200' if category == 'error' else 'bg-green-100 text-green-800 border border-green-200' }} font-bold">
-                    {{ message }}
-                </div>
+                <div class="flash {{ 'error' if category == 'error' else 'success' }}">{{ message }}</div>
                 {% endfor %}
             {% endif %}
         {% endwith %}
 
-        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        <form method="POST" enctype="multipart/form-data" id="form-painel">
 
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <h3 class="font-bold text-lg mb-4 border-b pb-2">1. Para onde o QR code leva?</h3>
-                <div class="space-y-4">
-                    <div class="flex gap-4">
-                        <label class="flex items-center gap-2 text-sm font-bold">
-                            <input type="radio" name="tipo_destino" value="link" {{ 'checked' if pagina.tipo_destino == 'link' }}>
-                            Link externo
-                        </label>
-                        <label class="flex items-center gap-2 text-sm font-bold">
-                            <input type="radio" name="tipo_destino" value="pagina" {{ 'checked' if pagina.tipo_destino == 'pagina' }}>
-                            Página própria (mensagem/foto)
-                        </label>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Link de destino (se escolheu "Link externo")</label>
-                        <input type="url" name="destino_url" value="{{ pagina.destino_url or '' }}" class="w-full border rounded p-3" placeholder="https://...">
-                    </div>
+            <!-- 1. DESTINO -->
+            <div class="form-card">
+                <h3><span class="step-num">1</span> Para onde o QR code leva?</h3>
+                <div class="radio-row">
+                    <label class="radio-option">
+                        <input type="radio" name="tipo_destino" value="link" {{ 'checked' if pagina.tipo_destino == 'link' }}>
+                        Link externo
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="tipo_destino" value="pagina" {{ 'checked' if pagina.tipo_destino == 'pagina' }}>
+                        Página própria
+                    </label>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Link de destino (se escolheu "Link externo")</label>
+                    <input type="url" name="destino_url" value="{{ pagina.destino_url or '' }}" class="field-input" placeholder="https://...">
                 </div>
             </div>
 
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <h3 class="font-bold text-lg mb-4 border-b pb-2">2. Conteúdo da página própria</h3>
-                <div class="space-y-4">
-                    <div class="flex items-center gap-4">
-                        <img src="{{ pagina.foto_url or 'https://placehold.co/100x100?text=Foto' }}" class="w-16 h-16 rounded-full object-cover bg-gray-200">
-                        <input type="file" name="foto" class="text-sm text-gray-500">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Título</label>
-                        <input type="text" name="titulo" value="{{ pagina.titulo or '' }}" class="w-full border rounded p-3">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Mensagem</label>
-                        <textarea name="mensagem" rows="5" class="w-full border rounded p-3" placeholder="Escreva a mensagem da página...">{{ pagina.mensagem or '' }}</textarea>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase">Estilo da página</label>
-                        <select name="template" class="w-full border rounded p-3 bg-white">
-                            <option value="classic" {{ 'selected' if pagina.template == 'classic' }}>Clássico</option>
-                            <option value="stitch" {{ 'selected' if pagina.template == 'stitch' }}>Stitch / Ohana</option>
-                        </select>
-                    </div>
+            <!-- 2. TEMPLATE -->
+            <div class="form-card">
+                <h3><span class="step-num">2</span> Estilo da página própria</h3>
+                <div class="field-group">
+                    <label class="field-label">Escolha um template</label>
+                    <select name="template" id="template-select" class="field-select">
+                        {% for t in templates %}
+                        <option value="{{ t.slug }}" {{ 'selected' if pagina.template == t.slug }}>
+                            {{ t.nome }} — {{ 'Pago' if t.tier == 'pago' else 'Grátis' }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <span class="tier-tag {{ 'pago' if get_template_por_slug(pagina.template) and get_template_por_slug(pagina.template).tier == 'pago' else 'gratis' }}" id="tier-tag-atual">
+                        {{ 'Pago' if get_template_por_slug(pagina.template) and get_template_por_slug(pagina.template).tier == 'pago' else 'Grátis' }}
+                    </span>
                 </div>
             </div>
 
-            <button type="submit" class="w-full bg-green-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-green-700 transition">SALVAR</button>
+            <!-- 3. CONTEÚDO DINÂMICO -->
+            <div class="form-card">
+                <h3><span class="step-num">3</span> Conteúdo da página</h3>
+                <div id="campos-dinamicos"><!-- preenchido via JS conforme o template escolhido --></div>
+                <input type="hidden" name="timeline_json" id="timeline-json-input" value='{{ (pagina.timeline_json or []) | tojson }}'>
+            </div>
+
+            <button type="submit" class="btn-salvar">SALVAR</button>
         </form>
 
-        <div class="mt-12 text-center pb-8 space-y-2">
-            <p class="text-xs text-gray-400">QRCodeBrindes</p>
-            <a href="https://www.qrcodebrindes.com.br" target="_blank" class="block text-xs font-bold text-gray-500 hover:text-black transition">
-                Feito por QRCodeBrindes
-            </a>
+        <div class="painel-footer">
+            <p>QRCodeBrindes</p>
+            <a href="https://www.qrcodebrindes.com.br" target="_blank">Feito por QRCodeBrindes</a>
         </div>
     </div>
+</div>
+
+<script>
+// Campos de cada template disponível, indexado por slug: {slug: [{tipo, nome, label?}, ...]}
+const CAMPOS_POR_TEMPLATE = {{ campos_por_template | tojson }};
+
+// Valores atuais salvos da página, usados pra pré-preencher os campos na primeira renderização
+const PAGINA_ATUAL = {
+    titulo: {{ (pagina.titulo or '') | tojson }},
+    mensagem: {{ (pagina.mensagem or '') | tojson }},
+    foto_url: {{ (pagina.foto_url or '') | tojson }},
+    timeline: {{ (pagina.timeline_json or []) | tojson }}
+};
+
+const container = document.getElementById('campos-dinamicos');
+const selectTemplate = document.getElementById('template-select');
+const tierTag = document.getElementById('tier-tag-atual');
+const timelineJsonInput = document.getElementById('timeline-json-input');
+
+// Rótulos padrão por nome de campo (usados quando o .json do template não define "label")
+const LABELS_PADRAO = {
+    titulo: 'Título',
+    mensagem: 'Mensagem',
+    foto: 'Foto',
+    timeline: 'Linha do tempo'
+};
+
+// Guarda os elementos já criados (um único elemento por "nome" de campo,
+// reaproveitado entre templates — só escondemos/mostramos, sem apagar valor)
+const camposCriados = {};
+
+function labelDoCampo(campo) {
+    return campo.label || LABELS_PADRAO[campo.nome] || campo.nome;
+}
+
+function criarCampoTexto(campo) {
+    const wrap = document.createElement('div');
+    wrap.className = 'field-group';
+    wrap.dataset.campoNome = campo.nome;
+    const valorInicial = campo.nome === 'titulo' ? PAGINA_ATUAL.titulo : '';
+    wrap.innerHTML = `
+        <label class="field-label">${labelDoCampo(campo)}</label>
+        <input type="text" name="${campo.nome}" class="field-input" value="${valorInicial.replace(/"/g, '&quot;')}">
+    `;
+    return wrap;
+}
+
+function criarCampoTextarea(campo) {
+    const wrap = document.createElement('div');
+    wrap.className = 'field-group';
+    wrap.dataset.campoNome = campo.nome;
+    const valorInicial = campo.nome === 'mensagem' ? PAGINA_ATUAL.mensagem : '';
+    const textarea = document.createElement('textarea');
+    textarea.name = campo.nome;
+    textarea.className = 'field-textarea';
+    textarea.rows = 5;
+    textarea.value = valorInicial;
+    const label = document.createElement('label');
+    label.className = 'field-label';
+    label.textContent = labelDoCampo(campo);
+    wrap.appendChild(label);
+    wrap.appendChild(textarea);
+    return wrap;
+}
+
+function criarCampoImagem(campo) {
+    const wrap = document.createElement('div');
+    wrap.className = 'field-group';
+    wrap.dataset.campoNome = campo.nome;
+    wrap.innerHTML = `
+        <label class="field-label">${labelDoCampo(campo)}</label>
+        <div class="foto-preview-row">
+            <img class="foto-preview" src="${PAGINA_ATUAL.foto_url || 'https://placehold.co/100x100?text=Foto'}" alt="">
+            <input type="file" name="foto" accept="image/*">
+        </div>
+    `;
+    return wrap;
+}
+
+function criarCampoTimeline(campo) {
+    const wrap = document.createElement('div');
+    wrap.className = 'field-group';
+    wrap.dataset.campoNome = campo.nome;
+
+    const label = document.createElement('label');
+    label.className = 'field-label';
+    label.textContent = labelDoCampo(campo);
+
+    const rows = document.createElement('div');
+    rows.className = 'timeline-rows';
+    rows.id = 'timeline-rows';
+
+    const btnAdd = document.createElement('button');
+    btnAdd.type = 'button';
+    btnAdd.className = 'timeline-add';
+    btnAdd.textContent = '+ Adicionar linha';
+    btnAdd.addEventListener('click', () => adicionarLinhaTimeline(rows));
+
+    wrap.appendChild(label);
+    wrap.appendChild(rows);
+    wrap.appendChild(btnAdd);
+
+    const linhasIniciais = (PAGINA_ATUAL.timeline && PAGINA_ATUAL.timeline.length) ? PAGINA_ATUAL.timeline : [{ data: '', texto: '' }];
+    linhasIniciais.forEach(linha => adicionarLinhaTimeline(rows, linha));
+
+    return wrap;
+}
+
+function adicionarLinhaTimeline(rowsContainer, linha) {
+    linha = linha || { data: '', texto: '' };
+    const row = document.createElement('div');
+    row.className = 'timeline-row';
+    row.innerHTML = `
+        <input type="text" class="tl-data" placeholder="Data (ex: 2026)" value="${(linha.data || '').replace(/"/g, '&quot;')}">
+        <input type="text" class="tl-texto" placeholder="Texto" value="${(linha.texto || '').replace(/"/g, '&quot;')}">
+        <button type="button" class="timeline-remove" title="Remover">×</button>
+    `;
+    row.querySelector('.timeline-remove').addEventListener('click', () => {
+        row.remove();
+    });
+    rowsContainer.appendChild(row);
+}
+
+function serializarTimeline() {
+    const rows = document.querySelectorAll('#timeline-rows .timeline-row');
+    const linhas = [];
+    rows.forEach(row => {
+        const data = row.querySelector('.tl-data').value.trim();
+        const texto = row.querySelector('.tl-texto').value.trim();
+        if (data || texto) {
+            linhas.push({ data: data, texto: texto });
+        }
+    });
+    return linhas;
+}
+
+const CRIADORES = {
+    texto: criarCampoTexto,
+    textarea: criarCampoTextarea,
+    imagem: criarCampoImagem,
+    timeline: criarCampoTimeline
+};
+
+function renderCampos(templateSlug) {
+    const campos = CAMPOS_POR_TEMPLATE[templateSlug] || [];
+    const nomesAtivos = new Set(campos.map(c => c.nome));
+
+    // Cria (se ainda não existir) ou mostra os campos que pertencem ao template atual
+    campos.forEach(campo => {
+        if (!camposCriados[campo.nome]) {
+            const criador = CRIADORES[campo.tipo];
+            if (!criador) return;
+            const el = criador(campo);
+            camposCriados[campo.nome] = el;
+            container.appendChild(el);
+        }
+        camposCriados[campo.nome].dataset.campoHidden = 'false';
+    });
+
+    // Esconde (sem apagar valor) os campos que não pertencem ao template atual
+    Object.keys(camposCriados).forEach(nome => {
+        if (!nomesAtivos.has(nome)) {
+            camposCriados[nome].dataset.campoHidden = 'true';
+        }
+    });
+
+    // Atualiza o badge de tier ao lado do select
+    const tplAtual = (window.TODOS_TEMPLATES || []).find(t => t.slug === templateSlug);
+    if (tplAtual && tierTag) {
+        tierTag.textContent = tplAtual.tier === 'pago' ? 'Pago' : 'Grátis';
+        tierTag.className = 'tier-tag ' + (tplAtual.tier === 'pago' ? 'pago' : 'gratis');
+    }
+}
+
+window.TODOS_TEMPLATES = {{ templates | tojson }};
+
+selectTemplate.addEventListener('change', () => renderCampos(selectTemplate.value));
+
+document.getElementById('form-painel').addEventListener('submit', () => {
+    // Só serializa a timeline se o campo estiver ativo pro template atual
+    if (document.getElementById('timeline-rows')) {
+        timelineJsonInput.value = JSON.stringify(serializarTimeline());
+    }
+});
+
+renderCampos(selectTemplate.value);
+</script>
+
 </body>
 </html>
