@@ -172,6 +172,9 @@ header{
 .painel-footer a{font-size:.8em;font-weight:700;color:var(--ink-soft)}
 .painel-footer a:hover{color:var(--ink-black)}
 
+.anuncio-wrap{padding:16px 20px 0;display:flex;justify-content:center}
+.anuncio-wrap img{max-height:90px;width:auto;border-radius:10px;box-shadow:var(--shadow-sm)}
+
 [data-campo-hidden="true"]{display:none !important}
 </style>
 </head>
@@ -185,6 +188,14 @@ header{
     </div>
     <a class="btn-sair" href="/{{ pagina.slug }}/logout">Sair</a>
 </header>
+
+{% if anuncio_topo %}
+<div class="anuncio-wrap">
+    <a href="{{ anuncio_topo.link }}" target="_blank" rel="noopener sponsored">
+        <img src="{{ anuncio_topo.foto_url }}" alt="{{ anuncio_topo.titulo or 'Publicidade' }}">
+    </a>
+</div>
+{% endif %}
 
 <div class="painel-wrap">
     <div class="container">
