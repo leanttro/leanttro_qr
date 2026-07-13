@@ -4,6 +4,9 @@ import psycopg2.extras
 import requests
 import os
 import io
+import json
+import re
+import unicodedata
 import secrets
 import smtplib
 from email.mime.text import MIMEText
@@ -53,10 +56,8 @@ SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 SMTP_FROM = os.getenv("SMTP_FROM", SMTP_USER)
 
-TEMPLATES_DISPONIVEIS = {
-    "classic": "love/index.html",
-    "stitch": "love/stitch.html",
-}
+# Link fixo de pagamento pra templates pagos (Parte 6 — defina o valor real depois).
+LINK_PAGAMENTO_TEMPLATES = os.getenv("LINK_PAGAMENTO_TEMPLATES", "")
 
 # --- BANCO ---
 def get_db():
@@ -171,6 +172,40 @@ def gerar_senha_aleatoria(tamanho=10):
     return "".join(secrets.choice(alfabeto) for _ in range(tamanho))
 
 
+def slugify_cidade(texto):
+    """Normaliza um nome de cidade pra slug: remove acento, minúsculo, espaço vira hífen."""
+    if not texto:
+        return None
+    texto = unicodedata.normalize('NFKD', texto).encode('ascii', 'ignore').decode('ascii')
+    texto = texto.strip().lower()
+    texto = re.sub(r'[^a-z0-9]+', '-', texto).strip('-')
+    return texto or None
+
+
+def carregar_templates():
+    """Varre templates/paginas/ e devolve os metadados (<slug>.json) de cada
+    template disponível (<slug>.html + <slug>.json lado a lado)."""
+    templates = []
+    pasta = os.path.join(app.template_folder, 'paginas')
+    if not os.path.isdir(pasta):
+        return templates
+    for arquivo in os.listdir(pasta):
+        if arquivo.endswith('.html'):
+            slug = arquivo[:-5]
+            meta_path = os.path.join(pasta, f'{slug}.json')
+            if os.path.exists(meta_path):
+                with open(meta_path, encoding='utf-8') as f:
+                    meta = json.load(f)
+                meta['slug'] = slug
+                meta['arquivo'] = f'paginas/{arquivo}'
+                templates.append(meta)
+    return templates
+
+
+def get_template_por_slug(slug):
+    return next((t for t in carregar_templates() if t['slug'] == slug), None)
+
+
 def enviar_email(destinatario, assunto, corpo_texto):
     """Envia um e-mail simples via SMTP. Retorna (sucesso: bool, erro: str|None).
     Se SMTP não estiver configurado no .env, retorna sucesso=False com uma mensagem clara,
@@ -270,6 +305,13 @@ def index():
         LIMIT 8
     """)
 
+    tipos_destaque = query_all("""
+        SELECT * FROM brindes_tipos_impressao
+        WHERE ativo = TRUE
+        ORDER BY nome
+        LIMIT 8
+    """)
+
     return render_template(
         'home.html',
         current_year=datetime.now().year,
@@ -277,6 +319,7 @@ def index():
         anuncio_meio=get_anuncio('meio'),
         brindes_destaque=brindes_destaque,
         empresas_destaque=empresas_destaque,
+        tipos_destaque=tipos_destaque,
     )
 
 
@@ -294,22 +337,34 @@ def gerar_qr():
         destino_url = request.form.get('destino_url', '').strip()
         email = request.form.get('email', '').strip()
         titulo = request.form.get('titulo', '').strip()
+        template_slug = request.form.get('template', 'classic')
 
         if not slug or not senha:
             flash('Preencha o link (slug) e a senha.', 'error')
-            return render_template('gerar_qr.html')
+            return render_template('gerar_qr.html', templates=carregar_templates())
 
         if get_pagina_by_slug(slug):
             flash('Esse link já está em uso, escolha outro.', 'error')
-            return render_template('gerar_qr.html')
+            return render_template('gerar_qr.html', templates=carregar_templates())
 
         if tipo_destino == 'pagina' and not email:
             flash('Email é obrigatório para criar uma página própria (usado para pagamento e recuperação).', 'error')
-            return render_template('gerar_qr.html')
+            return render_template('gerar_qr.html', templates=carregar_templates())
 
         if tipo_destino == 'link' and not destino_url:
             flash('Cole o link de destino.', 'error')
-            return render_template('gerar_qr.html')
+            return render_template('gerar_qr.html', templates=carregar_templates())
+
+        if tipo_destino == 'pagina':
+            tpl_escolhido = get_template_por_slug(template_slug)
+            if tpl_escolhido and tpl_escolhido.get('tier') == 'pago':
+                # Template pago: não cria a Pagina agora — explica o pagamento
+                # e o pessoal libera manualmente depois de confirmar.
+                return render_template(
+                    'pagamento_pendente.html',
+                    template=tpl_escolhido,
+                    link_pagamento=LINK_PAGAMENTO_TEMPLATES,
+                )
 
         pagina_id = execute_returning("""
             INSERT INTO brindes_paginas
@@ -321,7 +376,7 @@ def gerar_qr():
             generate_password_hash(senha),
             tipo_destino,
             destino_url if tipo_destino == 'link' else None,
-            request.form.get('template', 'classic'),
+            template_slug,
             titulo,
             email or None,
         ))
@@ -329,7 +384,7 @@ def gerar_qr():
         flash('QR code criado com sucesso!', 'success')
         return redirect(f'/{slug}/painel')
 
-    return render_template('gerar_qr.html')
+    return render_template('gerar_qr.html', templates=carregar_templates())
 
 
 # --- REDIRECIONADOR DO QR FÍSICO ---
@@ -351,7 +406,8 @@ def redirecionador_qr(slug):
 @app.route('/<slug>')
 def perfil_publico(slug):
     slug = slug.lower().strip()
-    if slug in ['static', 'favicon.ico', 'gerar-qr', 'diretorio', 'ocasiao', 'brinde']:
+    if slug in ['static', 'favicon.ico', 'gerar-qr', 'diretorio', 'ocasiao', 'brinde',
+                'empresa', 'impressao', 'cidade', 'demo']:
         abort(404)
 
     pagina = get_pagina_by_slug(slug)
@@ -367,14 +423,34 @@ def perfil_publico(slug):
 
 
 def render_pagina(pagina):
-    template_path = TEMPLATES_DISPONIVEIS.get(pagina.get('template'), TEMPLATES_DISPONIVEIS['classic'])
+    templates_disponiveis = carregar_templates()
+    tpl = get_template_por_slug(pagina.get('template'))
+    if not tpl and templates_disponiveis:
+        tpl = templates_disponiveis[0]
+    if not tpl:
+        abort(404)
     return render_template(
-        template_path,
+        tpl['arquivo'],
         page=pagina,
         timeline_events=gerar_timeline_events(pagina),
         current_year=datetime.now().year,
         font_css="'Inter', sans-serif",
         font_size_val="1.1rem",
+    )
+
+
+# --- DEMO DE TEMPLATE (preview ao vivo, sem gravar nada no banco) ---
+@app.route('/demo/<template_slug>')
+def demo_template(template_slug):
+    tpl = get_template_por_slug(template_slug)
+    if not tpl:
+        abort(404)
+    pagina_fake = {**tpl.get('demo', {}), 'template': template_slug}
+    return render_template(
+        tpl['arquivo'], page=pagina_fake,
+        timeline_events=pagina_fake.get('timeline', []),
+        current_year=datetime.now().year,
+        font_css="'Inter', sans-serif", font_size_val="1.1rem",
     )
 
 
@@ -628,6 +704,47 @@ def diretorio_publico():
         anuncio_topo=get_anuncio('topo'),
         anuncio_meio=get_anuncio('meio'),
     )
+
+
+# --- PÁGINA INDIVIDUAL DE EMPRESA (Parte 1) ---
+@app.route('/empresa/<slug>')
+def empresa_publica(slug):
+    empresa = query_one("SELECT * FROM brindes_empresas WHERE slug = %s AND ativo = TRUE", (slug,))
+    if not empresa:
+        abort(404)
+    return render_template('negocio_brindes.html', empresa=empresa,
+                            anuncio_topo=get_anuncio('topo'))
+
+
+# --- PÁGINA POR TIPO DE IMPRESSÃO (Parte 2) ---
+@app.route('/impressao/<slug>')
+def impressao_publica(slug):
+    tipo = query_one("SELECT * FROM brindes_tipos_impressao WHERE slug = %s AND ativo = TRUE", (slug,))
+    if not tipo:
+        abort(404)
+    brindes = query_all("""
+        SELECT b.*, o.nome as ocasiao_nome, o.slug as ocasiao_slug
+        FROM brindes_brindes b
+        LEFT JOIN brindes_ocasioes o ON o.id = b.ocasiao_id
+        WHERE b.tipo_impressao_id = %s AND b.ativo = TRUE
+        ORDER BY b.created_at DESC
+    """, (tipo['id'],))
+    return render_template('impressao.html', tipo=tipo, brindes=brindes,
+                            anuncio_topo=get_anuncio('topo'))
+
+
+# --- PÁGINA POR CIDADE (Parte 3) ---
+@app.route('/cidade/<slug>')
+def cidade_publica(slug):
+    empresas = query_all("""
+        SELECT * FROM brindes_empresas
+        WHERE cidade_slug = %s AND ativo = TRUE
+        ORDER BY (plano = 'destaque') DESC, nome
+    """, (slug,))
+    if not empresas:
+        abort(404)
+    return render_template('cidade.html', cidade_nome=empresas[0]['cidade'],
+                            empresas=empresas, anuncio_topo=get_anuncio('topo'))
 
 
 # =====================================================================
@@ -904,16 +1021,26 @@ def admin_empresas_add():
     nome = request.form.get('nome', '').strip()
     slug = request.form.get('slug', '').strip().lower()
     email = request.form.get('email', '').strip()
+    telefone = request.form.get('telefone', '').strip()
     whatsapp = request.form.get('whatsapp', '').strip()
+    site = request.form.get('site', '').strip()
     cidade = request.form.get('cidade', '').strip()
+    descricao = request.form.get('descricao', '').strip()
+    logo_url = request.form.get('logo_url', '').strip()
     plano = request.form.get('plano', 'gratis')
+    cidade_slug = slugify_cidade(cidade)
 
     if nome and slug:
         try:
             execute("""
-                INSERT INTO brindes_empresas (nome, slug, email, whatsapp, cidade, plano)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, (nome, slug, email or None, whatsapp or None, cidade or None, plano))
+                INSERT INTO brindes_empresas
+                    (nome, slug, email, telefone, whatsapp, site, cidade, cidade_slug, descricao, logo_url, plano)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                nome, slug, email or None, telefone or None, whatsapp or None,
+                site or None, cidade or None, cidade_slug, descricao or None,
+                logo_url or None, plano,
+            ))
             flash('Empresa adicionada.', 'success')
         except Exception:
             flash('Erro ao adicionar (slug já existe?).', 'error')
