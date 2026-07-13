@@ -922,6 +922,51 @@ def admin_templates_toggle(slug):
     return redirect('/admin/templates')
 
 
+@app.route('/admin/templates/<slug>/editar', methods=['GET', 'POST'])
+@admin_required
+def admin_templates_editar(slug):
+    tpl = get_template_por_slug(slug)
+    if not tpl:
+        abort(404)
+    meta_path = os.path.join(app.template_folder, 'paginas', f'{slug}.json')
+
+    # GET: o drawer do admin busca os dados atuais pra preencher o formulário.
+    if request.method == 'GET':
+        return jsonify(tpl)
+
+    # POST: salva nome, preview_url, tier e preco. "campos" e "demo" não são
+    # tocados aqui — continuam só editáveis por arquivo direto no .json.
+    nome = request.form.get('nome', tpl.get('nome', '')).strip()
+    preview_url = request.form.get('preview_url', '').strip()
+    tier = request.form.get('tier', 'gratis').strip()
+    if tier not in ('gratis', 'pago'):
+        tier = 'gratis'
+    preco_raw = request.form.get('preco', '0').strip()
+    try:
+        preco = float(preco_raw) if preco_raw else 0
+    except ValueError:
+        preco = 0
+    if tier == 'gratis':
+        preco = 0
+
+    if not nome:
+        return jsonify({'erro': 'Preencha o nome do template.'}), 400
+
+    tpl['nome'] = nome
+    tpl['preview_url'] = preview_url
+    tpl['tier'] = tier
+    tpl['preco'] = preco
+    # slug/arquivo são derivados do nome do arquivo, não fazem parte do metadado salvo em disco
+    tpl.pop('slug', None)
+    tpl.pop('arquivo', None)
+    try:
+        with open(meta_path, 'w', encoding='utf-8') as f:
+            json.dump(tpl, f, ensure_ascii=False, indent=2)
+        return jsonify({'ok': True})
+    except Exception:
+        return jsonify({'erro': 'Erro ao salvar o template.'}), 400
+
+
 # --- PÁGINAS (usuários que geraram QR code) ---
 @app.route('/admin/paginas/<int:item_id>/editar', methods=['POST'])
 @admin_required
