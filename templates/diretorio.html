@@ -1,93 +1,342 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diretório de empresas | QRCodeBrindes</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap');
-        :root { --paper: #DCE5DA; --ink: #1F3D2E; --coral: #E8604C; --gold: #C9A227; }
-        body { background-color: var(--paper); color: var(--ink); font-family: 'Inter', sans-serif; }
-        .font-display { font-family: 'Fraunces', serif; }
-        .font-mono { font-family: 'IBM Plex Mono', monospace; }
-        .tag {
-            position: relative;
-            background: #F6F3E9;
-            border-radius: 0.5rem 1.5rem 1.5rem 0.5rem;
-            box-shadow: 0 14px 30px -10px rgba(31, 61, 46, 0.3);
-            transition: transform .2s ease;
-        }
-        .tag:hover { transform: translateY(-4px); }
-        .tag::before {
-            content: '';
-            position: absolute;
-            top: 16px; left: 16px;
-            width: 12px; height: 12px;
-            border-radius: 50%;
-            background: var(--paper);
-            border: 2px solid var(--ink);
-        }
-        .tag.destaque { background: #F3D4C9; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diretório de empresas parceiras — QR Code Brindes</title>
+<meta name="description" content="Fabricantes e gráficas de sublimação, DTF, laser, silk e UV prontos pra fabricar seu brinde com QR code embutido.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#ffffff">
+
+<link rel="icon" type="image/png" href="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png">
+<link rel="apple-touch-icon" href="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+    --bg:#ffffff;
+    --surface:#f6f6f8;
+    --surface-2:#eeeef1;
+    --ink:#17171a;
+    --ink-soft:#63636c;
+    --ink-faint:#9797a0;
+    --line:#e2e2e7;
+    --line-strong:#cfcfd6;
+    --chrome-1:#fcfcfd;
+    --chrome-2:#d7d7dd;
+    --chrome-3:#9a9aa2;
+    --chrome-4:#4a4a52;
+    --ink-black:#111113;
+    --focus:#3b6ef0;
+    --radius:14px;
+    --shadow-sm:0 1px 2px rgba(20,20,25,.06);
+    --shadow-md:0 8px 24px rgba(20,20,25,.08);
+    --shadow-lg:0 24px 64px rgba(20,20,25,.14);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Montserrat',sans-serif;
+    -webkit-font-smoothing:antialiased;
+}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+.container{max-width:1180px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:'Montserrat',sans-serif;margin:0;color:var(--ink-black)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:3px;border-radius:4px}
+
+/* ============ HEADER ============ */
+header{
+    position:sticky;top:0;z-index:60;
+    background:rgba(255,255,255,.88);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 24px;
+    gap:16px;
+}
+.header-logo a{display:flex;align-items:center;gap:10px}
+.header-logo img{height:88px;width:auto}
+.desktop-nav ul{list-style:none;display:flex;gap:30px;margin:0;padding:0;align-items:center}
+.desktop-nav a{font-size:.94em;font-weight:500;color:var(--ink-soft);transition:color .15s}
+.desktop-nav a:hover{color:var(--ink-black)}
+.header-actions{display:flex;align-items:center;gap:14px}
+.btn-nav-cta{
+    background:linear-gradient(180deg, var(--chrome-1) 0%, #e3e3e8 55%, var(--chrome-2) 100%);
+    color:var(--ink-black);
+    padding:11px 22px;border-radius:10px;
+    font-size:.9em;font-weight:700;letter-spacing:.01em;
+    border:1px solid var(--line-strong);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 0 1px 3px rgba(20,20,25,.1);
+    transition:transform .15s, box-shadow .15s, background .15s;
+    display:inline-block;
+}
+.btn-nav-cta:hover{
+    background:linear-gradient(180deg, #ffffff 0%, var(--chrome-2) 55%, var(--chrome-3) 100%);
+    transform:translateY(-1px);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 0 6px 16px rgba(20,20,25,.16);
+}
+.hamburger-btn{display:none;background:none;border:1px solid var(--line);border-radius:8px;width:40px;height:40px;align-items:center;justify-content:center;cursor:pointer}
+.hamburger-btn span{display:block;width:18px;height:2px;background:var(--ink);position:relative}
+.hamburger-btn span::before,.hamburger-btn span::after{content:"";position:absolute;left:0;width:18px;height:2px;background:var(--ink)}
+.hamburger-btn span::before{top:-6px}
+.hamburger-btn span::after{top:6px}
+
+.mobile-nav-overlay{
+    position:fixed;inset:0;background:#0c0c0e;z-index:100;
+    display:flex;flex-direction:column;padding:24px;
+    transform:translateY(-100%);transition:transform .3s ease;
+}
+.mobile-nav-overlay.open{transform:translateY(0)}
+.mobile-nav-close{align-self:flex-end;background:none;border:1px solid rgba(255,255,255,.25);color:#fff;width:40px;height:40px;border-radius:8px;font-size:1.1em;cursor:pointer}
+.mobile-nav-overlay nav ul{list-style:none;padding:0;margin:60px 0 0;display:flex;flex-direction:column;gap:8px}
+.mobile-nav-overlay nav a{display:block;padding:16px 4px;font-size:1.4em;color:#fff;font-family:'Montserrat',sans-serif;font-weight:600;border-bottom:1px solid rgba(255,255,255,.1)}
+.mobile-nav-overlay .btn-nav-cta{display:inline-block;margin-top:24px;background:#fff;color:#0c0c0e;border-color:#fff}
+
+@media (max-width:900px){
+    header{flex-direction:column;padding:14px 20px 12px;gap:8px}
+    .header-logo{width:100%;display:flex;justify-content:center}
+    .header-logo a{justify-content:center}
+    .header-logo img{height:80px}
+    .header-actions{width:100%;justify-content:center}
+    .desktop-nav{display:none}
+    .hamburger-btn{display:flex}
+}
+
+/* ============ ANÚNCIOS ============ */
+.anuncio-wrap{padding:28px 24px;display:flex;justify-content:center}
+.anuncio-wrap img{max-height:100px;width:auto;border-radius:10px;box-shadow:var(--shadow-sm)}
+
+/* ============ PAGE HEAD ============ */
+.page-head{padding:56px 0 40px;border-bottom:1px solid var(--line);background:var(--surface)}
+.page-head .eyebrow{margin-bottom:16px}
+.page-head h1{font-size:clamp(1.9em,3.6vw,2.6em);line-height:1.15;margin-bottom:14px}
+.page-head p{color:var(--ink-soft);font-size:1.05em;line-height:1.6;max-width:64ch}
+.eyebrow{
+    display:inline-flex;align-items:baseline;gap:12px;
+    font-size:.78em;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--chrome-4);
+}
+.eyebrow::before{
+    content:"";display:inline-block;width:34px;height:1px;
+    background:linear-gradient(90deg, transparent, var(--chrome-3));
+    transform:translateY(-3px);
+}
+
+/* ============ SECTIONS shared ============ */
+.section{padding:56px 0}
+
+/* ============ GRUPOS POR CIDADE ============ */
+.cidade-group{margin-bottom:48px}
+.cidade-group:last-child{margin-bottom:0}
+.cidade-group-title{font-size:1.15em;font-weight:700;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.empresas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px}
+
+/* ============ CARD EMPRESA (mesmo componente do home/cidade) ============ */
+.card-empresa{
+    text-align:center;
+    background:var(--chrome-1);border:1px solid var(--line);border-radius:var(--radius);
+    padding:24px 18px;transition:transform .18s, box-shadow .18s;
+}
+.card-empresa:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+.card-empresa-logo{
+    width:64px;height:64px;border-radius:50%;background:var(--surface-2);border:1px solid var(--line);
+    margin:0 auto 14px;display:flex;align-items:center;justify-content:center;overflow:hidden;
+    font-family:'Montserrat',sans-serif;font-weight:700;color:var(--ink-soft);
+}
+.card-empresa-logo img{width:100%;height:100%;object-fit:cover}
+.card-empresa h3{font-size:.98em;margin-bottom:4px}
+.card-empresa .cidade{font-size:.84em;color:var(--ink-soft)}
+.badge-destaque{
+    display:inline-block;margin-top:10px;font-size:.7em;font-family:'Montserrat',sans-serif;
+    color:var(--chrome-4);background:var(--surface-2);padding:3px 9px;border-radius:999px;
+}
+
+.empty-state{
+    border:1px dashed var(--line-strong);border-radius:var(--radius);
+    padding:36px 28px;text-align:center;color:var(--ink-soft);background:var(--surface);
+}
+.empty-state strong{display:block;color:var(--ink-black);font-family:'Montserrat',sans-serif;font-size:1.1em;margin-bottom:6px}
+
+/* ============ FOOTER ============ */
+footer{background:var(--ink-black);color:#e6e6e9;padding:52px 0 28px}
+.footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px;margin-bottom:40px}
+.footer-logo{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.footer-logo img{height:32px}
+.footer-logo span{font-family:'Montserrat',sans-serif;font-weight:700;color:#fff}
+footer p{color:#9a9aa4;font-size:.92em;line-height:1.6;max-width:36ch;margin:0}
+footer h4{font-size:.78em;text-transform:uppercase;letter-spacing:.06em;color:#7a7a84;margin-bottom:14px;font-weight:600}
+footer ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+footer a{color:#c9c9ce;font-size:.94em}
+footer a:hover{color:#fff}
+.footer-bottom{border-top:1px solid #2a2a2e;padding-top:22px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.82em;color:#7a7a84}
+@media (max-width:700px){.footer-grid{grid-template-columns:1fr;gap:28px}}
+</style>
 </head>
-<body class="min-h-screen">
+<body>
 
-    <header class="max-w-6xl mx-auto px-6 py-6 flex justify-between items-center">
-        <a href="/" class="font-display text-xl font-semibold tracking-tight">QRCode<span style="color: var(--coral)">Brindes</span></a>
-        <a href="/gerar-qr" class="font-mono text-xs uppercase tracking-widest px-5 py-3 rounded-full text-white shadow-md" style="background-color: var(--ink)">Criar QR code</a>
-    </header>
+<!-- HEADER -->
+<header>
+    <div class="header-logo">
+        <a href="{{ url_for('index') }}" aria-label="QR Code Brindes — página inicial">
+            <img src="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png" alt="QR Code Brindes">
+        </a>
+    </div>
+    <nav class="desktop-nav" aria-label="Navegação principal">
+        <ul>
+            <li><a href="{{ url_for('index') }}#catalogo">Catálogo de brindes</a></li>
+            <li><a href="{{ url_for('diretorio_publico') }}">Diretório de empresas</a></li>
+            <li><a href="{{ url_for('index') }}#paginas-extras">Como funciona</a></li>
+        </ul>
+    </nav>
+    <div class="header-actions">
+        <a class="btn-nav-cta" href="{{ url_for('gerar_qr') }}">Criar meu QR</a>
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Abrir menu" onclick="toggleMobileNav(true)"><span></span></button>
+    </div>
+</header>
 
-    <section class="max-w-6xl mx-auto px-6 pt-6 pb-14 text-center">
-        <p class="font-mono text-xs uppercase tracking-[0.2em] mb-3" style="color: var(--coral)">Diretório</p>
-        <h1 class="font-display text-4xl font-semibold mb-4">Quem faz o brinde acontecer</h1>
-        <p class="max-w-xl mx-auto" style="color: #3E5A4B">Gráficas e fornecedores parceiros, prontos pra transformar sua ideia em brinde de verdade.</p>
-    </section>
+<!-- MOBILE NAV -->
+<div class="mobile-nav-overlay" id="mobile-nav" role="dialog" aria-modal="true">
+    <button class="mobile-nav-close" onclick="toggleMobileNav(false)" aria-label="Fechar menu">&#x2715;</button>
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('index') }}#catalogo" onclick="toggleMobileNav(false)">Catálogo de brindes</a></li>
+            <li><a href="{{ url_for('diretorio_publico') }}" onclick="toggleMobileNav(false)">Diretório de empresas</a></li>
+            <li><a href="{{ url_for('index') }}#paginas-extras" onclick="toggleMobileNav(false)">Como funciona</a></li>
+        </ul>
+        <a class="btn-nav-cta" href="{{ url_for('gerar_qr') }}" onclick="toggleMobileNav(false)">Criar meu QR</a>
+    </nav>
+</div>
 
-    <section class="max-w-6xl mx-auto px-6 pb-20">
+<!-- PAGE HEAD -->
+<section class="page-head">
+    <div class="container">
+        <span class="eyebrow">Diretório</span>
+        <h1>Diretório de empresas parceiras</h1>
+        <p>Fabricantes e gráficas de sublimação, DTF, laser, silk e UV prontos pra receber seu pedido de orçamento — organizados por cidade.</p>
+    </div>
+</section>
+
+{% if anuncio_topo %}
+<div class="anuncio-wrap">
+    <a href="{{ anuncio_topo.link }}" target="_blank" rel="noopener sponsored">
+        <img src="{{ anuncio_topo.foto_url }}" alt="{{ anuncio_topo.titulo or 'Publicidade' }}">
+    </a>
+</div>
+{% endif %}
+
+<!-- LISTAGEM -->
+<section class="section">
+    <div class="container">
         {% if empresas %}
-        <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {% for e in empresas %}
-            <div class="tag {{ 'destaque' if e.plano == 'destaque' else '' }} p-5 pt-8">
-                {% if e.plano == 'destaque' %}
-                <p class="font-mono text-[10px] uppercase tracking-widest mb-2" style="color: var(--coral)">★ Em destaque</p>
-                {% endif %}
-                <p class="font-display text-lg font-semibold leading-snug mb-1">{{ e.nome }}</p>
-                {% if e.cidade %}
-                <p class="font-mono text-[10px] uppercase tracking-widest mb-4" style="color: #8A8060">{{ e.cidade }}</p>
-                {% endif %}
-                <div class="flex flex-col gap-2 mt-4">
-                    {% if e.whatsapp %}
-                    <a href="https://wa.me/{{ e.whatsapp }}" target="_blank" class="text-center text-sm font-semibold py-2.5 rounded-full text-white" style="background-color: var(--ink)">Falar no WhatsApp</a>
-                    {% elif e.email %}
-                    <a href="mailto:{{ e.email }}" class="text-center text-sm font-semibold py-2.5 rounded-full text-white" style="background-color: var(--ink)">Enviar e-mail</a>
-                    {% endif %}
+            {% set com_cidade = empresas|selectattr('cidade')|list %}
+            {% set sem_cidade = empresas|rejectattr('cidade')|list %}
+
+            {% for cidade_nome, grupo in com_cidade|groupby('cidade') %}
+            <div class="cidade-group">
+                <h2 class="cidade-group-title">{{ cidade_nome }}</h2>
+                <div class="empresas-grid">
+                    {% for empresa in grupo %}
+                    <a class="card-empresa" href="{{ url_for('empresa_publica', slug=empresa.slug) }}">
+                        <div class="card-empresa-logo">
+                            {% if empresa.logo_url %}
+                            <img src="{{ empresa.logo_url }}" alt="{{ empresa.nome }}">
+                            {% else %}
+                            {{ empresa.nome[0]|upper }}
+                            {% endif %}
+                        </div>
+                        <h3>{{ empresa.nome }}</h3>
+                        <div class="cidade">{{ empresa.cidade }}</div>
+                        {% if empresa.plano == 'destaque' %}<span class="badge-destaque">destaque</span>{% endif %}
+                    </a>
+                    {% endfor %}
                 </div>
             </div>
             {% endfor %}
-        </div>
+
+            {% if sem_cidade %}
+            <div class="cidade-group">
+                <h2 class="cidade-group-title">Outras empresas</h2>
+                <div class="empresas-grid">
+                    {% for empresa in sem_cidade %}
+                    <a class="card-empresa" href="{{ url_for('empresa_publica', slug=empresa.slug) }}">
+                        <div class="card-empresa-logo">
+                            {% if empresa.logo_url %}
+                            <img src="{{ empresa.logo_url }}" alt="{{ empresa.nome }}">
+                            {% else %}
+                            {{ empresa.nome[0]|upper }}
+                            {% endif %}
+                        </div>
+                        <h3>{{ empresa.nome }}</h3>
+                        {% if empresa.plano == 'destaque' %}<span class="badge-destaque">destaque</span>{% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
         {% else %}
-        <div class="tag p-10 text-center max-w-md mx-auto">
-            <p class="font-display text-lg font-semibold mb-2">Ainda sem empresas cadastradas</p>
-            <p class="text-sm" style="color: #5C7B6A">Em breve o diretório fica completo.</p>
+        <div class="empty-state">
+            <strong>O diretório está crescendo</strong>
+            Em breve você encontra aqui as empresas parceiras prontas pra fabricar seu brinde.
         </div>
         {% endif %}
-    </section>
+    </div>
+</section>
 
-    <section class="py-16" style="background-color: var(--ink)">
-        <div class="max-w-3xl mx-auto px-6 text-center">
-            <p class="font-mono text-xs uppercase tracking-[0.2em] mb-4" style="color: var(--gold)">Pra quem fabrica</p>
-            <h2 class="font-display text-2xl font-semibold text-white mb-4">Quer aparecer aqui?</h2>
-            <a href="mailto:contato@qrcodebrindes.com.br" class="inline-block font-semibold px-7 py-4 rounded-full text-white shadow-lg hover:-translate-y-0.5 transition-transform" style="background-color: var(--coral)">
-                Quero cadastrar minha empresa
-            </a>
+{% if anuncio_meio %}
+<div class="anuncio-wrap">
+    <a href="{{ anuncio_meio.link }}" target="_blank" rel="noopener sponsored">
+        <img src="{{ anuncio_meio.foto_url }}" alt="{{ anuncio_meio.titulo or 'Publicidade' }}">
+    </a>
+</div>
+{% endif %}
+
+<!-- FOOTER -->
+<footer>
+    <div class="container footer-grid">
+        <div>
+            <div class="footer-logo">
+                <img src="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png" alt="">
+                <span>QR Code Brindes</span>
+            </div>
+            <p>QR code dinâmico, catálogo de brindes personalizados e diretório de fabricantes, tudo em um lugar só.</p>
         </div>
-    </section>
+        <div>
+            <h4>Navegação</h4>
+            <ul>
+                <li><a href="{{ url_for('index') }}#catalogo">Catálogo de brindes</a></li>
+                <li><a href="{{ url_for('diretorio_publico') }}">Diretório de empresas</a></li>
+                <li><a href="{{ url_for('index') }}#paginas-extras">Como funciona</a></li>
+            </ul>
+        </div>
+        <div>
+            <h4>Sua conta</h4>
+            <ul>
+                <li><a href="{{ url_for('gerar_qr') }}">Criar meu QR</a></li>
+                <li><a href="{{ url_for('gerar_qr') }}">Já tenho um QR</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="container footer-bottom">
+        <span>© {{ current_year }} QR Code Brindes</span>
+        <span>Feito pra durar mais que o brinde</span>
+    </div>
+</footer>
 
-    <footer class="py-10 text-center">
-        <p class="font-display text-sm font-semibold mb-1">QRCodeBrindes</p>
-        <p class="font-mono text-[10px]" style="color: #8A8060">presente físico, história digital</p>
-    </footer>
+<script>
+function toggleMobileNav(open){
+    document.getElementById('mobile-nav').classList.toggle('open', open);
+    document.body.style.overflow = open ? 'hidden' : '';
+}
+document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') toggleMobileNav(false);
+});
+</script>
 
 </body>
 </html>
