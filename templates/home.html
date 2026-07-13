@@ -316,6 +316,18 @@ header{
 }
 .empty-state strong{display:block;color:var(--ink-black);font-family:'Montserrat',sans-serif;font-size:1.1em;margin-bottom:6px}
 
+.card-tipo{
+    flex:0 0 200px;scroll-snap-align:start;text-align:center;
+    background:var(--chrome-1);border:1px solid var(--line);border-radius:var(--radius);
+    padding:22px 16px;transition:transform .18s, box-shadow .18s;
+}
+.card-tipo:hover{transform:translateY(-4px);box-shadow:var(--shadow-md)}
+.card-tipo-icon{
+    width:52px;height:52px;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);
+    margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:1.3em;
+}
+.card-tipo h3{font-size:.96em;line-height:1.3}
+
 /* ============ FOOTER ============ */
 footer{background:var(--ink-black);color:#e6e6e9;padding:52px 0 28px}
 .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px;margin-bottom:40px}
@@ -538,6 +550,35 @@ footer a:hover{color:#fff}
     </div>
 </section>
 
+<!-- POR TIPO DE IMPRESSÃO -->
+<section class="section section-alt" id="tipos-impressao">
+    <div class="container">
+        <div class="section-head">
+            <span class="eyebrow">Tipo de impressão</span>
+            <h2>Escolha pela técnica de impressão</h2>
+            <p>Sublimação, DTF, laser, silk, UV — encontre brindes organizados pelo processo de fabricação.</p>
+        </div>
+
+        {% if tipos_destaque %}
+        <div class="carousel-wrap">
+            <div class="carousel">
+                {% for tipo in tipos_destaque %}
+                <a class="card-tipo" href="{{ url_for('impressao_publica', slug=tipo.slug) }}">
+                    <div class="card-tipo-icon">🖨️</div>
+                    <h3>{{ tipo.nome }}</h3>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <strong>Os tipos de impressão estão sendo cadastrados</strong>
+            Em breve você encontra aqui os brindes organizados por técnica de impressão.
+        </div>
+        {% endif %}
+    </div>
+</section>
+
 {% if anuncio_meio %}
 <div class="anuncio-wrap">
     <a href="{{ anuncio_meio.link }}" target="_blank" rel="noopener sponsored">
@@ -559,7 +600,7 @@ footer a:hover{color:#fff}
         <div class="carousel-wrap">
             <div class="carousel">
                 {% for empresa in empresas_destaque %}
-                <a class="card-empresa" href="{{ url_for('diretorio_publico') }}">
+                <a class="card-empresa" href="{{ url_for('empresa_publica', slug=empresa.slug) }}">
                     <div class="card-empresa-logo">
                         {% if empresa.logo_url %}
                         <img src="{{ empresa.logo_url }}" alt="{{ empresa.nome }}">
