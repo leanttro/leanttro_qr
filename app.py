@@ -779,9 +779,9 @@ def admin_logout():
     return redirect('/admin/login')
 
 
-@app.route('/admin')
-@admin_required
-def admin_dashboard():
+def _admin_contexto_base():
+    """Contexto comum usado pelo admin.html em qualquer seção (dashboard,
+    ocasiões, tipos, brindes, empresas, leads, páginas, templates)."""
     stats = {
         'total_paginas': query_one("SELECT COUNT(*) as c FROM brindes_paginas")['c'],
         'total_scans': query_one("SELECT COUNT(*) as c FROM brindes_scans")['c'],
@@ -813,12 +813,42 @@ def admin_dashboard():
         GROUP BY p.id
         ORDER BY p.created_at DESC
     """)
+    templates = carregar_templates()
 
-    return render_template(
-        'admin.html',
+    return dict(
         stats=stats, ocasioes=ocasioes, tipos=tipos,
         brindes=brindes, empresas=empresas, leads=leads, paginas=paginas,
+        templates=templates,
     )
+
+
+@app.route('/admin')
+@admin_required
+def admin_dashboard():
+    return render_template('admin.html', secao_ativa='dashboard', **_admin_contexto_base())
+
+
+# --- TEMPLATES (Parte 3 — só leitura + ativar/desativar) ---
+@app.route('/admin/templates')
+@admin_required
+def admin_templates():
+    return render_template('admin.html', secao_ativa='templates', **_admin_contexto_base())
+
+
+@app.route('/admin/templates/<slug>/toggle', methods=['POST'])
+@admin_required
+def admin_templates_toggle(slug):
+    tpl = get_template_por_slug(slug)
+    if not tpl:
+        abort(404)
+    meta_path = os.path.join(app.template_folder, 'paginas', f'{slug}.json')
+    tpl['ativo'] = not tpl.get('ativo', True)
+    # slug/arquivo são derivados do nome do arquivo, não fazem parte do metadado salvo em disco
+    tpl.pop('slug', None)
+    tpl.pop('arquivo', None)
+    with open(meta_path, 'w', encoding='utf-8') as f:
+        json.dump(tpl, f, ensure_ascii=False, indent=2)
+    return redirect('/admin/templates')
 
 
 # --- PÁGINAS (usuários que geraram QR code) ---
@@ -934,6 +964,36 @@ def admin_ocasioes_add():
     return redirect('/admin#ocasioes')
 
 
+@app.route('/admin/ocasioes/<int:item_id>/editar', methods=['GET', 'POST'])
+@admin_required
+def admin_ocasioes_editar(item_id):
+    ocasiao = query_one("SELECT * FROM brindes_ocasioes WHERE id = %s", (item_id,))
+    if not ocasiao:
+        abort(404)
+
+    if request.method == 'GET':
+        return jsonify(ocasiao)
+
+    nome = request.form.get('nome', '').strip()
+    slug = request.form.get('slug', '').strip().lower()
+    descricao = request.form.get('descricao', '').strip()
+    imagem_url = request.form.get('imagem_url', '').strip()
+    sazonal = 'sazonal' in request.form
+
+    if not nome or not slug:
+        return jsonify({'erro': 'Preencha nome e slug.'}), 400
+
+    try:
+        execute("""
+            UPDATE brindes_ocasioes
+            SET nome = %s, slug = %s, descricao = %s, imagem_url = %s, sazonal = %s
+            WHERE id = %s
+        """, (nome, slug, descricao or None, imagem_url or None, sazonal, item_id))
+        return jsonify({'ok': True})
+    except Exception:
+        return jsonify({'erro': 'Erro ao salvar (slug já existe?).'}), 400
+
+
 @app.route('/admin/ocasioes/<int:item_id>/toggle', methods=['POST'])
 @admin_required
 def admin_ocasioes_toggle(item_id):
@@ -954,13 +1014,46 @@ def admin_ocasioes_delete(item_id):
 def admin_tipos_add():
     nome = request.form.get('nome', '').strip()
     slug = request.form.get('slug', '').strip().lower()
+    imagem_url = request.form.get('imagem_url', '').strip()
     if nome and slug:
         try:
-            execute("INSERT INTO brindes_tipos_impressao (nome, slug) VALUES (%s, %s)", (nome, slug))
+            execute(
+                "INSERT INTO brindes_tipos_impressao (nome, slug, imagem_url) VALUES (%s, %s, %s)",
+                (nome, slug, imagem_url or None)
+            )
             flash('Tipo de impressão adicionado.', 'success')
         except Exception:
             flash('Erro ao adicionar (slug já existe?).', 'error')
     return redirect('/admin#tipos')
+
+
+@app.route('/admin/tipos-impressao/<int:item_id>/editar', methods=['GET', 'POST'])
+@admin_required
+def admin_tipos_editar(item_id):
+    tipo = query_one("SELECT * FROM brindes_tipos_impressao WHERE id = %s", (item_id,))
+    if not tipo:
+        abort(404)
+
+    if request.method == 'GET':
+        return jsonify(tipo)
+
+    nome = request.form.get('nome', '').strip()
+    slug = request.form.get('slug', '').strip().lower()
+    descricao = request.form.get('descricao', '').strip()
+    imagem_url = request.form.get('imagem_url', '').strip()
+
+    if not nome or not slug:
+        return jsonify({'erro': 'Preencha nome e slug.'}), 400
+
+    try:
+        execute("""
+            UPDATE brindes_tipos_impressao
+            SET nome = %s, slug = %s, descricao = %s, imagem_url = %s
+            WHERE id = %s
+        """, (nome, slug, descricao or None, imagem_url or None, item_id))
+        return jsonify({'ok': True})
+    except Exception:
+        return jsonify({'erro': 'Erro ao salvar (slug já existe?).'}), 400
 
 
 @app.route('/admin/tipos-impressao/<int:item_id>/toggle', methods=['POST'])
@@ -1002,6 +1095,38 @@ def admin_brindes_add():
         except Exception:
             flash('Erro ao adicionar (slug já existe?).', 'error')
     return redirect('/admin#brindes')
+
+
+@app.route('/admin/brindes/<int:item_id>/editar', methods=['GET', 'POST'])
+@admin_required
+def admin_brindes_editar(item_id):
+    brinde = query_one("SELECT * FROM brindes_brindes WHERE id = %s", (item_id,))
+    if not brinde:
+        abort(404)
+
+    if request.method == 'GET':
+        return jsonify(brinde)
+
+    nome = request.form.get('nome', '').strip()
+    slug = request.form.get('slug', '').strip().lower()
+    descricao = request.form.get('descricao', '').strip()
+    imagem_url = request.form.get('imagem_url', '').strip()
+    ocasiao_id = request.form.get('ocasiao_id') or None
+    tipo_impressao_id = request.form.get('tipo_impressao_id') or None
+
+    if not nome or not slug:
+        return jsonify({'erro': 'Preencha nome e slug.'}), 400
+
+    try:
+        execute("""
+            UPDATE brindes_brindes
+            SET nome = %s, slug = %s, descricao = %s, imagem_url = %s,
+                ocasiao_id = %s, tipo_impressao_id = %s
+            WHERE id = %s
+        """, (nome, slug, descricao or None, imagem_url or None, ocasiao_id, tipo_impressao_id, item_id))
+        return jsonify({'ok': True})
+    except Exception:
+        return jsonify({'erro': 'Erro ao salvar (slug já existe?).'}), 400
 
 
 @app.route('/admin/brindes/<int:item_id>/toggle', methods=['POST'])
@@ -1049,6 +1174,48 @@ def admin_empresas_add():
         except Exception:
             flash('Erro ao adicionar (slug já existe?).', 'error')
     return redirect('/admin#empresas')
+
+
+@app.route('/admin/empresas/<int:item_id>/editar', methods=['GET', 'POST'])
+@admin_required
+def admin_empresas_editar(item_id):
+    empresa = query_one("SELECT * FROM brindes_empresas WHERE id = %s", (item_id,))
+    if not empresa:
+        abort(404)
+
+    if request.method == 'GET':
+        return jsonify(empresa)
+
+    nome = request.form.get('nome', '').strip()
+    slug = request.form.get('slug', '').strip().lower()
+    email = request.form.get('email', '').strip()
+    telefone = request.form.get('telefone', '').strip()
+    whatsapp = request.form.get('whatsapp', '').strip()
+    site = request.form.get('site', '').strip()
+    cidade = request.form.get('cidade', '').strip()
+    descricao = request.form.get('descricao', '').strip()
+    logo_url = request.form.get('logo_url', '').strip()
+    plano = request.form.get('plano', 'gratis')
+    cidade_slug = slugify_cidade(cidade)
+
+    if not nome or not slug:
+        return jsonify({'erro': 'Preencha nome e slug.'}), 400
+
+    try:
+        execute("""
+            UPDATE brindes_empresas
+            SET nome = %s, slug = %s, email = %s, telefone = %s, whatsapp = %s,
+                site = %s, cidade = %s, cidade_slug = %s, descricao = %s,
+                logo_url = %s, plano = %s
+            WHERE id = %s
+        """, (
+            nome, slug, email or None, telefone or None, whatsapp or None,
+            site or None, cidade or None, cidade_slug, descricao or None,
+            logo_url or None, plano, item_id,
+        ))
+        return jsonify({'ok': True})
+    except Exception:
+        return jsonify({'erro': 'Erro ao salvar (slug já existe?).'}), 400
 
 
 @app.route('/admin/empresas/<int:item_id>/toggle', methods=['POST'])
