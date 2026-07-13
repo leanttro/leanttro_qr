@@ -346,6 +346,19 @@ header{
 }
 .chip-cat:hover{border-color:var(--ink-black);color:var(--ink-black)}
 .chip-cat.active{background:var(--ink-black);border-color:var(--ink-black);color:#fff}
+.chip-ocasiao-wrap{display:inline-flex;align-items:center;border-radius:999px;border:1px solid var(--line-strong);overflow:hidden;transition:border-color .15s}
+.chip-ocasiao-wrap:hover{border-color:var(--ink-black)}
+.chip-ocasiao-wrap .chip-cat{border:none;border-radius:0;padding-right:10px}
+.chip-ocasiao-wrap.active-wrap{border-color:var(--ink-black)}
+.chip-ocasiao-wrap.active-wrap .chip-cat{background:var(--ink-black);color:#fff}
+.chip-ocasiao-link{
+    display:flex;align-items:center;padding:0 10px;height:100%;
+    font-size:.78em;color:var(--ink-faint);border-left:1px solid var(--line-strong);
+    background:var(--chrome-1);transition:background .15s, color .15s;white-space:nowrap;
+}
+.chip-ocasiao-link:hover{background:var(--surface-2);color:var(--ink-black)}
+.chip-ocasiao-wrap.active-wrap .chip-ocasiao-link{border-left-color:rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:rgba(255,255,255,.7)}
+.chip-ocasiao-wrap.active-wrap .chip-ocasiao-link:hover{background:rgba(255,255,255,.2);color:#fff}
 .grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px}
 .grid-loading{color:var(--ink-faint);font-size:.92em;padding:8px 0}
 
@@ -903,18 +916,36 @@ function renderGrid(gridId, emptyId, itens, cardFn){
     grid.innerHTML = itens.map(cardFn).join('');
 }
 
-function renderChips(rowId, valores, ativo, aoFiltrar){
+function slugify(str){
+    return String(str).toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+        .replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+}
+
+function renderChips(rowId, valores, ativo, aoFiltrar, comLink){
     const row = document.getElementById(rowId);
     if (!row) return;
     let html = '<button type="button" class="chip-cat' + (!ativo ? ' active' : '') + '" data-valor="">Todos</button>';
     valores.forEach(function(v){
-        html += '<button type="button" class="chip-cat' + (v === ativo ? ' active' : '') + '" data-valor="' + escaparHtml(v) + '">' + escaparHtml(v) + '</button>';
+        const isAtivo = v === ativo;
+        if (comLink){
+            const slug = slugify(v);
+            html += '<span class="chip-ocasiao-wrap' + (isAtivo ? ' active-wrap' : '') + '">' +
+                '<button type="button" class="chip-cat" data-valor="' + escaparHtml(v) + '">' + escaparHtml(v) + '</button>' +
+                '<a class="chip-ocasiao-link" href="/ocasiao/' + slug + '" title="Ver página de ' + escaparHtml(v) + '">ver tudo →</a>' +
+            '</span>';
+        } else {
+            html += '<button type="button" class="chip-cat' + (isAtivo ? ' active' : '') + '" data-valor="' + escaparHtml(v) + '">' + escaparHtml(v) + '</button>';
+        }
     });
     row.innerHTML = html;
     row.querySelectorAll('.chip-cat').forEach(function(chip){
         chip.addEventListener('click', function(){
             row.querySelectorAll('.chip-cat').forEach(function(c){ c.classList.remove('active'); });
+            row.querySelectorAll('.chip-ocasiao-wrap').forEach(function(w){ w.classList.remove('active-wrap'); });
             chip.classList.add('active');
+            const wrap = chip.closest('.chip-ocasiao-wrap');
+            if (wrap) wrap.classList.add('active-wrap');
             aoFiltrar(chip.dataset.valor || null);
         });
     });
@@ -981,7 +1012,7 @@ fetch('/api/brindes')
     .then(function(r){ return r.json(); })
     .then(function(data){
         TODOS_BRINDES = Array.isArray(data) ? data : [];
-        renderChips('chips-brindes', valoresUnicos(TODOS_BRINDES, 'ocasiao_nome'), null, filtrarBrindesPorOcasiao);
+        renderChips('chips-brindes', valoresUnicos(TODOS_BRINDES, 'ocasiao_nome'), null, filtrarBrindesPorOcasiao, true);
         renderGrid('grid-brindes', 'empty-brindes', TODOS_BRINDES, cardBrindeHTML);
     })
     .catch(function(){ renderGrid('grid-brindes', 'empty-brindes', [], cardBrindeHTML); });
