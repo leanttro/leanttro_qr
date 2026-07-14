@@ -470,50 +470,7 @@ footer a:hover{color:#fff}
 .footer-bottom{border-top:1px solid #2a2a2e;padding-top:22px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.82em;color:#7a7a84}
 @media (max-width:700px){.footer-grid{grid-template-columns:1fr;gap:28px}}
 
-/* ============ MODAL ============ */
-.modal-overlay{
-    position:fixed;inset:0;background:rgba(12,12,14,.6);backdrop-filter:blur(3px);
-    z-index:200;display:none;align-items:flex-start;justify-content:center;
-    padding:5vh 20px;overflow-y:auto;
-}
-.modal-overlay.open{display:flex}
-.modal{
-    background:#fff;border-radius:18px;max-width:460px;width:100%;
-    padding:28px;box-shadow:var(--shadow-lg);position:relative;
-    animation:pop .18s ease;
-}
-@keyframes pop{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
-.modal-close{
-    position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:8px;
-    border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:1em;color:var(--ink-soft);
-}
-.modal h2{font-size:1.35em;margin-bottom:6px}
-.modal-sub{color:var(--ink-soft);font-size:.92em;margin-bottom:22px}
-.modal-tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px;margin-bottom:22px}
-.modal-tab{
-    flex:1;text-align:center;padding:9px;border-radius:7px;font-size:.86em;font-weight:600;
-    color:var(--ink-soft);cursor:pointer;border:none;background:none;
-}
-.modal-tab.active{background:#fff;color:var(--ink-black);box-shadow:var(--shadow-sm)}
-.field{margin-bottom:16px}
-.field label{display:block;font-size:.86em;font-weight:600;margin-bottom:6px;color:var(--ink)}
-.field input{
-    width:100%;padding:12px 14px;border:1px solid var(--line-strong);border-radius:9px;
-    font-size:.96em;font-family:'Montserrat',sans-serif;background:var(--surface);
-}
-.field input:focus{outline:2px solid var(--focus);outline-offset:1px;background:#fff}
-.field .hint{font-size:.78em;color:var(--ink-faint);margin-top:5px}
-.field-optional{color:var(--ink-faint);font-weight:400}
-.btn-submit{
-    width:100%;background:var(--ink-black);color:#fff;border:none;border-radius:10px;
-    padding:14px;font-weight:600;font-size:.98em;cursor:pointer;margin-top:6px;
-}
-.btn-submit:hover{background:var(--chrome-4)}
-.flash-box{
-    background:#fdecea;border:1px solid #f3c2bd;color:#8a2e22;
-    padding:12px 14px;border-radius:9px;font-size:.88em;margin-bottom:18px;
-}
-.flash-box.success{background:#eaf6ee;border-color:#bfe3cb;color:#1f6b4a}
+/* modal removido — /gerar-qr agora é o único destino de criação de QR */
 </style>
 </head>
 <body>
@@ -533,7 +490,7 @@ footer a:hover{color:#fff}
         </ul>
     </nav>
     <div class="header-actions">
-        <button class="btn-nav-cta" type="button" onclick="abrirModal('link')">Criar meu QR</button>
+        <a class="btn-nav-cta" href="{{ url_for('gerar_qr') }}">Criar meu QR</a>
         <button class="hamburger-btn" id="hamburger-btn" aria-label="Abrir menu" onclick="toggleMobileNav(true)"><span></span></button>
     </div>
 </header>
@@ -547,17 +504,17 @@ footer a:hover{color:#fff}
             <li><a href="{{ url_for('diretorio_publico') }}" onclick="toggleMobileNav(false)">Diretório de empresas</a></li>
             <li><a href="https://wa.me/5511913324827?text=Olá,+vim+pelo+QR+Code+Brindes!" target="_blank" rel="noopener" onclick="toggleMobileNav(false)">Contato</a></li>
         </ul>
-        <button class="btn-nav-cta" type="button" onclick="toggleMobileNav(false); abrirModal('link')">Criar meu QR</button>
+        <a class="btn-nav-cta" href="{{ url_for('gerar_qr') }}" onclick="toggleMobileNav(false)">Criar meu QR</a>
     </nav>
 </div>
 
 <!-- HERO -->
 <section class="hero">
     <div class="container hero-single">
-        <form class="qr-card" id="form-hero" onsubmit="return abrirModalComLink(event)">
+        <form class="qr-card" id="form-hero" method="GET" action="{{ url_for('gerar_qr') }}">
             <div class="qr-card-label">Gerar QR code grátis</div>
             <div class="qr-card-row">
-                <input class="qr-input" id="hero-destino-url" type="url" placeholder="Cole aqui o link de destino (Instagram, cardápio, convite...)" required>
+                <input class="qr-input" id="hero-destino-url" name="destino_url" type="url" placeholder="Cole aqui o link de destino (Instagram, cardápio, convite...)" required>
                 <button class="btn-gerar" type="submit">Gerar meu QR →</button>
             </div>
             <p class="qr-card-note">Sem cartão de crédito. Leva menos de um minuto.</p>
@@ -812,8 +769,7 @@ footer a:hover{color:#fff}
         <div>
             <h4>Sua conta</h4>
             <ul>
-                <li><a href="#" onclick="abrirModal('link');return false;">Criar meu QR</a></li>
-                <li><a href="{{ url_for('gerar_qr') }}">Já tenho um QR</a></li>
+                <li><a href="{{ url_for('gerar_qr') }}">Criar meu QR</a></li>
             </ul>
         </div>
     </div>
@@ -822,53 +778,6 @@ footer a:hover{color:#fff}
         <span>Feito pra durar mais que o brinde</span>
     </div>
 </footer>
-
-<!-- MODAL GERAR QR -->
-<div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-    <div class="modal">
-        <button class="modal-close" onclick="fecharModal()" aria-label="Fechar">&#x2715;</button>
-        <h2 id="modal-title">Criar meu QR code</h2>
-        <p class="modal-sub">Leva menos de um minuto. Grátis pra começar.</p>
-
-        <div class="modal-tabs">
-            <button type="button" class="modal-tab" id="tab-link" onclick="trocarTab('link')">Já tenho um link</button>
-            <button type="button" class="modal-tab" id="tab-pagina" onclick="trocarTab('pagina')">Quero criar uma página</button>
-        </div>
-
-        <form action="{{ url_for('gerar_qr') }}" method="POST">
-            <input type="hidden" name="tipo_destino" id="input-tipo-destino" value="link">
-            <input type="hidden" name="template" value="classic">
-
-            <div class="field" id="campo-destino-url">
-                <label for="destino_url">Link de destino</label>
-                <input type="url" id="destino_url" name="destino_url" placeholder="https://...">
-            </div>
-
-            <div class="field">
-                <label for="slug">Escolha o link do seu QR</label>
-                <input type="text" id="slug" name="slug" placeholder="ex: casamento-ana-e-joao" required pattern="[a-zA-Z0-9\-]+">
-                <p class="hint">Vai ficar em qrcodebrindes.com/<span id="slug-preview">seu-link</span></p>
-            </div>
-
-            <div class="field">
-                <label for="senha">Crie uma senha</label>
-                <input type="password" id="senha" name="senha" placeholder="Pra editar seu QR depois" required>
-            </div>
-
-            <div class="field" id="campo-email">
-                <label for="email">E-mail <span class="field-optional" id="email-optional">(opcional)</span></label>
-                <input type="email" id="email" name="email" placeholder="Pra recuperar sua senha e receber avisos de pagamento">
-            </div>
-
-            <div class="field">
-                <label for="titulo">Título <span class="field-optional">(opcional)</span></label>
-                <input type="text" id="titulo" name="titulo" placeholder="ex: Casamento Ana & João">
-            </div>
-
-            <button class="btn-submit" type="submit">Gerar meu QR code →</button>
-        </form>
-    </div>
-</div>
 
 <script>
 function setViewTpl(modo){
@@ -895,59 +804,8 @@ function toggleMobileNav(open){
     document.body.style.overflow = open ? 'hidden' : '';
 }
 
-function trocarTab(tipo){
-    document.getElementById('tab-link').classList.toggle('active', tipo === 'link');
-    document.getElementById('tab-pagina').classList.toggle('active', tipo === 'pagina');
-    document.getElementById('input-tipo-destino').value = tipo;
-
-    const campoDestino = document.getElementById('campo-destino-url');
-    const campoEmail = document.getElementById('email');
-    const emailOptional = document.getElementById('email-optional');
-    const destinoInput = document.getElementById('destino_url');
-
-    if (tipo === 'link') {
-        campoDestino.style.display = '';
-        destinoInput.required = true;
-        campoEmail.required = false;
-        emailOptional.style.display = '';
-    } else {
-        campoDestino.style.display = 'none';
-        destinoInput.required = false;
-        campoEmail.required = true;
-        emailOptional.style.display = 'none';
-    }
-}
-
-function abrirModal(tipo){
-    trocarTab(tipo);
-    document.getElementById('modal-overlay').classList.add('open');
-    document.body.style.overflow = 'hidden';
-}
-
-function fecharModal(){
-    document.getElementById('modal-overlay').classList.remove('open');
-    document.body.style.overflow = '';
-}
-
-function abrirModalComLink(event){
-    event.preventDefault();
-    const link = document.getElementById('hero-destino-url').value;
-    abrirModal('link');
-    document.getElementById('destino_url').value = link;
-    return false;
-}
-
-document.getElementById('slug').addEventListener('input', function(e){
-    const preview = document.getElementById('slug-preview');
-    preview.textContent = e.target.value.trim() ? e.target.value.trim() : 'seu-link';
-});
-
-document.getElementById('modal-overlay').addEventListener('click', function(e){
-    if (e.target === this) fecharModal();
-});
 document.addEventListener('keydown', function(e){
     if (e.key === 'Escape'){
-        fecharModal();
         toggleMobileNav(false);
     }
 });
