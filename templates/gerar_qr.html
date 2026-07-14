@@ -8,10 +8,8 @@
 <meta name="robots" content="index, follow">
 <meta name="theme-color" content="#ffffff">
 <meta name="author" content="QR Code Brindes">
-
 <link rel="icon" type="image/png" href="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png">
 <link rel="apple-touch-icon" href="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png">
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
@@ -25,6 +23,9 @@
     --shadow-sm:0 1px 2px rgba(20,20,25,.06);
     --shadow-md:0 8px 24px rgba(20,20,25,.08);
     --shadow-lg:0 24px 64px rgba(20,20,25,.14);
+    --green:#1f6b4a;--green-bg:#eaf6ee;--green-line:#bfe3cb;
+    --red:#8a2e22;--red-bg:#fdecea;--red-line:#f3c2bd;
+    --amber:#7a4f00;--amber-bg:#fff8ec;--amber-line:#f0d69a;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -43,7 +44,7 @@ header{
 }
 .header-logo a{display:flex;align-items:center;gap:10px}
 .header-logo img{height:88px;width:auto}
-@media (max-width:900px){.header-logo img{height:80px}}
+@media(max-width:900px){.header-logo img{height:60px}}
 
 /* PAGE HEAD */
 .page-head{padding:52px 0 8px;text-align:center}
@@ -57,10 +58,10 @@ header{
 
 /* FLASH */
 .flash-box{
-    background:#fdecea;border:1px solid #f3c2bd;color:#8a2e22;
+    background:var(--red-bg);border:1px solid var(--red-line);color:var(--red);
     padding:12px 14px;border-radius:9px;font-size:.9em;margin:24px 0;
 }
-.flash-box.success{background:#eaf6ee;border-color:#bfe3cb;color:#1f6b4a}
+.flash-box.success{background:var(--green-bg);border-color:var(--green-line);color:var(--green)}
 
 /* FORM CARD */
 .form-section{padding:32px 0 72px}
@@ -68,38 +69,99 @@ header{
     background:var(--chrome-1);border:1px solid var(--line-strong);border-radius:var(--radius);
     padding:32px;box-shadow:var(--shadow-md);
 }
-.modal-tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px;margin-bottom:26px}
-.modal-tab{
-    flex:1;text-align:center;padding:10px;border-radius:7px;font-size:.9em;font-weight:600;
-    color:var(--ink-soft);cursor:pointer;border:none;background:none;
+
+/* ABAS */
+.tabs{display:flex;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px;margin-bottom:10px}
+.tab-btn{
+    flex:1;text-align:center;padding:10px 8px 8px;border-radius:7px;font-size:.9em;font-weight:600;
+    color:var(--ink-soft);cursor:pointer;border:none;background:none;font-family:'Montserrat',sans-serif;
+    transition:background .12s,color .12s;
 }
-.modal-tab.active{background:#fff;color:var(--ink-black);box-shadow:var(--shadow-sm)}
+.tab-btn.active{background:#fff;color:var(--ink-black);box-shadow:var(--shadow-sm)}
+.tab-hints{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:24px}
+.tab-hint{
+    background:var(--surface);border:1px solid var(--line);border-radius:8px;
+    padding:9px 12px;font-size:.79em;color:var(--ink-soft);line-height:1.45;
+    transition:border-color .15s,background .15s;
+}
+.tab-hint.active-hint{background:#fff;border-color:var(--line-strong);color:var(--ink)}
+.tab-hint strong{display:block;color:var(--ink);margin-bottom:2px;font-size:.95em}
+
+/* CAMPOS */
 .field{margin-bottom:18px}
-.field label{display:block;font-size:.88em;font-weight:600;margin-bottom:6px;color:var(--ink)}
-.field input{
+.field label{display:block;font-size:.88em;font-weight:600;margin-bottom:6px;color:var(--ink);display:flex;align-items:center;gap:6px}
+.field-optional{font-size:.82em;font-weight:400;color:var(--ink-faint)}
+.field input[type=text],
+.field input[type=url],
+.field input[type=email],
+.field input[type=password]{
     width:100%;padding:13px 14px;border:1px solid var(--line-strong);border-radius:9px;
     font-size:.98em;font-family:'Montserrat',sans-serif;background:var(--surface);
+    color:var(--ink);transition:border-color .15s,background .15s;
 }
-.field input:focus{outline:2px solid var(--focus);outline-offset:1px;background:#fff}
-.field .hint{font-size:.8em;color:var(--ink-faint);margin-top:5px}
-.field-optional{color:var(--ink-faint);font-weight:400}
+.field input:focus{outline:2px solid var(--focus);outline-offset:1px;background:#fff;border-color:transparent}
+.field-hint{font-size:.8em;color:var(--ink-faint);margin-top:5px}
+
+/* URL PREVIEW CHIP */
+.slug-preview-wrap{margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.slug-preview-chip{
+    display:inline-flex;align-items:center;gap:0;background:var(--surface-2);
+    border:1px solid var(--line-strong);border-radius:999px;
+    font-size:.82em;overflow:hidden;max-width:100%;
+}
+.slug-chip-base{padding:5px 10px 5px 12px;color:var(--ink-faint);white-space:nowrap}
+.slug-chip-slug{padding:5px 12px 5px 0;color:var(--ink-black);font-weight:700;word-break:break-all}
+.slug-chip-slug.empty{color:var(--ink-faint);font-weight:400;font-style:italic}
+
+/* CAMPO COM ÍCONE (senha) */
+.input-wrap{position:relative}
+.input-wrap input{padding-right:44px}
+.toggle-pw{
+    position:absolute;right:12px;top:50%;transform:translateY(-50%);
+    background:none;border:none;cursor:pointer;color:var(--ink-faint);
+    padding:4px;border-radius:4px;display:flex;align-items:center;
+    font-size:.8em;font-weight:600;font-family:'Montserrat',sans-serif;
+    transition:color .15s;
+}
+.toggle-pw:hover{color:var(--ink)}
+
+/* ALERTA EMAIL OBRIGATÓRIO */
+.email-notice{
+    background:var(--amber-bg);border:1px solid var(--amber-line);color:var(--amber);
+    border-radius:8px;padding:9px 12px;font-size:.82em;margin-bottom:18px;
+    display:none;align-items:flex-start;gap:8px;line-height:1.45;
+}
+.email-notice.visible{display:flex}
+.email-notice-icon{flex-shrink:0;margin-top:1px}
+
+/* BOTÃO SUBMIT */
 .btn-submit{
     width:100%;background:var(--ink-black);color:#fff;border:none;border-radius:10px;
-    padding:15px;font-weight:600;font-size:1em;cursor:pointer;margin-top:8px;
+    padding:15px;font-weight:700;font-size:1em;cursor:pointer;margin-top:8px;
+    font-family:'Montserrat',sans-serif;display:flex;align-items:center;justify-content:center;
+    gap:10px;transition:background .15s,transform .1s;
 }
-.btn-submit:hover{background:var(--chrome-4)}
+.btn-submit:hover:not(:disabled){background:var(--chrome-4);transform:translateY(-1px)}
+.btn-submit:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.btn-spinner{
+    width:18px;height:18px;border:2.5px solid rgba(255,255,255,.3);
+    border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:none;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn-submit.loading .btn-spinner{display:block}
+.btn-submit.loading .btn-label{display:none}
 
 /* TEMPLATE PICKER */
-.template-section{margin:28px 0}
-.template-section > label.section-label{display:block;font-size:.88em;font-weight:600;margin-bottom:12px;color:var(--ink)}
+.template-section{margin:4px 0 18px}
+.template-section>.section-label{display:block;font-size:.88em;font-weight:600;margin-bottom:12px;color:var(--ink)}
 .template-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
 .template-option{position:relative}
 .template-option input{position:absolute;opacity:0;width:1px;height:1px}
 .template-option label{
     display:block;border:2px solid var(--line);border-radius:12px;overflow:hidden;
-    cursor:pointer;transition:border-color .15s, box-shadow .15s;background:var(--chrome-1);
+    cursor:pointer;transition:border-color .15s,box-shadow .15s;background:var(--chrome-1);
 }
-.template-option input:checked + label{border-color:var(--ink-black);box-shadow:var(--shadow-sm)}
+.template-option input:checked+label{border-color:var(--ink-black);box-shadow:var(--shadow-sm)}
 .template-preview{aspect-ratio:4/3;background:var(--surface-2);overflow:hidden}
 .template-preview img{width:100%;height:100%;object-fit:cover}
 .template-body{padding:12px 14px}
@@ -110,15 +172,22 @@ header{
 .template-demo-link{display:block;margin-top:8px;font-size:.78em;color:var(--ink-soft);text-decoration:underline}
 .template-demo-link:hover{color:var(--ink-black)}
 
+/* DIVISOR DE SEÇÃO */
+.section-divider{border:none;border-top:1px solid var(--line);margin:24px 0 22px}
+.section-subtitle{font-size:.8em;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 18px}
+
 /* FOOTER */
 footer{background:var(--ink-black);color:#e6e6e9;padding:40px 0 24px;margin-top:60px}
 .footer-bottom{max-width:880px;margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:.82em;color:#7a7a84}
 
-@media (max-width:600px){.form-card{padding:22px}}
-
 /* ANÚNCIO */
 .anuncio-wrap{padding:28px 24px 0;display:flex;justify-content:center}
 .anuncio-wrap img{max-height:100px;width:auto;border-radius:10px;box-shadow:var(--shadow-sm)}
+
+@media(max-width:600px){
+    .form-card{padding:20px 16px}
+    .tab-hints{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -161,19 +230,40 @@ footer{background:var(--ink-black);color:#e6e6e9;padding:40px 0 24px;margin-top:
         {% endwith %}
 
         <div class="form-card">
-            <div class="modal-tabs">
-                <button type="button" class="modal-tab" id="tab-link" onclick="trocarTab('link')">Já tenho um link</button>
-                <button type="button" class="modal-tab" id="tab-pagina" onclick="trocarTab('pagina')">Quero criar uma página</button>
+
+            <!-- ABAS -->
+            <div class="tabs" role="tablist">
+                <button type="button" class="tab-btn" id="tab-link" role="tab"
+                    aria-selected="true" onclick="trocarTab('link')">Já tenho um link</button>
+                <button type="button" class="tab-btn" id="tab-pagina" role="tab"
+                    aria-selected="false" onclick="trocarTab('pagina')">Quero criar uma página</button>
             </div>
 
-            <form action="{{ url_for('gerar_qr') }}" method="POST">
+            <!-- HINTS DAS ABAS -->
+            <div class="tab-hints" aria-hidden="true">
+                <div class="tab-hint" id="hint-link">
+                    <strong>Já tenho um link</strong>
+                    Cole qualquer URL — Instagram, WhatsApp, cardápio, formulário…
+                </div>
+                <div class="tab-hint" id="hint-pagina">
+                    <strong>Quero criar uma página</strong>
+                    Monte uma página de boas-vindas com foto, mensagem e linha do tempo.
+                </div>
+            </div>
+
+            <form action="{{ url_for('gerar_qr') }}" method="POST" id="form-qr">
                 <input type="hidden" name="tipo_destino" id="input-tipo-destino" value="link">
 
+                <!-- CAMPO: URL de destino (aba link) -->
                 <div class="field" id="campo-destino-url">
                     <label for="destino_url">Link de destino</label>
-                    <input type="url" id="destino_url" name="destino_url" placeholder="https://...">
+                    <input type="url" id="destino_url" name="destino_url"
+                        placeholder="https://wa.me/5511999999999"
+                        value="{{ destino_url_prefill or '' }}">
+                    <p class="field-hint">Cole o link que abre quando alguém escanear o QR code.</p>
                 </div>
 
+                <!-- CAMPO: templates (aba página) -->
                 <div class="field" id="campo-templates" style="display:none">
                     <div class="template-section">
                         <label class="section-label">Escolha um modelo de página</label>
@@ -201,28 +291,78 @@ footer{background:var(--ink-black);color:#e6e6e9;padding:40px 0 24px;margin-top:
                     </div>
                 </div>
 
+                <hr class="section-divider">
+                <p class="section-subtitle">Seu endereço e acesso</p>
+
+                <!-- CAMPO: slug -->
                 <div class="field">
-                    <label for="slug">Escolha o link do seu QR</label>
-                    <input type="text" id="slug" name="slug" placeholder="ex: casamento-ana-e-joao" required pattern="[a-zA-Z0-9\-]+">
-                    <p class="hint">Vai ficar em qrcodebrindes.com/<span id="slug-preview">seu-link</span></p>
+                    <label for="slug">Crie seu endereço único</label>
+                    <input type="text" id="slug" name="slug"
+                        placeholder="ex: casamento-ana-e-joao"
+                        required pattern="[a-zA-Z0-9\-]+"
+                        autocomplete="off" spellcheck="false"
+                        aria-describedby="slug-desc">
+                    <div class="slug-preview-wrap" id="slug-desc" aria-live="polite">
+                        <div class="slug-preview-chip" id="slug-chip">
+                            <span class="slug-chip-base">qrcodebrindes.com/</span><span class="slug-chip-slug empty" id="slug-chip-slug">escolha-um-nome</span>
+                        </div>
+                    </div>
+                    <p class="field-hint" style="margin-top:6px">Só letras, números e hífen. Sem espaço.</p>
                 </div>
 
+                <!-- CAMPO: senha -->
                 <div class="field">
                     <label for="senha">Crie uma senha</label>
-                    <input type="password" id="senha" name="senha" placeholder="Pra editar seu QR depois" required>
+                    <div class="input-wrap">
+                        <input type="password" id="senha" name="senha"
+                            placeholder="Mínimo 6 caracteres"
+                            required minlength="6"
+                            autocomplete="new-password">
+                        <button type="button" class="toggle-pw" onclick="toggleSenha('senha','toggle-pw-1')" id="toggle-pw-1" aria-label="Mostrar senha">ver</button>
+                    </div>
+                    <p class="field-hint">Você vai precisar dela pra editar o QR depois.</p>
                 </div>
 
-                <div class="field" id="campo-email">
-                    <label for="email">E-mail <span class="field-optional" id="email-optional">(opcional)</span></label>
-                    <input type="email" id="email" name="email" placeholder="Pra recuperar sua senha e receber avisos de pagamento">
-                </div>
-
+                <!-- CAMPO: confirmar senha -->
                 <div class="field">
-                    <label for="titulo">Título <span class="field-optional">(opcional)</span></label>
-                    <input type="text" id="titulo" name="titulo" placeholder="ex: Casamento Ana & João">
+                    <label for="senha_confirm">Confirme a senha</label>
+                    <div class="input-wrap">
+                        <input type="password" id="senha_confirm" name="senha_confirm"
+                            placeholder="Repita a senha"
+                            required minlength="6"
+                            autocomplete="new-password">
+                        <button type="button" class="toggle-pw" onclick="toggleSenha('senha_confirm','toggle-pw-2')" id="toggle-pw-2" aria-label="Mostrar confirmação de senha">ver</button>
+                    </div>
+                    <p class="field-hint" id="senha-match-hint" style="display:none;color:#8a2e22"></p>
                 </div>
 
-                <button class="btn-submit" type="submit">Gerar meu QR code →</button>
+                <!-- AVISO email obrigatório (aparece na aba página) -->
+                <div class="email-notice" id="email-notice">
+                    <span class="email-notice-icon">⚠️</span>
+                    <span>E-mail obrigatório nesta opção — usado pra recuperar seu acesso e receber avisos de pagamento.</span>
+                </div>
+
+                <!-- CAMPO: email -->
+                <div class="field" id="campo-email">
+                    <label for="email">E-mail <span class="field-optional" id="email-label-suffix">(opcional)</span></label>
+                    <input type="email" id="email" name="email"
+                        placeholder="seuemail@exemplo.com"
+                        autocomplete="email">
+                    <p class="field-hint" id="email-hint">Para recuperar a senha e receber avisos.</p>
+                </div>
+
+                <!-- CAMPO: título -->
+                <div class="field">
+                    <label for="titulo">Nome do QR <span class="field-optional">(opcional)</span></label>
+                    <input type="text" id="titulo" name="titulo"
+                        placeholder="ex: Casamento Ana & João">
+                    <p class="field-hint">Pra você se organizar no painel — o visitante não vê isso.</p>
+                </div>
+
+                <button class="btn-submit" type="submit" id="btn-submit">
+                    <span class="btn-label">Gerar meu QR code →</span>
+                    <span class="btn-spinner" aria-hidden="true"></span>
+                </button>
             </form>
         </div>
     </div>
@@ -236,39 +376,110 @@ footer{background:var(--ink-black);color:#e6e6e9;padding:40px 0 24px;margin-top:
 </footer>
 
 <script>
+/* ── TROCAR ABA ── */
 function trocarTab(tipo){
-    document.getElementById('tab-link').classList.toggle('active', tipo === 'link');
-    document.getElementById('tab-pagina').classList.toggle('active', tipo === 'pagina');
+    var isLink = tipo === 'link';
+
+    document.getElementById('tab-link').classList.toggle('active', isLink);
+    document.getElementById('tab-pagina').classList.toggle('active', !isLink);
+    document.getElementById('tab-link').setAttribute('aria-selected', isLink ? 'true' : 'false');
+    document.getElementById('tab-pagina').setAttribute('aria-selected', !isLink ? 'true' : 'false');
+
+    document.getElementById('hint-link').classList.toggle('active-hint', isLink);
+    document.getElementById('hint-pagina').classList.toggle('active-hint', !isLink);
+
     document.getElementById('input-tipo-destino').value = tipo;
 
-    const campoDestino = document.getElementById('campo-destino-url');
-    const campoTemplates = document.getElementById('campo-templates');
-    const campoEmail = document.getElementById('email');
-    const emailOptional = document.getElementById('email-optional');
-    const destinoInput = document.getElementById('destino_url');
+    var campoUrl = document.getElementById('campo-destino-url');
+    var campoTpl = document.getElementById('campo-templates');
+    var inputUrl = document.getElementById('destino_url');
+    var inputEmail = document.getElementById('email');
+    var emailSuffix = document.getElementById('email-label-suffix');
+    var emailNotice = document.getElementById('email-notice');
 
-    if (tipo === 'link') {
-        campoDestino.style.display = '';
-        campoTemplates.style.display = 'none';
-        destinoInput.required = true;
-        campoEmail.required = false;
-        emailOptional.style.display = '';
+    if (isLink) {
+        campoUrl.style.display = '';
+        campoTpl.style.display = 'none';
+        inputUrl.required = true;
+        inputEmail.required = false;
+        emailSuffix.textContent = '(opcional)';
+        emailNotice.classList.remove('visible');
     } else {
-        campoDestino.style.display = 'none';
-        campoTemplates.style.display = '';
-        destinoInput.required = false;
-        campoEmail.required = true;
-        emailOptional.style.display = 'none';
+        campoUrl.style.display = 'none';
+        campoTpl.style.display = '';
+        inputUrl.required = false;
+        inputEmail.required = true;
+        emailSuffix.textContent = '(obrigatório)';
+        emailNotice.classList.add('visible');
     }
 }
 
-trocarTab('link');
-
-document.getElementById('slug').addEventListener('input', function(e){
-    const preview = document.getElementById('slug-preview');
-    preview.textContent = e.target.value.trim() ? e.target.value.trim() : 'seu-link';
+/* ── PREVIEW DO SLUG ── */
+document.getElementById('slug').addEventListener('input', function(){
+    var val = this.value.trim();
+    var chipSlug = document.getElementById('slug-chip-slug');
+    if (val) {
+        chipSlug.textContent = val;
+        chipSlug.classList.remove('empty');
+    } else {
+        chipSlug.textContent = 'escolha-um-nome';
+        chipSlug.classList.add('empty');
+    }
 });
-</script>
 
+/* ── TOGGLE SENHA ── */
+function toggleSenha(inputId, btnId){
+    var input = document.getElementById(inputId);
+    var btn = document.getElementById(btnId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = 'ocultar';
+        btn.setAttribute('aria-label', 'Ocultar senha');
+    } else {
+        input.type = 'password';
+        btn.textContent = 'ver';
+        btn.setAttribute('aria-label', 'Mostrar senha');
+    }
+}
+
+/* ── VALIDAÇÃO DE SENHAS ── */
+document.getElementById('senha_confirm').addEventListener('input', function(){
+    var senha = document.getElementById('senha').value;
+    var hint = document.getElementById('senha-match-hint');
+    if (!this.value) { hint.style.display = 'none'; return; }
+    if (this.value !== senha) {
+        hint.textContent = 'As senhas não coincidem.';
+        hint.style.display = 'block';
+    } else {
+        hint.textContent = '✓ Senhas iguais';
+        hint.style.color = '#1f6b4a';
+        hint.style.display = 'block';
+    }
+});
+
+/* ── SUBMIT COM LOADING ── */
+document.getElementById('form-qr').addEventListener('submit', function(e){
+    var senha = document.getElementById('senha').value;
+    var confirm = document.getElementById('senha_confirm').value;
+    if (senha !== confirm) {
+        e.preventDefault();
+        var hint = document.getElementById('senha-match-hint');
+        hint.textContent = 'As senhas não coincidem. Corrija antes de continuar.';
+        hint.style.color = '#8a2e22';
+        hint.style.display = 'block';
+        document.getElementById('senha_confirm').focus();
+        return;
+    }
+    var btn = document.getElementById('btn-submit');
+    btn.disabled = true;
+    btn.classList.add('loading');
+});
+
+/* ── INIT ── */
+trocarTab('link');
+if (document.getElementById('destino_url').value.trim()) {
+    document.getElementById('slug').focus();
+}
+</script>
 </body>
 </html>
