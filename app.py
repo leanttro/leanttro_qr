@@ -914,9 +914,8 @@ def cadastrar_empresa_publico():
         return jsonify({'ok': False, 'erro': 'Nome da empresa é obrigatório.'}), 400
 
     # Monta slug único com sufixo aleatório para evitar conflito
-    from slugify import slugify as _slugify
     import random, string
-    base_slug = _slugify(nome, allow_unicode=False)
+    base_slug = slugify_cidade(nome) or 'empresa'
     sufixo    = ''.join(random.choices(string.ascii_lowercase + string.digits, k=5))
     slug      = f"{base_slug}-{sufixo}"
 
