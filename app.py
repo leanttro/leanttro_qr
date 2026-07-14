@@ -520,6 +520,9 @@ def gerar_qr():
             email or None,
         ))
 
+        session['pagina_id'] = pagina_id
+        session['pagina_slug'] = slug
+
         flash('QR code criado com sucesso!', 'success')
         return redirect(f'/{slug}/painel')
 
