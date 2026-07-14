@@ -1,7 +1,7 @@
 {
   "nome": "Cartão Fidelidade",
-  "tier": "pago",
-  "preco": 14.90,
+  "tier": "gratis",
+  "preco": 0,
   "preview_url": "",
   "demo_carimbos_atual": 6,
   "campos": [
