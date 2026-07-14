@@ -1,0 +1,16 @@
+{
+  "nome": "Gratidão pela Compra",
+  "tier": "pago",
+  "preco": 12.90,
+  "preview_url": "",
+  "campos": [
+    {"tipo": "texto", "nome": "titulo", "label": "Nome da loja (opcional)"},
+    {"tipo": "textarea", "nome": "mensagem", "label": "Mensagem de agradecimento (opcional)"},
+    {"tipo": "texto", "nome": "instagram", "label": "Seu @ nas redes sociais"}
+  ],
+  "demo": {
+    "titulo": "Loja Encanto",
+    "mensagem": "Obrigada por escolher a gente!\nCada compra sua faz toda diferença.",
+    "instagram": "@lojaencanto"
+  }
+}
