@@ -65,7 +65,7 @@
     --shadow-lg:0 24px 64px rgba(20,20,25,.14);
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;overflow-x:hidden;max-width:100%}
+html{scroll-behavior:smooth}
 body{
     margin:0;
     background:var(--bg);
@@ -530,6 +530,9 @@ footer a:hover{color:#fff}
             <li><a href="#catalogo">Catálogo de brindes</a></li>
             <li><a href="{{ url_for('diretorio_publico') }}">Diretório de empresas</a></li>
             <li><a href="https://wa.me/5511913324827?text=Olá,+vim+pelo+QR+Code+Brindes!" target="_blank" rel="noopener">Contato</a></li>
+        </ul>
+    </nav>
+    <div class="header-actions">
         <button class="btn-nav-cta" type="button" onclick="abrirModal('link')">Criar meu QR</button>
         <button class="hamburger-btn" id="hamburger-btn" aria-label="Abrir menu" onclick="toggleMobileNav(true)"><span></span></button>
     </div>
