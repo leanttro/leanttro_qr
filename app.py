@@ -426,6 +426,17 @@ def gerar_qr():
         flash("Muitas tentativas. Tente novamente mais tarde.", "error")
         return redirect('/')
 
+    if request.method == 'GET':
+        # Vem do hero da home (form GET com ?destino_url=...) já com o link colado
+        destino_url_prefill = request.args.get('destino_url', '').strip()
+        return render_template(
+            'gerar_qr.html',
+            templates=carregar_templates(),
+            current_year=datetime.now().year,
+            anuncio_topo=get_anuncio('topo', contexto='funcionalidade'),
+            destino_url_prefill=destino_url_prefill,
+        )
+
     if request.method == 'POST':
         slug = request.form.get('slug', '').lower().strip()
         senha = request.form.get('senha', '')
@@ -480,8 +491,6 @@ def gerar_qr():
 
         flash('QR code criado com sucesso!', 'success')
         return redirect(f'/{slug}/painel')
-
-    return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year, anuncio_topo=get_anuncio('topo', contexto='funcionalidade'))
 
 
 # --- REDIRECIONADOR DO QR FÍSICO ---
