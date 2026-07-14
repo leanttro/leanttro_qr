@@ -289,6 +289,31 @@ def get_pagina_by_slug(slug):
     return query_one("SELECT * FROM brindes_paginas WHERE slug = %s AND ativo = TRUE", (slug,))
 
 
+def montar_page_context(pagina):
+    """Mescla os campos extras dinâmicos do template (ex: 'meta', 'premio',
+    'carimbos_atual' do Cartão Fidelidade) dentro do dict da página, pra
+    templates poderem usar {{ page.premio }} normalmente. Também devolve
+    carimbos_atual separado, já que o template usa essa variável solta.
+    campos_extra é uma coluna JSONB — se a página ainda não tiver essa
+    coluna (banco não migrado), simplesmente não mescla nada."""
+    page = dict(pagina)
+    extra = pagina.get('campos_extra') or {}
+    if isinstance(extra, str):
+        try:
+            extra = json.loads(extra)
+        except (ValueError, TypeError):
+            extra = {}
+    for chave, valor in extra.items():
+        if chave not in page or page.get(chave) in (None, ''):
+            page[chave] = valor
+    carimbos_atual = extra.get('carimbos_atual', 0)
+    try:
+        carimbos_atual = int(carimbos_atual)
+    except (ValueError, TypeError):
+        carimbos_atual = 0
+    return page, carimbos_atual
+
+
 def gerar_timeline_events(pagina):
     """Placeholder: timeline vem de timeline_json (lista de {date, title})."""
     return pagina.get("timeline_json") or []
@@ -483,14 +508,16 @@ def render_pagina(pagina):
         abort(404)
     total_scans_row = query_one("SELECT COUNT(*) as total FROM brindes_scans WHERE pagina_id = %s", (pagina['id'],))
     total_scans = total_scans_row['total'] if total_scans_row else 0
+    page, carimbos_atual = montar_page_context(pagina)
     return render_template(
         tpl['arquivo'],
-        page=pagina,
+        page=page,
         timeline_events=gerar_timeline_events(pagina),
         current_year=datetime.now().year,
         font_css="'Inter', sans-serif",
         font_size_val="1.1rem",
         total_scans=total_scans,
+        carimbos_atual=carimbos_atual,
     )
 
 
@@ -509,6 +536,7 @@ def demo_template(template_slug):
         font_css="'Inter', sans-serif", font_size_val="1.1rem",
         anuncio_topo=get_anuncio('topo', contexto='funcionalidade'),
         total_scans=total_scans,
+        carimbos_atual=tpl.get('demo_carimbos_atual', 0),
     )
 
 
@@ -650,6 +678,34 @@ def painel_pagina(slug):
                 linhas = []
             timeline_json = psycopg2.extras.Json(linhas)
 
+        # Campos extras dinâmicos definidos no .json do template (ex: 'meta'
+        # e 'premio' do Cartão Fidelidade). Os campos fixos (titulo, mensagem,
+        # foto, timeline) já são tratados à parte acima/abaixo — aqui só
+        # cuidamos do que sobra. Mantém o que já existia (incluindo
+        # carimbos_atual, que não é editável nesse formulário) e sobrescreve
+        # só com os campos que o template atual realmente tem.
+        campos_extra_existentes = pagina.get('campos_extra') or {}
+        if isinstance(campos_extra_existentes, str):
+            try:
+                campos_extra_existentes = json.loads(campos_extra_existentes)
+            except (ValueError, TypeError):
+                campos_extra_existentes = {}
+        campos_extra = dict(campos_extra_existentes)
+        campos_fixos = {'titulo', 'mensagem', 'foto', 'imagem', 'timeline'}
+        for campo in campos_tpl:
+            nome_campo = campo.get('nome')
+            if not nome_campo or nome_campo in campos_fixos:
+                continue
+            valor_form = request.form.get(nome_campo, '').strip()
+            if campo.get('tipo') == 'numero':
+                try:
+                    campos_extra[nome_campo] = int(valor_form) if valor_form else None
+                except ValueError:
+                    campos_extra[nome_campo] = None
+            else:
+                campos_extra[nome_campo] = valor_form
+        campos_extra_json = psycopg2.extras.Json(campos_extra)
+
         execute("""
             UPDATE brindes_paginas
             SET titulo = %s,
@@ -658,7 +714,8 @@ def painel_pagina(slug):
                 template = %s,
                 destino_url = %s,
                 tipo_destino = %s,
-                timeline_json = %s
+                timeline_json = %s,
+                campos_extra = %s
             WHERE id = %s
         """, (
             request.form.get('titulo', ''),
@@ -668,6 +725,7 @@ def painel_pagina(slug):
             request.form.get('destino_url') or None,
             request.form.get('tipo_destino', pagina.get('tipo_destino')),
             timeline_json,
+            campos_extra_json,
             pagina['id'],
         ))
 
@@ -675,18 +733,55 @@ def painel_pagina(slug):
         return redirect(f'/{slug}/painel')
 
     total_scans = query_one("SELECT COUNT(*) as total FROM brindes_scans WHERE pagina_id = %s", (pagina['id'],))
-    pagina_atualizada = get_pagina_by_slug(slug)
+    pagina_atualizada, carimbos_atual = montar_page_context(get_pagina_by_slug(slug))
     campos_por_template = {t['slug']: t.get('campos', []) for t in templates_disponiveis}
 
     return render_template(
         'painel.html',
         pagina=pagina_atualizada,
+        carimbos_atual=carimbos_atual,
         total_scans=total_scans['total'] if total_scans else 0,
         qr_url=f"/{slug}/qr.png",
         templates=templates_disponiveis,
         campos_por_template=campos_por_template,
         anuncio_topo=get_anuncio('topo', contexto='funcionalidade'),
     )
+
+
+# --- CARTÃO FIDELIDADE: somar/zerar carimbo (protegido, mesma sessão do painel) ---
+@app.route('/<slug>/carimbar', methods=['POST'])
+def carimbar_pagina(slug):
+    pagina = get_pagina_by_slug(slug)
+    if not pagina:
+        abort(404)
+    if session.get('pagina_id') != pagina['id']:
+        return redirect(f'/{slug}/login')
+
+    campos_extra = pagina.get('campos_extra') or {}
+    if isinstance(campos_extra, str):
+        try:
+            campos_extra = json.loads(campos_extra)
+        except (ValueError, TypeError):
+            campos_extra = {}
+    atual = campos_extra.get('carimbos_atual', 0) or 0
+    try:
+        atual = int(atual)
+    except (ValueError, TypeError):
+        atual = 0
+
+    acao = request.form.get('acao', 'somar')
+    if acao == 'zerar':
+        atual = 0
+    else:
+        atual += 1
+    campos_extra['carimbos_atual'] = atual
+
+    execute(
+        "UPDATE brindes_paginas SET campos_extra = %s WHERE id = %s",
+        (psycopg2.extras.Json(campos_extra), pagina['id']),
+    )
+    flash('Carimbo zerado.' if acao == 'zerar' else 'Carimbo adicionado!', 'success')
+    return redirect(f'/{slug}/painel')
 
 
 # =====================================================================
