@@ -761,6 +761,16 @@ footer a:hover{color:#fff}
                 <button class="view-btn" title="Grade" onclick="setView('empresas','grade')"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
             </div>
         </div>
+
+        <div class="cidade-slicer">
+            <button type="button" class="slicer-toggle" id="slicer-toggle-cidade" aria-expanded="false" aria-controls="filtros-cidade" onclick="toggleCidadeSlicer()">
+                <span class="slicer-label">📍 Cidade: <strong id="slicer-cidade-label">Todas as cidades</strong></span>
+                <svg class="slicer-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="slicer-panel" id="filtros-cidade" role="listbox"></div>
+        </div>
+        <div class="slicer-backdrop" id="slicer-backdrop-cidade" onclick="closeCidadeSlicer()"></div>
+
         <div class="carousel-wrap" id="wrap-empresas">
             <div class="carousel" id="grid-empresas">
                 <p class="grid-loading">Carregando empresas...</p>
@@ -1151,6 +1161,7 @@ fetch('/api/empresas')
     .then(function(data){
         TODAS_EMPRESAS = Array.isArray(data) ? data.sort(function(a,b){ return (b.plano==='destaque'?1:0)-(a.plano==='destaque'?1:0); }) : [];
         renderGrid('grid-empresas', 'empty-empresas', TODAS_EMPRESAS, cardEmpresaHTML);
+        renderSlicerCidade(valoresUnicos(TODAS_EMPRESAS, 'cidade').sort());
     })
     .catch(function(){ renderGrid('grid-empresas', 'empty-empresas', [], cardEmpresaHTML); });
 </script>
