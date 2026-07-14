@@ -1,15 +1,19 @@
 {
-  "nome": "Gamificação",
+  "nome": "Cartão Fidelidade",
   "tier": "pago",
   "preco": 14.90,
   "preview_url": "",
-  "demo_total_scans": 7,
+  "demo_carimbos_atual": 6,
   "campos": [
-    {"tipo": "texto", "nome": "titulo", "label": "Título da mensagem"},
-    {"tipo": "textarea", "nome": "mensagem", "label": "Sua mensagem"}
+    {"tipo": "texto", "nome": "titulo", "label": "Nome da promoção/estabelecimento"},
+    {"tipo": "textarea", "nome": "mensagem", "label": "Mensagem pro cliente"},
+    {"tipo": "numero", "nome": "meta", "label": "Quantos carimbos pra ganhar o prêmio"},
+    {"tipo": "texto", "nome": "premio", "label": "Qual é o prêmio"}
   ],
   "demo": {
-    "titulo": "Obrigado por voltar sempre!",
-    "mensagem": "Cada vez que você escaneia esse QR, a gente sabe que valeu a pena.\nContinue por aqui!"
+    "titulo": "Cartão Fidelidade — Burger House",
+    "mensagem": "A cada compra, peça pra gente carimbar seu cartão!\nJunte e ganhe um brinde especial.",
+    "meta": 10,
+    "premio": "1 hambúrguer grátis"
   }
 }
