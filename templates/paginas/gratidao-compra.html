@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>{{ page.titulo }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Caveat:wght@600;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --rosa: #f48fb1;
+    --azul: #90caf9;
+    --roxo: #ce93d8;
+    --amarelo: #fff59d;
+    --escuro: #2b2233;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; padding: 0; min-height: 100%; }
+
+  body {
+    font-family: 'Quicksand', {{ font_css }}, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    color: var(--escuro);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 26px 14px;
+    background: #f3f1f6;
+  }
+
+  .wrapper {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(16px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .card {
+    width: 100%;
+    border-radius: 30px;
+    padding: 40px 26px 34px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 30px 55px rgba(60, 40, 70, 0.28);
+    animation: cardIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+    background: repeating-linear-gradient(
+      135deg,
+      var(--rosa) 0px, var(--rosa) 66px,
+      #ffffff 66px, #ffffff 80px,
+      var(--azul) 80px, var(--azul) 146px,
+      #ffffff 146px, #ffffff 160px,
+      var(--amarelo) 160px, var(--amarelo) 226px,
+      #ffffff 226px, #ffffff 240px,
+      var(--roxo) 240px, var(--roxo) 306px,
+      #ffffff 306px, #ffffff 320px
+    );
+  }
+
+  /* ===== Título bolha "gratidão" ===== */
+  .titulo-bolha {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 800;
+    font-size: 46px;
+    line-height: 1;
+    letter-spacing: 0.01em;
+    transform: rotate(-2deg);
+    margin: 6px 0 4px;
+    filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.12)) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.18));
+  }
+
+  .titulo-bolha .letra {
+    -webkit-text-stroke: 5px #ffffff;
+    paint-order: stroke fill;
+  }
+
+  .subtitulo-bolha {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--escuro);
+    -webkit-text-stroke: 3px #ffffff;
+    paint-order: stroke fill;
+    margin: 0 0 2px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12));
+  }
+
+  /* ===== "compra" cursivo com blob azul ===== */
+  .compra-wrap {
+    position: relative;
+    display: inline-block;
+    margin: 6px 0 18px;
+  }
+
+  .compra-blob {
+    position: absolute;
+    inset: -6px -18px;
+    background: var(--azul);
+    border: 4px solid #ffffff;
+    border-radius: 48% 52% 46% 54% / 58% 46% 54% 42%;
+    transform: rotate(-3deg);
+    box-shadow: 0 8px 16px rgba(80, 140, 190, 0.35);
+    z-index: 0;
+  }
+
+  .compra-texto {
+    position: relative;
+    z-index: 1;
+    display: inline-block;
+    font-family: 'Caveat', cursive;
+    font-weight: 700;
+    font-size: 64px;
+    line-height: 1;
+    color: #1c1c1c;
+    -webkit-text-stroke: 3px #ffffff;
+    paint-order: stroke fill;
+    padding: 8px 10px;
+    transform: rotate(-2deg) translateY(-7px);
+  }
+
+  .loja-tag {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.72);
+    border-radius: 999px;
+    padding: 6px 18px;
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.03em;
+    color: #7a5c8a;
+    margin-bottom: 14px;
+  }
+
+  .mensagem {
+    font-family: 'Quicksand', {{ font_css }}, sans-serif;
+    font-weight: 600;
+    font-size: {{ font_size_val }}px;
+    line-height: 1.6;
+    color: #4a3b55;
+    white-space: pre-line;
+    word-wrap: break-word;
+    background: rgba(255, 255, 255, 0.62);
+    border-radius: 16px;
+    padding: 14px 18px;
+    margin: 6px auto 22px;
+    max-width: 92%;
+  }
+
+  /* ===== Câmera decorativa ===== */
+  .camera-icone {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+
+  .camera-icone svg { width: 46px; height: 46px; }
+
+  .registre-bolha {
+    font-family: 'Baloo 2', sans-serif;
+    font-weight: 700;
+    font-size: 19px;
+    color: var(--rosa);
+    -webkit-text-stroke: 3px #ffffff;
+    paint-order: stroke fill;
+    margin: 6px 0 0;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  }
+
+  .marque-cursiva {
+    font-family: 'Caveat', cursive;
+    font-weight: 600;
+    font-size: 21px;
+    color: var(--escuro);
+    margin: 0 0 22px;
+  }
+
+  /* ===== Caixinha de rede social ===== */
+  .rede-box {
+    background: var(--rosa);
+    border: 2px dashed rgba(255, 255, 255, 0.85);
+    border-radius: 14px;
+    padding: 14px 18px;
+    max-width: 94%;
+    margin: 0 auto;
+    box-shadow: 0 8px 18px rgba(230, 130, 170, 0.35);
+    font-family: 'Quicksand', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: #ffffff;
+    letter-spacing: 0.02em;
+  }
+
+  .rodape { margin-top: 22px; text-align: center; }
+
+  .rodape a {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 6px 16px;
+    border-radius: 999px;
+    color: #7a5c8a;
+    font-family: 'Quicksand', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    transition: background 0.2s ease;
+  }
+
+  .rodape a:hover { background: #ffffff; }
+
+  @media (max-width: 380px) {
+    .card { padding: 32px 18px 26px; border-radius: 24px; }
+    .titulo-bolha { font-size: 38px; }
+    .compra-texto { font-size: 52px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="wrapper">
+    <div class="card">
+
+      <div class="titulo-bolha">
+        <span class="letra" style="color:#f48fb1;">g</span><span class="letra" style="color:#90caf9;">r</span><span class="letra" style="color:#ce93d8;">a</span><span class="letra" style="color:#fff59d;">t</span><span class="letra" style="color:#f48fb1;">i</span><span class="letra" style="color:#90caf9;">d</span><span class="letra" style="color:#ce93d8;">ã</span><span class="letra" style="color:#fff59d;">o</span>
+      </div>
+
+      <p class="subtitulo-bolha">pela sua</p>
+
+      <div class="compra-wrap">
+        <span class="compra-blob"></span>
+        <span class="compra-texto">compra</span>
+      </div>
+
+      {% if page.titulo %}
+        <p class="loja-tag">{{ page.titulo }}</p>
+      {% endif %}
+
+      {% if page.mensagem %}
+        <p class="mensagem">{{ page.mensagem }}</p>
+      {% endif %}
+
+      <div class="camera-icone">
+        <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="14" width="40" height="28" rx="6" stroke="#5aa9d6" stroke-width="2.5" fill="#ffffff"/>
+          <rect x="16" y="7" width="16" height="8" rx="3" stroke="#5aa9d6" stroke-width="2.5" fill="#ffffff"/>
+          <circle cx="24" cy="28" r="9" stroke="#5aa9d6" stroke-width="2.5" fill="#ffffff"/>
+          <path d="M24 24.5c-1.6-2-5-1.3-5 1.3 0 2.4 3.4 4.4 5 5.8 1.6-1.4 5-3.4 5-5.8 0-2.6-3.4-3.3-5-1.3Z" fill="#f48fb1"/>
+          <circle cx="37" cy="20" r="1.6" fill="#f48fb1"/>
+        </svg>
+      </div>
+
+      <p class="registre-bolha">registre este momento</p>
+      <p class="marque-cursiva">e nos marque nas redes sociais!</p>
+
+      <div class="rede-box">{{ page.instagram or '@sua_loja_aqui' }}</div>
+
+    </div>
+
+    <div class="rodape">
+      <a href="https://qrcodebrindes.com.br" target="_blank" rel="noopener">Feito com QR Code Brindes &copy; {{ current_year }}</a>
+    </div>
+  </div>
+
+</body>
+</html>
