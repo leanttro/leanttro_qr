@@ -1815,6 +1815,121 @@ def admin_anuncios_deletar(item_id):
     execute("DELETE FROM brindes_anuncios WHERE id = %s", (item_id,))
     return jsonify({'ok': True})
 
+from xml.sax.saxutils import escape
 
+
+@app.route('/sitemap.xml')
+def sitemap():
+    """Gera o sitemap.xml dinamicamente a partir do banco. Só inclui páginas
+    públicas que realmente têm conteúdo indexável — não inclui login, painel,
+    admin, demo, nem páginas de QR do tipo 'link' (essas só redirecionam pra
+    fora e não têm nada pro Google indexar)."""
+
+    def fmt_data(valor):
+        if not valor:
+            return None
+        try:
+            return valor.strftime('%Y-%m-%d')
+        except AttributeError:
+            return None
+
+    urls = []
+
+    # --- Páginas estáticas principais ---
+    urls.append({'loc': f'{BASE_URL}/', 'changefreq': 'daily', 'priority': '1.0'})
+    urls.append({'loc': f'{BASE_URL}/diretorio', 'changefreq': 'daily', 'priority': '0.8'})
+    urls.append({'loc': f'{BASE_URL}/gerar-qr', 'changefreq': 'monthly', 'priority': '0.6'})
+    urls.append({'loc': f'{BASE_URL}/acessar-painel', 'changefreq': 'monthly', 'priority': '0.3'})
+
+    # --- Ocasiões ---
+    ocasioes = query_all("SELECT slug, created_at FROM brindes_ocasioes WHERE ativo = TRUE")
+    for o in ocasioes:
+        urls.append({
+            'loc': f"{BASE_URL}/ocasiao/{o['slug']}",
+            'lastmod': fmt_data(o.get('created_at')),
+            'changefreq': 'weekly',
+            'priority': '0.7',
+        })
+
+    # --- Tipos de impressão ---
+    tipos = query_all("SELECT slug FROM brindes_tipos_impressao WHERE ativo = TRUE")
+    for t in tipos:
+        urls.append({
+            'loc': f"{BASE_URL}/impressao/{t['slug']}",
+            'changefreq': 'weekly',
+            'priority': '0.7',
+        })
+
+    # --- Brindes (catálogo) ---
+    brindes = query_all("SELECT slug, created_at FROM brindes_brindes WHERE ativo = TRUE")
+    for b in brindes:
+        urls.append({
+            'loc': f"{BASE_URL}/brinde/{b['slug']}",
+            'lastmod': fmt_data(b.get('created_at')),
+            'changefreq': 'weekly',
+            'priority': '0.6',
+        })
+
+    # --- Empresas (diretório) ---
+    empresas = query_all("SELECT slug, created_at, cidade_slug FROM brindes_empresas WHERE ativo = TRUE")
+    for e in empresas:
+        urls.append({
+            'loc': f"{BASE_URL}/empresa/{e['slug']}",
+            'lastmod': fmt_data(e.get('created_at')),
+            'changefreq': 'weekly',
+            'priority': '0.6',
+        })
+
+    # --- Cidades (distintas, a partir das empresas cadastradas) ---
+    cidades = query_all("""
+        SELECT DISTINCT cidade_slug FROM brindes_empresas
+        WHERE ativo = TRUE AND cidade_slug IS NOT NULL AND cidade_slug != ''
+    """)
+    for c in cidades:
+        urls.append({
+            'loc': f"{BASE_URL}/cidade/{c['cidade_slug']}",
+            'changefreq': 'weekly',
+            'priority': '0.5',
+        })
+
+    # --- Páginas de QR próprias (só as que têm conteúdo, não as de redirect) ---
+    paginas = query_all("""
+        SELECT slug, created_at FROM brindes_paginas
+        WHERE ativo = TRUE AND tipo_destino = 'pagina'
+    """)
+    for p in paginas:
+        urls.append({
+            'loc': f"{BASE_URL}/{p['slug']}",
+            'lastmod': fmt_data(p.get('created_at')),
+            'changefreq': 'monthly',
+            'priority': '0.4',
+        })
+
+    # --- Monta o XML ---
+    partes = ['<?xml version="1.0" encoding="UTF-8"?>',
+              '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
+    for u in urls:
+        partes.append('  <url>')
+        partes.append(f"    <loc>{escape(u['loc'])}</loc>")
+        if u.get('lastmod'):
+            partes.append(f"    <lastmod>{u['lastmod']}</lastmod>")
+        if u.get('changefreq'):
+            partes.append(f"    <changefreq>{u['changefreq']}</changefreq>")
+        if u.get('priority'):
+            partes.append(f"    <priority>{u['priority']}</priority>")
+        partes.append('  </url>')
+    partes.append('</urlset>')
+
+    xml = '\n'.join(partes)
+    return app.response_class(xml, mimetype='application/xml')
+
+
+@app.route('/robots.txt')
+def robots_txt():
+    """Aponta o Google pro sitemap. Se você já tiver um robots.txt estático
+    em static/, pode remover essa rota — mas confirme que ele referencia
+    o sitemap, senão o Google demora muito mais pra achar."""
+    conteudo = f"User-agent: *\nAllow: /\nSitemap: {BASE_URL}/sitemap.xml\n"
+    return app.response_class(conteudo, mimetype='text/plain')
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5002, debug=True)
