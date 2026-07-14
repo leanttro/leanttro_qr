@@ -113,6 +113,26 @@ def execute_returning(sql, params=None):
         conn.close()
 
 
+def rodar_auto_migracoes():
+    """Roda uma vez quando o app sobe. Cria a coluna campos_extra em
+    brindes_paginas se ela ainda não existir — assim ninguém precisa entrar
+    no banco na mão pra usar campos extras de template (ex: Cartão
+    Fidelidade). ADD COLUMN IF NOT EXISTS é seguro rodar toda vez que o app
+    reinicia: se a coluna já existe, não faz nada."""
+    try:
+        execute("""
+            ALTER TABLE brindes_paginas
+            ADD COLUMN IF NOT EXISTS campos_extra JSONB DEFAULT '{}'::jsonb
+        """)
+        print("Auto-migração ok: coluna campos_extra confirmada em brindes_paginas.")
+    except Exception as e:
+        print(f"Aviso: auto-migração de campos_extra falhou ({e}). "
+              f"Salvar campos extras de template pode não funcionar até isso ser corrigido.")
+
+
+rodar_auto_migracoes()
+
+
 def sync_brinde_tipos_impressao(brinde_id, tipo_impressao_ids):
     """Substitui o conjunto de tipos de impressão de um brinde em
     brindes_brinde_tipos_impressao (M2M). Apaga as relações antigas daquele
