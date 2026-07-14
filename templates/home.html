@@ -1018,8 +1018,12 @@ function setView(secao, modo){
     var grid = document.getElementById('grid-' + secao);
     var nav  = document.getElementById('nav-' + secao);
     if(!wrap||!grid) return;
-    // botões do toolbar desta seção
-    var btns = wrap.previousElementSibling.querySelectorAll('.view-btn');
+    // botões do toolbar desta seção (busca dentro do container pra não
+    // depender de ser o irmão imediatamente anterior, já que algumas seções
+    // têm elementos extras, como o filtro de cidade, entre o toolbar e o carrossel)
+    var container = wrap.closest('.container') || wrap.parentElement;
+    var btns = container.querySelectorAll('.view-btn');
+    if(!btns.length) return;
     btns[0].classList.toggle('active', modo==='carrossel');
     btns[1].classList.toggle('active', modo==='grade');
     if(modo==='grade'){
@@ -1186,7 +1190,7 @@ fetch('/api/empresas')
   onmouseover="this.style.transform='translateY(-2px)'"
   onmouseout="this.style.transform=''"
 >
-  <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 </button>
 
 <!-- TRADUZIR FLUTUANTE -->
