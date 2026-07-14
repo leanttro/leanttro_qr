@@ -481,6 +481,8 @@ def render_pagina(pagina):
         tpl = templates_disponiveis[0]
     if not tpl:
         abort(404)
+    total_scans_row = query_one("SELECT COUNT(*) as total FROM brindes_scans WHERE pagina_id = %s", (pagina['id'],))
+    total_scans = total_scans_row['total'] if total_scans_row else 0
     return render_template(
         tpl['arquivo'],
         page=pagina,
@@ -488,6 +490,7 @@ def render_pagina(pagina):
         current_year=datetime.now().year,
         font_css="'Inter', sans-serif",
         font_size_val="1.1rem",
+        total_scans=total_scans,
     )
 
 
@@ -498,12 +501,14 @@ def demo_template(template_slug):
     if not tpl:
         abort(404)
     pagina_fake = {**tpl.get('demo', {}), 'template': template_slug}
+    total_scans = tpl.get('demo_total_scans', 7)
     return render_template(
         tpl['arquivo'], page=pagina_fake,
         timeline_events=pagina_fake.get('timeline', []),
         current_year=datetime.now().year,
         font_css="'Inter', sans-serif", font_size_val="1.1rem",
         anuncio_topo=get_anuncio('topo', contexto='funcionalidade'),
+        total_scans=total_scans,
     )
 
 
