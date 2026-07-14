@@ -272,6 +272,24 @@ header{
             <button type="submit" class="btn-salvar">SALVAR</button>
         </form>
 
+        <!-- CARTÃO FIDELIDADE: carimbar / zerar (fica escondido pra outros templates) -->
+        <div class="form-card" id="bloco-carimbos" style="display:none">
+            <h3><span class="step-num">★</span> Carimbos do cliente</h3>
+            <p style="font-size:.9em;color:var(--ink-soft);margin:0 0 16px">
+                Atual: <b>{{ carimbos_atual }} / {{ pagina.meta or '?' }}</b> carimbos
+            </p>
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+                <form method="POST" action="/{{ pagina.slug }}/carimbar" style="flex:1;min-width:140px">
+                    <input type="hidden" name="acao" value="somar">
+                    <button type="submit" class="btn-salvar" style="background:var(--success)">+1 carimbo</button>
+                </form>
+                <form method="POST" action="/{{ pagina.slug }}/carimbar" style="flex:1;min-width:140px" onsubmit="return confirm('Zerar todos os carimbos desse cliente?')">
+                    <input type="hidden" name="acao" value="zerar">
+                    <button type="submit" class="btn-salvar" style="background:var(--error)">Zerar carimbos</button>
+                </form>
+            </div>
+        </div>
+
         <div class="painel-footer">
             <p>QRCodeBrindes</p>
             <a href="https://www.qrcodebrindes.com.br" target="_blank">Feito por QRCodeBrindes</a>
@@ -288,7 +306,8 @@ const PAGINA_ATUAL = {
     titulo: {{ (pagina.titulo or '') | tojson }},
     mensagem: {{ (pagina.mensagem or '') | tojson }},
     foto_url: {{ (pagina.foto_url or '') | tojson }},
-    timeline: {{ (pagina.timeline_json or []) | tojson }}
+    timeline: {{ (pagina.timeline_json or []) | tojson }},
+    campos_extra: {{ (pagina.campos_extra or {}) | tojson }}
 };
 
 const container = document.getElementById('campos-dinamicos');
@@ -312,14 +331,35 @@ function labelDoCampo(campo) {
     return campo.label || LABELS_PADRAO[campo.nome] || campo.nome;
 }
 
+function valorSalvoDoCampo(nomeCampo) {
+    // Campos fixos (titulo/mensagem) vêm de colunas próprias da página.
+    // Qualquer outro campo (ex: premio) vem de campos_extra, salvo no painel.
+    if (nomeCampo === 'titulo') return PAGINA_ATUAL.titulo || '';
+    if (nomeCampo === 'mensagem') return PAGINA_ATUAL.mensagem || '';
+    const valor = PAGINA_ATUAL.campos_extra ? PAGINA_ATUAL.campos_extra[nomeCampo] : undefined;
+    return (valor === undefined || valor === null) ? '' : valor;
+}
+
 function criarCampoTexto(campo) {
     const wrap = document.createElement('div');
     wrap.className = 'field-group';
     wrap.dataset.campoNome = campo.nome;
-    const valorInicial = campo.nome === 'titulo' ? PAGINA_ATUAL.titulo : '';
+    const valorInicial = String(valorSalvoDoCampo(campo.nome));
     wrap.innerHTML = `
         <label class="field-label">${labelDoCampo(campo)}</label>
         <input type="text" name="${campo.nome}" class="field-input" value="${valorInicial.replace(/"/g, '&quot;')}">
+    `;
+    return wrap;
+}
+
+function criarCampoNumero(campo) {
+    const wrap = document.createElement('div');
+    wrap.className = 'field-group';
+    wrap.dataset.campoNome = campo.nome;
+    const valorInicial = String(valorSalvoDoCampo(campo.nome));
+    wrap.innerHTML = `
+        <label class="field-label">${labelDoCampo(campo)}</label>
+        <input type="number" name="${campo.nome}" class="field-input" value="${valorInicial.replace(/"/g, '&quot;')}">
     `;
     return wrap;
 }
@@ -328,7 +368,7 @@ function criarCampoTextarea(campo) {
     const wrap = document.createElement('div');
     wrap.className = 'field-group';
     wrap.dataset.campoNome = campo.nome;
-    const valorInicial = campo.nome === 'mensagem' ? PAGINA_ATUAL.mensagem : '';
+    const valorInicial = String(valorSalvoDoCampo(campo.nome));
     const textarea = document.createElement('textarea');
     textarea.name = campo.nome;
     textarea.className = 'field-textarea';
@@ -416,6 +456,7 @@ function serializarTimeline() {
 const CRIADORES = {
     texto: criarCampoTexto,
     textarea: criarCampoTextarea,
+    numero: criarCampoNumero,
     imagem: criarCampoImagem,
     timeline: criarCampoTimeline
 };
@@ -448,6 +489,14 @@ function renderCampos(templateSlug) {
     if (tplAtual && tierTag) {
         tierTag.textContent = tplAtual.tier === 'pago' ? 'Pago' : 'Grátis';
         tierTag.className = 'tier-tag ' + (tplAtual.tier === 'pago' ? 'pago' : 'gratis');
+    }
+
+    // Bloco de carimbar só aparece pra templates com cara de "cartão fidelidade"
+    // (identificado pela combinação dos campos meta + premio no .json do template)
+    const blocoCarimbos = document.getElementById('bloco-carimbos');
+    if (blocoCarimbos) {
+        const ehCartaoFidelidade = nomesAtivos.has('meta') && nomesAtivos.has('premio');
+        blocoCarimbos.style.display = ehCartaoFidelidade ? '' : 'none';
     }
 }
 
