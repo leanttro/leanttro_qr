@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>{{ page.titulo }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --azul-1: #0f1b3d;
+    --azul-2: #16214a;
+    --azul-3: #0a1330;
+    --dourado: #d4af37;
+    --dourado-claro: #f3d98b;
+    --dourado-escuro: #9c7a22;
+    --texto-suave: #c7cde0;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; padding: 0; min-height: 100%; }
+
+  body {
+    font-family: 'Montserrat', {{ font_css }}, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    color: #ffffff;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 16px;
+    position: relative;
+    overflow-x: hidden;
+    background:
+      radial-gradient(circle at 20% 10%, rgba(212, 175, 55, 0.10) 0%, transparent 42%),
+      radial-gradient(circle at 85% 90%, rgba(212, 175, 55, 0.08) 0%, transparent 45%),
+      radial-gradient(circle at 50% 50%, var(--azul-2) 0%, var(--azul-1) 55%, var(--azul-3) 100%);
+    background-attachment: fixed;
+  }
+
+  /* padrão geométrico discreto de fundo */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.35;
+    background-image:
+      repeating-linear-gradient(45deg, rgba(212, 175, 55, 0.035) 0px, rgba(212, 175, 55, 0.035) 1px, transparent 1px, transparent 26px),
+      repeating-linear-gradient(-45deg, rgba(212, 175, 55, 0.035) 0px, rgba(212, 175, 55, 0.035) 1px, transparent 1px, transparent 26px);
+    z-index: 0;
+  }
+
+  .wrapper {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(18px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .card {
+    width: 100%;
+    background: linear-gradient(160deg, rgba(22, 33, 74, 0.92) 0%, rgba(10, 19, 48, 0.96) 100%);
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    border-radius: 22px;
+    padding: 44px 30px 34px;
+    box-shadow:
+      0 25px 60px rgba(0, 0, 0, 0.55),
+      0 0 0 1px rgba(212, 175, 55, 0.06) inset;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    animation: cardIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--dourado), var(--dourado-claro), var(--dourado), transparent);
+  }
+
+  /* ===== Bigode decorativo 3D ===== */
+  .bigode-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 22px;
+    filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.5));
+  }
+
+  .bigode-wrap svg { width: 148px; height: auto; }
+
+  .titulo {
+    font-size: calc({{ font_size_val }}px + 12px);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+    line-height: 1.2;
+    background: linear-gradient(180deg, var(--dourado-claro) 0%, var(--dourado) 55%, var(--dourado-escuro) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .subtitulo {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--texto-suave);
+    margin: 0 0 22px;
+  }
+
+  .divisor {
+    width: 64px;
+    height: 2px;
+    margin: 0 auto 24px;
+    background: linear-gradient(90deg, transparent, var(--dourado), transparent);
+  }
+
+  .mensagem {
+    font-size: {{ font_size_val }}px;
+    font-weight: 400;
+    line-height: 1.8;
+    color: var(--texto-suave);
+    white-space: pre-line;
+    margin: 0;
+    word-wrap: break-word;
+  }
+
+  .rodape { margin-top: 26px; text-align: center; }
+
+  .rodape a {
+    color: rgba(212, 175, 55, 0.75);
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    transition: color 0.2s ease;
+  }
+
+  .rodape a:hover { color: var(--dourado-claro); text-decoration: underline; }
+
+  @media (max-width: 380px) {
+    .card { padding: 36px 22px 28px; border-radius: 18px; }
+    .titulo { font-size: calc({{ font_size_val }}px + 8px); }
+    .bigode-wrap svg { width: 120px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="wrapper">
+    <div class="card">
+
+      <div class="bigode-wrap">
+        <svg viewBox="0 0 200 90" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bigodeCorpo" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#f6e5ad"/>
+              <stop offset="30%" stop-color="#d4af37"/>
+              <stop offset="65%" stop-color="#a9822a"/>
+              <stop offset="100%" stop-color="#7a5c1c"/>
+            </linearGradient>
+            <linearGradient id="bigodeBrilho" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#ffffff" stop-opacity="0.85"/>
+              <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+            </linearGradient>
+            <radialGradient id="bigodeSombra" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#000000" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#000000" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+
+          <ellipse cx="100" cy="68" rx="82" ry="14" fill="url(#bigodeSombra)"/>
+
+          <path d="M100,32
+                   C92,14 68,6 46,10
+                   C22,15 4,32 2,48
+                   C1,56 6,62 14,60
+                   C22,58 26,48 34,42
+                   C42,36 50,34 56,38
+                   C62,42 60,50 52,54
+                   C46,57 40,56 36,52
+                   C34,58 40,64 50,64
+                   C64,64 76,54 82,44
+                   C88,52 92,58 100,60
+                   C108,58 112,52 118,44
+                   C124,54 136,64 150,64
+                   C160,64 166,58 164,52
+                   C160,56 154,57 148,54
+                   C140,50 138,42 144,38
+                   C150,34 158,36 166,42
+                   C174,48 178,58 186,60
+                   C194,62 199,56 198,48
+                   C196,32 178,15 154,10
+                   C132,6 108,14 100,32 Z"
+                fill="url(#bigodeCorpo)"
+                stroke="#5c440f"
+                stroke-width="0.6"/>
+
+          <path d="M100,32
+                   C92,16 70,9 48,12
+                   C28,16 12,30 6,44
+                   C14,34 26,24 40,20
+                   C56,15 70,17 80,26
+                   C88,33 94,30 100,32 Z"
+                fill="url(#bigodeBrilho)" opacity="0.55"/>
+
+          <path d="M100,32
+                   C108,16 130,9 152,12
+                   C172,16 188,30 194,44
+                   C186,34 174,24 160,20
+                   C144,15 130,17 120,26
+                   C112,33 106,30 100,32 Z"
+                fill="url(#bigodeBrilho)" opacity="0.45"/>
+        </svg>
+      </div>
+
+      <p class="subtitulo">Feliz Dia dos Pais</p>
+      <h1 class="titulo">{{ page.titulo }}</h1>
+      <div class="divisor"></div>
+      <p class="mensagem">{{ page.mensagem }}</p>
+
+    </div>
+
+    <div class="rodape">
+      <a href="https://qrcodebrindes.com.br" target="_blank" rel="noopener">Feito com QR Code Brindes &copy; {{ current_year }}</a>
+    </div>
+  </div>
+
+</body>
+</html>

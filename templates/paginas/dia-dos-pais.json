@@ -1,0 +1,14 @@
+{
+  "nome": "Dia dos Pais",
+  "tier": "pago",
+  "preco": 12.90,
+  "preview_url": "",
+  "campos": [
+    {"tipo": "texto", "nome": "titulo", "label": "Nome do pai/homenageado"},
+    {"tipo": "textarea", "nome": "mensagem", "label": "Sua mensagem"}
+  ],
+  "demo": {
+    "titulo": "Seu Roberto",
+    "mensagem": "Obrigado por tudo que você fez por mim.\nTe amo, pai!"
+  }
+}
