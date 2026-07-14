@@ -1842,11 +1842,10 @@ def sitemap():
     urls.append({'loc': f'{BASE_URL}/acessar-painel', 'changefreq': 'monthly', 'priority': '0.3'})
 
     # --- Ocasiões ---
-    ocasioes = query_all("SELECT slug, created_at FROM brindes_ocasioes WHERE ativo = TRUE")
+    ocasioes = query_all("SELECT slug FROM brindes_ocasioes WHERE ativo = TRUE")
     for o in ocasioes:
         urls.append({
             'loc': f"{BASE_URL}/ocasiao/{o['slug']}",
-            'lastmod': fmt_data(o.get('created_at')),
             'changefreq': 'weekly',
             'priority': '0.7',
         })
