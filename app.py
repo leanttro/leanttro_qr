@@ -419,6 +419,37 @@ def index():
     )
 
 
+# --- ACESSAR PAINEL (telinha de "digite seu link/slug", redireciona pro login certo) ---
+@app.route('/acessar-painel', methods=['GET', 'POST'])
+def acessar_painel():
+    erro = None
+    if request.method == 'POST':
+        if not check_limit(f"acessar_painel_{get_ip()}", 15, 3600):
+            flash("Muitas tentativas. Tente novamente mais tarde.", "error")
+            return redirect('/acessar-painel')
+
+        bruto = (request.form.get('slug') or '').strip()
+
+        # Aceita tanto o link completo colado (com ou sem https://, com ou sem barra
+        # no final) quanto só o código/slug puro digitado direto.
+        slug = bruto.lower()
+        slug = re.sub(r'^https?://', '', slug)
+        slug = slug.strip('/').split('/')[0].split('?')[0]
+        # Se a primeira parte parece um domínio (tem ponto) e havia mais barra
+        # depois, o slug real é o próximo pedaço do caminho.
+        if '.' in slug and '/' in bruto.lower().strip():
+            partes = re.sub(r'^https?://', '', bruto.lower()).strip('/').split('/')
+            slug = partes[1].split('?')[0] if len(partes) > 1 else slug
+
+        pagina = get_pagina_by_slug(slug) if slug else None
+        if not pagina:
+            erro = "Não encontramos essa página. Confira o link ou código e tente de novo."
+        else:
+            return redirect(f'/{slug}/login')
+
+    return render_template('acessar_painel.html', erro=erro)
+
+
 # --- GERAR QR CODE (criação de página) ---
 @app.route('/gerar-qr', methods=['GET', 'POST'])
 def gerar_qr():
