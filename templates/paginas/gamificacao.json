@@ -1,0 +1,15 @@
+{
+  "nome": "Gamificação",
+  "tier": "pago",
+  "preco": 14.90,
+  "preview_url": "",
+  "demo_total_scans": 7,
+  "campos": [
+    {"tipo": "texto", "nome": "titulo", "label": "Título da mensagem"},
+    {"tipo": "textarea", "nome": "mensagem", "label": "Sua mensagem"}
+  ],
+  "demo": {
+    "titulo": "Obrigado por voltar sempre!",
+    "mensagem": "Cada vez que você escaneia esse QR, a gente sabe que valeu a pena.\nContinue por aqui!"
+  }
+}

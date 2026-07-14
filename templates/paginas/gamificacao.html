@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>{{ page.titulo }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cor-fundo-1: #0b2b3a;
+    --cor-fundo-2: #123a4d;
+    --cor-card: #ffffff;
+    --cor-texto: #16262e;
+    --cor-texto-suave: #64757d;
+    --ouro: #d4af37;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body { margin: 0; padding: 0; min-height: 100%; }
+
+  body {
+    font-family: 'Montserrat', {{ font_css }}, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    color: var(--cor-texto);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 16px;
+    position: relative;
+    overflow-x: hidden;
+    background: radial-gradient(circle at 15% 15%, #164a5f 0%, transparent 45%),
+                radial-gradient(circle at 85% 80%, #0e3446 0%, transparent 50%),
+                linear-gradient(160deg, var(--cor-fundo-1) 0%, var(--cor-fundo-2) 55%, #0b2b3a 100%);
+    background-attachment: fixed;
+  }
+
+  .wrapper {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(18px) scale(0.98); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .card {
+    width: 100%;
+    background: var(--cor-card);
+    border-radius: 22px;
+    padding: 42px 30px 34px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    animation: cardIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #0e7490, var(--ouro));
+    background-size: 200% 100%;
+    animation: barraCorrida 4s linear infinite;
+  }
+
+  @keyframes barraCorrida {
+    0%   { background-position: 0% 0%; }
+    100% { background-position: 200% 0%; }
+  }
+
+  .titulo {
+    font-size: calc({{ font_size_val }}px + 9px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--cor-texto);
+    margin: 0 0 16px;
+    line-height: 1.25;
+  }
+
+  .mensagem {
+    font-size: {{ font_size_val }}px;
+    font-weight: 400;
+    line-height: 1.75;
+    color: var(--cor-texto-suave);
+    white-space: pre-line;
+    margin: 0;
+    word-wrap: break-word;
+  }
+
+  /* ===== Bloco de nível / conquista ===== */
+  .nivel-bloco {
+    margin-top: 32px;
+    padding-top: 28px;
+    border-top: 1px solid #eef1f3;
+    position: relative;
+  }
+
+  @keyframes selPop {
+    0%   { opacity: 0; transform: translateY(8px) scale(0.9); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .nivel-selo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 18px 8px 8px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 13.5px;
+    line-height: 1.3;
+    max-width: 100%;
+    position: relative;
+    animation: selPop 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+  }
+
+  .nivel-icone {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .nivel-icone svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  @keyframes pulsoAnel {
+    0%   { box-shadow: 0 0 0 0 var(--anel-cor); }
+    100% { box-shadow: 0 0 0 10px transparent; }
+  }
+
+  .nivel-icone.tem-pulso::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    animation: pulsoAnel 1.8s ease-out infinite;
+  }
+
+  .nivel-texto { text-align: left; }
+
+  /* ===== Confete no nível máximo ===== */
+  .confete {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 2px;
+    background: var(--ouro);
+    opacity: 0.85;
+    animation: confeteFloat 3.2s ease-in-out infinite;
+  }
+
+  @keyframes confeteFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.85; }
+    50%      { transform: translateY(-10px) rotate(180deg); opacity: 0.4; }
+  }
+
+  /* ===== Barra de progresso ===== */
+  .progresso-container { margin-top: 22px; }
+
+  .progresso-legenda {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #a3adb3;
+    margin-bottom: 7px;
+  }
+
+  .progresso-barra {
+    width: 100%;
+    height: 9px;
+    border-radius: 999px;
+    background: #eef1f3;
+    overflow: hidden;
+    position: relative;
+  }
+
+  @keyframes preencherBarra {
+    from { width: 0%; }
+  }
+
+  @keyframes brilharBarra {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(250%); }
+  }
+
+  .progresso-preenchido {
+    height: 100%;
+    border-radius: 999px;
+    position: relative;
+    overflow: hidden;
+    animation: preencherBarra 1s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+  }
+
+  .progresso-preenchido::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+    animation: brilharBarra 2.2s ease-in-out infinite;
+  }
+
+  .rodape { margin-top: 26px; text-align: center; }
+
+  .rodape a {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    transition: color 0.2s ease;
+  }
+
+  .rodape a:hover { color: #ffffff; text-decoration: underline; }
+
+  @media (max-width: 380px) {
+    .card { padding: 34px 22px 28px; border-radius: 18px; }
+    .titulo { font-size: calc({{ font_size_val }}px + 6px); }
+  }
+</style>
+</head>
+<body>
+
+  <div class="wrapper">
+    <div class="card">
+      <h1 class="titulo">{{ page.titulo }}</h1>
+      <p class="mensagem">{{ page.mensagem }}</p>
+
+      <div class="nivel-bloco">
+
+        {% if total_scans is not defined or total_scans <= 1 %}
+          {% set nivel_cor = "#0e7490" %}
+          {% set nivel_cor_clara = "#e6f4f7" %}
+          {% set proximo_alvo = 2 %}
+          {% set progresso_pct = ((total_scans or 0) / 2 * 100) | round(0, 'floor') %}
+          <span class="nivel-selo" style="background:{{ nivel_cor_clara }}; color:{{ nivel_cor }};">
+            <span class="nivel-icone" style="background:#ffffff; color:{{ nivel_cor }};">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8L12 2z"/></svg>
+            </span>
+            <span class="nivel-texto">Primeira vez por aqui</span>
+          </span>
+
+        {% elif total_scans >= 2 and total_scans <= 4 %}
+          {% set nivel_cor = "#2563eb" %}
+          {% set nivel_cor_clara = "#e8efff" %}
+          {% set proximo_alvo = 5 %}
+          {% set progresso_pct = (total_scans / 5 * 100) | round(0, 'floor') %}
+          <span class="nivel-selo" style="background:{{ nivel_cor_clara }}; color:{{ nivel_cor }};">
+            <span class="nivel-icone" style="background:#ffffff; color:{{ nivel_cor }};">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </span>
+            <span class="nivel-texto">Já foi visto {{ total_scans }} vezes</span>
+          </span>
+
+        {% elif total_scans >= 5 and total_scans <= 9 %}
+          {% set nivel_cor = "#ea580c" %}
+          {% set nivel_cor_clara = "#fff1e6" %}
+          {% set proximo_alvo = 10 %}
+          {% set progresso_pct = (total_scans / 10 * 100) | round(0, 'floor') %}
+          <span class="nivel-selo" style="background:{{ nivel_cor_clara }}; color:{{ nivel_cor }};">
+            <span class="nivel-icone tem-pulso" style="background:#ffffff; color:{{ nivel_cor }}; --anel-cor: {{ nivel_cor }}55;">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c1.2 3.4-2.1 4.9-2.1 8.2a4.1 4.1 0 0 0 8.2 0c0-1.9-.9-3.1-1.5-3.9.3 2-1 2.9-1.7 2.3.9-3.6-.9-6.2-2.9-6.6Z"/></svg>
+            </span>
+            <span class="nivel-texto">{{ total_scans }} visualizações — está fazendo sucesso!</span>
+          </span>
+
+        {% else %}
+          {% set nivel_cor = "#b8860b" %}
+          {% set nivel_cor_clara = "#fdf3da" %}
+          {% set proximo_alvo = None %}
+          {% set progresso_pct = 100 %}
+          <span class="nivel-selo" style="background:{{ nivel_cor_clara }}; color:{{ nivel_cor }};">
+            <span class="nivel-icone tem-pulso" style="background:#ffffff; color:{{ nivel_cor }}; --anel-cor: {{ nivel_cor }}55;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M8 4h8v3.5a4 4 0 0 1-8 0V4Z"/>
+                <path d="M8 4.5H5v1.5a3 3 0 0 0 3 3"/>
+                <path d="M16 4.5h3v1.5a3 3 0 0 1-3 3"/>
+                <path d="M12 11.5v3.5"/>
+                <path d="M9 19.5h6"/>
+                <path d="M10 15h4v1.5a2 2 0 0 1-4 0V15Z"/>
+              </svg>
+            </span>
+            <span class="nivel-texto">{{ total_scans }} visualizações — um clássico!</span>
+            <span class="confete" style="left:-4px; top:-2px; animation-delay:0s;"></span>
+            <span class="confete" style="right:-2px; top:2px; animation-delay:0.6s; background:#0e7490;"></span>
+            <span class="confete" style="right:14px; bottom:-4px; animation-delay:1.2s;"></span>
+          </span>
+        {% endif %}
+
+        <div class="progresso-container">
+          <div class="progresso-legenda">
+            {% if proximo_alvo %}
+              <span>Nível atual</span>
+              <span>Faltam {{ proximo_alvo - (total_scans or 0) }} p/ o próximo nível</span>
+            {% else %}
+              <span>Nível máximo</span>
+              <span>Status lendário</span>
+            {% endif %}
+          </div>
+          <div class="progresso-barra">
+            <div class="progresso-preenchido" style="width: {{ progresso_pct if progresso_pct <= 100 else 100 }}%; background: {{ nivel_cor }};"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="rodape">
+      <a href="https://qrcodebrindes.com.br" target="_blank" rel="noopener">Feito com QR Code Brindes &copy; {{ current_year }}</a>
+    </div>
+  </div>
+
+</body>
+</html>
