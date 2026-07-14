@@ -621,12 +621,39 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
       </div>
 
       <div class="card">
+        <div class="card-header">
+          <span class="card-title">Empresas cadastradas</span>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+            <div class="search-bar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" placeholder="Buscar por nome..." id="buscaEmpresas" oninput="filtrarEmpresas()">
+            </div>
+            <select id="filtroCidadeEmpresas" onchange="filtrarEmpresas()" style="padding:7px 10px; border:1px solid var(--border2); border-radius:var(--radius-sm); background:var(--surface); color:var(--text); font-family:var(--font); font-size:13px;">
+              <option value="">Todas as cidades</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="bulk-bar" id="barraSelecaoEmpresas" style="display:none; align-items:center; gap:12px; flex-wrap:wrap; padding:12px 20px; background:var(--surface2); border-bottom:1px solid var(--border);">
+          <span id="contadorSelecaoEmpresas" style="font-size:13px; font-weight:600; color:var(--text2);"></span>
+          <button type="button" class="btn-link" style="color:#7c5cbf;" onclick="acaoEmMassaEmpresas('ativar')">Ativar</button>
+          <button type="button" class="btn-link" style="color:#7c5cbf;" onclick="acaoEmMassaEmpresas('desativar')">Desativar</button>
+          <button type="button" class="btn-link" style="color:var(--amber);" onclick="acaoEmMassaEmpresas('destacar')">Destacar</button>
+          <button type="button" class="btn-link" style="color:var(--amber);" onclick="acaoEmMassaEmpresas('tirar_destaque')">Tirar destaque</button>
+          <button type="button" class="btn-link" style="color:var(--red);" onclick="acaoEmMassaEmpresas('excluir')">Excluir selecionadas</button>
+          <button type="button" class="btn-link" style="color:var(--text2); margin-left:auto;" onclick="limparSelecaoEmpresas()">Limpar seleção</button>
+        </div>
+
         <div class="table-wrap">
-          <table>
-            <thead><tr><th>Logo</th><th>Nome</th><th>Cidade</th><th>Plano</th><th>Status</th><th>Ações</th></tr></thead>
+          <table id="tabelaEmpresas">
+            <thead><tr>
+              <th style="width:34px;"><input type="checkbox" id="chkTodosEmpresas" onchange="alternarTodosEmpresas(this)"></th>
+              <th>Logo</th><th>Nome</th><th>Cidade</th><th>Plano</th><th>Status</th><th>Ações</th>
+            </tr></thead>
             <tbody>
               {% for e in empresas %}
-              <tr>
+              <tr data-id="{{ e.id }}" data-nome="{{ (e.nome or '')|lower }}" data-cidade="{{ (e.cidade or '')|lower }}" data-ativo="{{ 'true' if e.ativo else 'false' }}" data-plano="{{ e.plano }}">
+                <td><input type="checkbox" class="chk-empresa" value="{{ e.id }}" onchange="atualizarSelecaoEmpresas()"></td>
                 <td>
                   {% if e.logo_url %}<img class="td-img" src="{{ e.logo_url }}" alt="">
                   {% else %}<div class="td-img td-img-fallback">{{ (e.nome or '?')[0]|upper }}</div>{% endif %}
@@ -643,8 +670,9 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
                 </td>
               </tr>
               {% else %}
-              <tr><td colspan="6" class="empty-state">Nenhuma empresa cadastrada.</td></tr>
+              <tr><td colspan="7" class="empty-state">Nenhuma empresa cadastrada.</td></tr>
               {% endfor %}
+              <tr id="linhaFiltroVazioEmpresas" style="display:none;"><td colspan="7" class="empty-state">Nenhuma empresa encontrada com esse filtro.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1341,6 +1369,134 @@ async function editarEmpresa(id) {
     mostrarToast('Erro ao carregar empresa.', 'error');
     fecharDrawer();
   }
+}
+
+// ── Empresas: busca por nome, filtro por cidade e ações em massa ──
+// Tudo client-side, reaproveitando as mesmas rotas /toggle, /toggle-plano
+// e /delete já usadas pelos botões individuais de cada linha.
+
+function popularFiltroCidadeEmpresas() {
+  const select = document.getElementById('filtroCidadeEmpresas');
+  if (!select) return;
+  const linhas = document.querySelectorAll('#tabelaEmpresas tbody tr[data-cidade]');
+  const cidades = new Set();
+  linhas.forEach(tr => { if (tr.dataset.cidade) cidades.add(tr.dataset.cidade); });
+  Array.from(cidades).sort().forEach(cidade => {
+    const opt = document.createElement('option');
+    opt.value = cidade;
+    opt.textContent = cidade.replace(/\b\w/g, c => c.toUpperCase());
+    select.appendChild(opt);
+  });
+}
+popularFiltroCidadeEmpresas();
+
+function filtrarEmpresas() {
+  const termo = (document.getElementById('buscaEmpresas').value || '').toLowerCase().trim();
+  const cidade = document.getElementById('filtroCidadeEmpresas').value;
+  const linhas = document.querySelectorAll('#tabelaEmpresas tbody tr[data-nome]');
+  let visiveis = 0;
+  linhas.forEach(tr => {
+    const bateNome = !termo || tr.dataset.nome.includes(termo);
+    const bateCidade = !cidade || tr.dataset.cidade === cidade;
+    const mostrar = bateNome && bateCidade;
+    tr.style.display = mostrar ? '' : 'none';
+    if (mostrar) {
+      visiveis++;
+    } else {
+      const chk = tr.querySelector('.chk-empresa');
+      if (chk) chk.checked = false;
+    }
+  });
+  const linhaVazia = document.getElementById('linhaFiltroVazioEmpresas');
+  if (linhaVazia) linhaVazia.style.display = (linhas.length && !visiveis) ? '' : 'none';
+  const chkTodos = document.getElementById('chkTodosEmpresas');
+  if (chkTodos) chkTodos.checked = false;
+  atualizarSelecaoEmpresas();
+}
+
+function alternarTodosEmpresas(chkTodos) {
+  const linhasVisiveis = Array.from(document.querySelectorAll('#tabelaEmpresas tbody tr[data-nome]'))
+    .filter(tr => tr.style.display !== 'none');
+  linhasVisiveis.forEach(tr => {
+    const chk = tr.querySelector('.chk-empresa');
+    if (chk) chk.checked = chkTodos.checked;
+  });
+  atualizarSelecaoEmpresas();
+}
+
+function atualizarSelecaoEmpresas() {
+  const selecionadas = document.querySelectorAll('.chk-empresa:checked').length;
+  const barra = document.getElementById('barraSelecaoEmpresas');
+  const contador = document.getElementById('contadorSelecaoEmpresas');
+  if (!barra || !contador) return;
+  barra.style.display = selecionadas ? 'flex' : 'none';
+  contador.textContent = selecionadas === 1 ? '1 empresa selecionada' : `${selecionadas} empresas selecionadas`;
+}
+
+function limparSelecaoEmpresas() {
+  document.querySelectorAll('.chk-empresa:checked').forEach(chk => { chk.checked = false; });
+  const chkTodos = document.getElementById('chkTodosEmpresas');
+  if (chkTodos) chkTodos.checked = false;
+  atualizarSelecaoEmpresas();
+}
+
+async function acaoEmMassaEmpresas(tipo) {
+  const linhasSelecionadas = Array.from(document.querySelectorAll('#tabelaEmpresas tbody tr[data-nome]'))
+    .filter(tr => { const chk = tr.querySelector('.chk-empresa'); return chk && chk.checked; });
+  if (!linhasSelecionadas.length) return;
+
+  const rotulos = {
+    ativar: 'ativar', desativar: 'desativar', destacar: 'destacar',
+    tirar_destaque: 'tirar o destaque de', excluir: 'excluir',
+  };
+
+  if (tipo === 'excluir') {
+    const ok = confirm(`Excluir ${linhasSelecionadas.length} empresa(s) selecionada(s)? Essa ação não pode ser desfeita.`);
+    if (!ok) return;
+  }
+
+  // Só chama a rota de toggle nas linhas cujo estado atual é diferente do
+  // estado desejado (evita "Ativar em massa" desligar quem já tava ativo).
+  const alvos = linhasSelecionadas.filter(tr => {
+    if (tipo === 'ativar') return tr.dataset.ativo !== 'true';
+    if (tipo === 'desativar') return tr.dataset.ativo === 'true';
+    if (tipo === 'destacar') return tr.dataset.plano !== 'destaque';
+    if (tipo === 'tirar_destaque') return tr.dataset.plano === 'destaque';
+    return true; // excluir: todas as marcadas
+  });
+
+  if (!alvos.length) {
+    mostrarToast(`Nenhuma empresa selecionada precisava ${rotulos[tipo]}.`, 'error');
+    return;
+  }
+
+  const rotaPorTipo = {
+    ativar: id => `/admin/empresas/${id}/toggle`,
+    desativar: id => `/admin/empresas/${id}/toggle`,
+    destacar: id => `/admin/empresas/${id}/toggle-plano`,
+    tirar_destaque: id => `/admin/empresas/${id}/toggle-plano`,
+    excluir: id => `/admin/empresas/${id}/delete`,
+  };
+
+  const barra = document.getElementById('barraSelecaoEmpresas');
+  if (barra) barra.querySelectorAll('button').forEach(b => b.disabled = true);
+
+  let falhas = 0;
+  for (const tr of alvos) {
+    try {
+      const r = await fetch(rotaPorTipo[tipo](tr.dataset.id), { method: 'POST' });
+      if (!r.ok) falhas++;
+    } catch (e) {
+      falhas++;
+    }
+  }
+
+  if (falhas) {
+    mostrarToast(`${falhas} de ${alvos.length} empresa(s) não puderam ser atualizadas.`, 'error');
+  } else {
+    mostrarToast('Ação em massa aplicada com sucesso!', 'success');
+  }
+  recarregarSecao('empresas');
 }
 
 async function alternarAnuncio(id) {
