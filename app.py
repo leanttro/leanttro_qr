@@ -774,6 +774,7 @@ def painel_pagina(slug):
         templates=templates_disponiveis,
         campos_por_template=campos_por_template,
         anuncio_topo=get_anuncio('topo', contexto='funcionalidade'),
+        base_url=BASE_URL,
     )
 
 
