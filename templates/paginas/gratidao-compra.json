@@ -1,7 +1,7 @@
 {
   "nome": "Gratidão pela Compra",
-  "tier": "pago",
-  "preco": 12.90,
+  "tier": "gratis",
+  "preco": 0,
   "preview_url": "",
   "campos": [
     {"tipo": "texto", "nome": "titulo", "label": "Nome da loja (opcional)"},
