@@ -66,23 +66,89 @@ header{
 /* ============ CARD DO QR ============ */
 .qr-card{
     background:var(--chrome-1);border:1px solid var(--line);border-radius:var(--radius);
-    padding:28px 24px;text-align:center;margin-bottom:24px;box-shadow:var(--shadow-sm);
+    padding:32px 24px 24px;text-align:center;margin-bottom:16px;box-shadow:var(--shadow-sm);
+    position:relative;overflow:hidden;
 }
-.qr-card .qr-eyebrow{font-size:.78em;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:600;margin-bottom:6px}
-.qr-card .qr-link{font-size:1.5em;font-weight:800;color:var(--ink-black);word-break:break-all}
-.qr-card .qr-link:hover{color:var(--focus)}
-.qr-card .qr-scans{font-size:.88em;color:var(--ink-soft);margin-top:8px}
-.qr-card .qr-scans b{color:var(--ink)}
-.qr-img-wrap{margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:10px}
-.qr-img-wrap img{width:150px;height:150px;border-radius:10px;border:6px solid #fff;box-shadow:var(--shadow-sm);background:#fff}
-.qr-download{font-size:.82em;font-weight:700;color:var(--focus)}
-.qr-download:hover{text-decoration:underline}
+.qr-card .plano-badge{position:absolute;top:16px;right:16px}
 .plano-badge{
-    display:inline-block;margin-top:16px;font-size:.72em;font-weight:700;text-transform:uppercase;
-    letter-spacing:.04em;padding:5px 14px;border-radius:999px;
+    display:inline-block;font-size:.7em;font-weight:700;text-transform:uppercase;
+    letter-spacing:.04em;padding:5px 12px;border-radius:999px;
 }
 .plano-badge.gratis{background:var(--surface-2);color:var(--ink-soft)}
 .plano-badge.pago{background:#e5f7ec;color:var(--success)}
+
+.qr-img-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.qr-img-frame{
+    padding:14px;background:#fff;border-radius:18px;border:1px solid var(--line);
+    box-shadow:var(--shadow-md);
+}
+.qr-img-frame img{width:190px;height:190px;display:block;border-radius:6px}
+.qr-download{font-size:.82em;font-weight:700;color:var(--focus);margin-top:2px}
+.qr-download:hover{text-decoration:underline}
+
+.qr-card .qr-eyebrow{font-size:.78em;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:600;margin:24px 0 8px}
+
+.qr-link-row{
+    display:flex;align-items:center;gap:8px;background:var(--surface);
+    border:1px solid var(--line);border-radius:10px;padding:10px 8px 10px 16px;
+}
+.qr-link-row .qr-link{
+    flex:1;font-size:.95em;font-weight:700;color:var(--ink-black);
+    text-align:left;word-break:break-all;overflow-wrap:anywhere;
+}
+.qr-link-row .qr-link:hover{color:var(--focus)}
+.btn-copy{
+    flex-shrink:0;display:flex;align-items:center;gap:6px;
+    background:var(--ink-black);color:#fff;border:none;border-radius:8px;
+    padding:9px 14px;font-family:'Montserrat',sans-serif;font-size:.82em;font-weight:700;
+    cursor:pointer;transition:background .15s, transform .1s;white-space:nowrap;
+}
+.btn-copy:hover{background:var(--chrome-4)}
+.btn-copy:active{transform:scale(.96)}
+.btn-copy.copiado{background:var(--success)}
+.btn-copy svg{width:14px;height:14px;flex-shrink:0}
+
+.qr-share-row{display:flex;gap:10px;margin-top:14px}
+.btn-share{
+    flex:1;display:flex;align-items:center;justify-content:center;gap:7px;
+    padding:11px 10px;border-radius:10px;border:1px solid var(--line-strong);
+    background:#fff;font-family:'Montserrat',sans-serif;font-size:.85em;font-weight:700;
+    color:var(--ink);cursor:pointer;transition:border-color .15s, transform .1s;
+}
+.btn-share:hover{border-color:var(--ink-black);transform:translateY(-1px)}
+.btn-share:active{transform:translateY(0)}
+.btn-share svg{width:17px;height:17px;flex-shrink:0}
+.btn-share.whatsapp svg{color:#25D366}
+.btn-share.instagram svg{color:#E1306C}
+
+.qr-card .qr-scans{font-size:.85em;color:var(--ink-soft);margin-top:16px}
+.qr-card .qr-scans b{color:var(--ink)}
+
+@media (max-width:400px){
+    .qr-share-row{flex-direction:column}
+}
+
+/* ============ COMO FUNCIONA ============ */
+.como-funciona{
+    background:var(--chrome-1);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px 20px;margin-bottom:24px;
+}
+.como-funciona summary{
+    cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;
+    font-size:.9em;font-weight:700;color:var(--ink-black);
+}
+.como-funciona summary::-webkit-details-marker{display:none}
+.como-funciona summary .chev{transition:transform .2s;color:var(--ink-faint)}
+.como-funciona[open] summary .chev{transform:rotate(180deg)}
+.como-funciona-steps{display:flex;flex-direction:column;gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.como-funciona-step{display:flex;gap:12px;align-items:flex-start}
+.como-funciona-step .step-num{
+    display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+    width:22px;height:22px;border-radius:50%;background:var(--ink-black);color:#fff;
+    font-size:.72em;font-weight:700;
+}
+.como-funciona-step p{margin:0;font-size:.86em;color:var(--ink-soft);line-height:1.5}
+.como-funciona-step p b{color:var(--ink)}
 
 /* ============ FLASH MESSAGES ============ */
 .flash{
@@ -202,17 +268,59 @@ header{
 
         <!-- QR CARD -->
         <div class="qr-card">
-            <p class="qr-eyebrow">Seu link</p>
-            <a href="/{{ pagina.slug }}" target="_blank" class="qr-link">/{{ pagina.slug }}</a>
-            <p class="qr-scans">Escaneado ou acessado <b>{{ total_scans }}</b> vez(es).</p>
+            <span class="plano-badge {{ 'pago' if pagina.plano == 'pago' else 'gratis' }}">{{ pagina.plano }}</span>
 
             <div class="qr-img-wrap">
-                <img src="{{ qr_url }}" alt="QR Code">
+                <div class="qr-img-frame">
+                    <img src="{{ qr_url }}" alt="QR Code">
+                </div>
                 <a href="{{ qr_url }}" download="qrcode-{{ pagina.slug }}.png" class="qr-download">Baixar QR code (PNG)</a>
             </div>
 
-            <span class="plano-badge {{ 'pago' if pagina.plano == 'pago' else 'gratis' }}">Plano: {{ pagina.plano }}</span>
+            <p class="qr-eyebrow">Seu link</p>
+            <div class="qr-link-row">
+                <a href="/{{ pagina.slug }}" target="_blank" class="qr-link" id="link-texto">{{ base_url }}/{{ pagina.slug }}</a>
+                <button type="button" class="btn-copy" id="btn-copiar" data-link="{{ base_url }}/{{ pagina.slug }}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"></path></svg>
+                    <span id="btn-copiar-texto">Copiar</span>
+                </button>
+            </div>
+
+            <div class="qr-share-row">
+                <button type="button" class="btn-share whatsapp" id="btn-whatsapp">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.6-.8-1.8-.9-.2-.1-.4-.1-.6.1-.2.3-.7.9-.8 1-.2.2-.3.2-.5.1-.3-.1-1.2-.4-2.2-1.4-.8-.7-1.4-1.6-1.6-1.9-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.3-.4.1-.2 0-.3 0-.5s-.6-1.5-.9-2c-.2-.5-.4-.4-.6-.5h-.5c-.2 0-.5.1-.7.3-.3.3-1 1-1 2.3 0 1.4 1 2.7 1.1 2.9.1.2 2 3.1 4.9 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.6-.1 1.6-.7 1.9-1.3.2-.6.2-1.2.2-1.3-.1-.1-.3-.2-.6-.3z"/><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg>
+                    WhatsApp
+                </button>
+                <button type="button" class="btn-share instagram" id="btn-instagram">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"></rect><circle cx="12" cy="12" r="4.2"></circle><circle cx="17.3" cy="6.7" r="1"></circle></svg>
+                    Instagram
+                </button>
+            </div>
+
+            <p class="qr-scans">Escaneado ou acessado <b>{{ total_scans }}</b> vez(es).</p>
         </div>
+
+        <!-- COMO FUNCIONA -->
+        <details class="como-funciona">
+            <summary>
+                Como funciona o seu QR code
+                <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="como-funciona-steps">
+                <div class="como-funciona-step">
+                    <span class="step-num">1</span>
+                    <p><b>Configure abaixo</b> pra onde o QR code leva — um link externo ou a sua própria página, com o estilo e conteúdo que quiser.</p>
+                </div>
+                <div class="como-funciona-step">
+                    <span class="step-num">2</span>
+                    <p><b>Baixe o QR code</b> ou compartilhe o link diretamente pelo WhatsApp ou Instagram usando os botões acima.</p>
+                </div>
+                <div class="como-funciona-step">
+                    <span class="step-num">3</span>
+                    <p><b>Acompanhe os acessos</b> aqui no painel — cada escaneamento ou visita ao link é contado automaticamente.</p>
+                </div>
+            </div>
+        </details>
 
         <!-- FLASH MESSAGES -->
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -512,6 +620,74 @@ document.getElementById('form-painel').addEventListener('submit', () => {
 });
 
 renderCampos(selectTemplate.value);
+
+// ============ LINK, COPIAR E COMPARTILHAR ============
+(function () {
+    const slug = {{ pagina.slug | tojson }};
+    // Monta o link com o domínio real que a pessoa está usando (funciona mesmo
+    // se "base_url" não vier preenchido do backend).
+    const linkCompleto = window.location.origin + '/' + slug;
+
+    const elLinkTexto = document.getElementById('link-texto');
+    const btnCopiar = document.getElementById('btn-copiar');
+    const btnCopiarTexto = document.getElementById('btn-copiar-texto');
+
+    if (elLinkTexto) elLinkTexto.textContent = linkCompleto;
+    if (btnCopiar) btnCopiar.dataset.link = linkCompleto;
+
+    if (btnCopiar) {
+        btnCopiar.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(linkCompleto);
+            } catch (e) {
+                // Fallback pra navegadores sem suporte à Clipboard API
+                const temp = document.createElement('textarea');
+                temp.value = linkCompleto;
+                temp.style.position = 'fixed';
+                temp.style.opacity = '0';
+                document.body.appendChild(temp);
+                temp.select();
+                document.execCommand('copy');
+                document.body.removeChild(temp);
+            }
+            btnCopiar.classList.add('copiado');
+            btnCopiarTexto.textContent = 'Copiado!';
+            setTimeout(() => {
+                btnCopiar.classList.remove('copiado');
+                btnCopiarTexto.textContent = 'Copiar';
+            }, 1800);
+        });
+    }
+
+    const btnWhatsapp = document.getElementById('btn-whatsapp');
+    if (btnWhatsapp) {
+        btnWhatsapp.addEventListener('click', () => {
+            const texto = encodeURIComponent(`Dá uma olhada: ${linkCompleto}`);
+            window.open(`https://wa.me/?text=${texto}`, '_blank', 'noopener');
+        });
+    }
+
+    const btnInstagram = document.getElementById('btn-instagram');
+    if (btnInstagram) {
+        btnInstagram.addEventListener('click', async () => {
+            // Instagram não tem um link de compartilhamento direto tipo o WhatsApp.
+            // Em celular, tenta abrir o menu nativo de compartilhar (inclui Instagram);
+            // no desktop (ou se não suportar), copia o link e avisa pra colar na bio/story.
+            if (navigator.share) {
+                try {
+                    await navigator.share({ url: linkCompleto, title: 'Meu QR code' });
+                    return;
+                } catch (e) {
+                    if (e && e.name === 'AbortError') return;
+                }
+            }
+            try {
+                await navigator.clipboard.writeText(linkCompleto);
+            } catch (e) { /* ignora */ }
+            alert('Link copiado! Cole na bio ou em um story do Instagram.');
+        });
+    }
+})();
 </script>
 
 </body>
