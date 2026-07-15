@@ -783,7 +783,7 @@ def fidelize_painel():
         return redirect('/login')
 
     paginas = query_all("""
-        SELECT p.id, p.slug, p.template, p.titulo, p.apelido_slug,
+        SELECT p.id, p.slug, p.template, p.titulo, p.apelido_slug, p.campos_extra,
                (SELECT COUNT(*) FROM brindes_scans s WHERE s.pagina_id = p.id) AS total_scans
         FROM brindes_paginas p
         WHERE p.conta_id = %s
@@ -802,6 +802,20 @@ def fidelize_painel():
             p['sufixo_atual'] = p['apelido_slug']
         else:
             p['sufixo_atual'] = p['slug'][len(prefixo_slug):] if p['slug'].startswith(prefixo_slug) else p['slug']
+
+        # Carimbos atuais do cartão, pra exibir e permitir carimbar sem sair
+        # do painel do Fidelize (evita depender de sessão entre subdomínio e
+        # apex, que ainda tá sendo ajustada na infra).
+        campos_extra = p.get('campos_extra') or {}
+        if isinstance(campos_extra, str):
+            try:
+                campos_extra = json.loads(campos_extra)
+            except (ValueError, TypeError):
+                campos_extra = {}
+        try:
+            p['carimbos_atual'] = int(campos_extra.get('carimbos_atual', 0) or 0)
+        except (ValueError, TypeError):
+            p['carimbos_atual'] = 0
 
     return render_template(
         'fidelize/painel.html',
@@ -919,6 +933,49 @@ def fidelize_logout():
     session.pop('fidelize_conta_id', None)
     session.pop('fidelize_conta_nome', None)
     return redirect('/')
+
+
+# --- CARIMBAR DIRETO DO PAINEL DO FIDELIZE ---
+# Mesma lógica de carimbar_pagina (/<slug>/carimbar), mas rodando 100% dentro
+# do subdomínio fidelize.qrcodebrindes.com.br — não depende da sessão viajar
+# pro apex (qrcodebrindes.com.br), que é o que tava causando o loop de login.
+# A checagem "WHERE conta_id = %s" garante que ela só carimba página da
+# própria conta, sem precisar de pode_gerenciar_pagina/sessão cruzada.
+@app.route('/painel/pagina/<int:pagina_id>/carimbar', methods=['POST'], subdomain='fidelize')
+@fidelize_login_required
+def fidelize_carimbar(pagina_id):
+    conta_id = session['fidelize_conta_id']
+    pagina = query_one(
+        "SELECT id, campos_extra FROM brindes_paginas WHERE id = %s AND conta_id = %s",
+        (pagina_id, conta_id)
+    )
+    if not pagina:
+        abort(404)
+
+    campos_extra = pagina.get('campos_extra') or {}
+    if isinstance(campos_extra, str):
+        try:
+            campos_extra = json.loads(campos_extra)
+        except (ValueError, TypeError):
+            campos_extra = {}
+    try:
+        atual = int(campos_extra.get('carimbos_atual', 0) or 0)
+    except (ValueError, TypeError):
+        atual = 0
+
+    acao = request.form.get('acao', 'somar')
+    if acao == 'zerar':
+        atual = 0
+    else:
+        atual += 1
+    campos_extra['carimbos_atual'] = atual
+
+    execute(
+        "UPDATE brindes_paginas SET campos_extra = %s WHERE id = %s",
+        (psycopg2.extras.Json(campos_extra), pagina_id),
+    )
+    flash('Carimbo zerado.' if acao == 'zerar' else 'Carimbo adicionado!', 'success')
+    return redirect('/painel')
 
 
 # --- LOGIN DA PÁGINA (slug + senha) ---
