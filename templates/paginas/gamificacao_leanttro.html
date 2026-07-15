@@ -46,9 +46,9 @@
     position: relative;
     overflow-x: hidden;
     background:
-      radial-gradient(circle at 15% 10%, rgba(255,255,255,0.16) 0%, transparent 45%),
+      radial-gradient(circle at 15% 10%, rgba(255,255,255,0.5) 0%, transparent 45%),
       radial-gradient(circle at 85% 90%, rgba(167,139,250,0.35) 0%, transparent 55%),
-      linear-gradient(155deg, #7c3aed 0%, #6d28d9 45%, #4c1d95 100%);
+      linear-gradient(155deg, #ede9fe 0%, #ddd6fe 45%, #c4b5fd 100%);
     background-size: 200% 200%;
     animation: gradienteVivo 14s ease infinite;
   }
@@ -59,6 +59,7 @@
     100% { background-position: 0% 0%; }
   }
 
+  /* ===== brilho ambiente que cruza o fundo ===== */
   .brilho-varredura {
     position: fixed;
     inset: -20% -20%;
@@ -73,6 +74,7 @@
     100% { background-position: 100% 100%; }
   }
 
+  /* ===== confete espalhado pelo fundo ===== */
   .confete-bg {
     position: fixed;
     width: 9px;
@@ -98,6 +100,7 @@
     z-index: 1;
   }
 
+  /* ===== Logo topo ===== */
   @keyframes logoFloat {
     0%, 100% { transform: translateY(0); }
     50%      { transform: translateY(-6px); }
@@ -189,6 +192,7 @@
     word-wrap: break-word;
   }
 
+  /* ===== Cartão de fidelidade (carimbos) ===== */
   .fidelidade-bloco {
     margin-top: 30px;
     padding-top: 26px;
@@ -204,6 +208,7 @@
     margin: 0 0 16px;
   }
 
+  /* ===== Barra de progresso ===== */
   .progresso-shell {
     width: 100%;
     height: 10px;
@@ -310,6 +315,7 @@
   }
   .fidelidade-premio strong { color: var(--cor-texto); font-weight: 700; }
 
+  /* ===== Estado completo / resgate liberado ===== */
   @keyframes selBounce {
     0%   { opacity: 0; transform: translateY(10px) scale(0.85); }
     60%  { transform: translateY(-3px) scale(1.05); }
@@ -345,6 +351,7 @@
     50%      { transform: translateY(-13px) rotate(180deg); opacity: 0.4; }
   }
 
+  /* ===== CTA WhatsApp estilo Leanttro ===== */
   .cta-whats {
     display: inline-flex;
     align-items: center;
@@ -370,14 +377,14 @@
 
   .rodape { margin-top: 26px; text-align: center; }
   .rodape a {
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--roxo-1);
     font-size: 12px;
     font-weight: 600;
     text-decoration: none;
     letter-spacing: 0.02em;
     transition: color 0.2s ease;
   }
-  .rodape a:hover { color: #ffffff; text-decoration: underline; }
+  .rodape a:hover { color: var(--roxo-2); text-decoration: underline; }
 
   @media (max-width: 380px) {
     .card { padding: 34px 20px 26px; border-radius: 18px; }
@@ -397,18 +404,19 @@
 
   <div class="brilho-varredura"></div>
 
-  <span class="confete-bg" style="left:6%; top:12%; background:#ffffff; animation-delay:0s;"></span>
+  <!-- confetes espalhados pelo fundo -->
+  <span class="confete-bg" style="left:6%; top:12%; background:#6d28d9; animation-delay:0s;"></span>
   <span class="confete-bg" style="left:14%; top:70%; background:#a78bfa; animation-delay:0.4s;"></span>
-  <span class="confete-bg" style="left:22%; top:35%; background:#ffffff; animation-delay:0.8s;"></span>
+  <span class="confete-bg" style="left:22%; top:35%; background:#6d28d9; animation-delay:0.8s;"></span>
   <span class="confete-bg" style="left:30%; top:88%; background:#4c1d95; animation-delay:1.2s;"></span>
-  <span class="confete-bg" style="left:8%; top:50%; background:#c4b5fd; animation-delay:1.6s;"></span>
-  <span class="confete-bg" style="right:10%; top:8%; background:#ffffff; animation-delay:0.2s;"></span>
+  <span class="confete-bg" style="left:8%; top:50%; background:#7c3aed; animation-delay:1.6s;"></span>
+  <span class="confete-bg" style="right:10%; top:8%; background:#6d28d9; animation-delay:0.2s;"></span>
   <span class="confete-bg" style="right:18%; top:60%; background:#a78bfa; animation-delay:0.6s;"></span>
-  <span class="confete-bg" style="right:6%; top:30%; background:#ffffff; animation-delay:1s;"></span>
+  <span class="confete-bg" style="right:6%; top:30%; background:#6d28d9; animation-delay:1s;"></span>
   <span class="confete-bg" style="right:26%; top:80%; background:#4c1d95; animation-delay:1.4s;"></span>
-  <span class="confete-bg" style="right:14%; top:45%; background:#c4b5fd; animation-delay:1.8s;"></span>
+  <span class="confete-bg" style="right:14%; top:45%; background:#7c3aed; animation-delay:1.8s;"></span>
   <span class="confete-bg" style="left:48%; top:6%; background:#a78bfa; animation-delay:0.3s;"></span>
-  <span class="confete-bg" style="left:42%; top:92%; background:#ffffff; animation-delay:0.9s;"></span>
+  <span class="confete-bg" style="left:42%; top:92%; background:#6d28d9; animation-delay:0.9s;"></span>
 
   <div class="wrapper">
 
