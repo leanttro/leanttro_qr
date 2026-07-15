@@ -807,6 +807,21 @@ def fidelize_painel():
         for t in templates_gamificacao
     ])
 
+    # União (sem duplicar por nome) de todos os campos extras de qualquer
+    # template da família "gamificacao*" — alimenta o formulário de edição
+    # em massa. Cada página, na hora de salvar, só recebe os campos que o
+    # SEU PRÓPRIO template realmente tem (ver fidelize_aplicar_campos_todos);
+    # os demais são simplesmente ignorados pra aquela página, sem erro.
+    campos_bulk_vistos = set()
+    campos_bulk_uniao = []
+    for t in templates_gamificacao:
+        for c in t.get('campos', []):
+            nome_c = c.get('nome')
+            if not nome_c or nome_c in ('titulo', 'mensagem', 'timeline') or nome_c in campos_bulk_vistos:
+                continue
+            campos_bulk_vistos.add(nome_c)
+            campos_bulk_uniao.append(c)
+
     # Prefixo fixo do link (nome do negócio slugificado + '-'), pra manter a
     # marca no link mesmo quando ela edita a parte de trás. Mesma função
     # (slugify_cidade) usada em _fidelize_gerar_slug_unico, pra consistência.
@@ -848,6 +863,7 @@ def fidelize_painel():
         current_year=datetime.now().year,
         templates_gamificacao=templates_gamificacao,
         templates_gamificacao_json=templates_gamificacao_json,
+        campos_bulk_uniao=campos_bulk_uniao,
     )
 
 
@@ -917,6 +933,88 @@ def fidelize_aplicar_template_todos():
     """, (template_form, conta_id))
 
     flash('Modelo aplicado a todos os seus QR codes!', 'success')
+    return redirect('/painel')
+
+
+# --- EDITAR TÍTULO/MENSAGEM/CAMPOS EXTRAS DE TODOS OS QR CODES DE UMA VEZ ---
+# Sobrescreve título e mensagem com o mesmo valor em TODOS os cartões da
+# conta (decisão consciente: é uma reescrita em massa mesmo, não um "aplicar
+# só onde tiver vazio"). Os campos extras (ex: meta, prêmio) só são
+# sobrescritos página por página SE o template daquela página específica
+# realmente tiver aquele campo — como páginas podem estar em templates
+# diferentes da família "gamificacao*", um campo que não existe no template
+# de uma página é simplesmente ignorado pra ela, sem erro.
+@app.route('/painel/aplicar-campos-todos', methods=['POST'], subdomain='fidelize')
+@fidelize_login_required
+def fidelize_aplicar_campos_todos():
+    conta_id = session['fidelize_conta_id']
+    paginas = query_all(
+        "SELECT id, template, campos_extra, foto_url FROM brindes_paginas WHERE conta_id = %s",
+        (conta_id,)
+    )
+    if not paginas:
+        flash('Você ainda não tem nenhum QR code criado.', 'error')
+        return redirect('/painel')
+
+    titulo = request.form.get('titulo', '').strip()
+    mensagem = request.form.get('mensagem', '')
+
+    # Foto compartilhada é opcional — só sobe UMA vez (se ela escolher um
+    # arquivo) e a mesma URL é reaproveitada em toda página cujo template
+    # tenha campo de imagem.
+    foto_url_compartilhada = None
+    f = request.files.get('foto')
+    if f and f.filename:
+        foto_url_compartilhada = upload_imgur(f)
+        if not foto_url_compartilhada:
+            flash('Título/mensagem/campos foram salvos, mas houve erro ao enviar a foto compartilhada.', 'error')
+
+    campos_fixos = {'titulo', 'mensagem', 'foto', 'imagem', 'timeline'}
+    atualizados = 0
+
+    for p in paginas:
+        tpl = get_template_por_slug(p.get('template'))
+        campos_tpl = (tpl or {}).get('campos', [])
+
+        campos_extra_existentes = p.get('campos_extra') or {}
+        if isinstance(campos_extra_existentes, str):
+            try:
+                campos_extra_existentes = json.loads(campos_extra_existentes)
+            except (ValueError, TypeError):
+                campos_extra_existentes = {}
+        campos_extra = dict(campos_extra_existentes)
+
+        for campo in campos_tpl:
+            nome_campo = campo.get('nome')
+            if not nome_campo or nome_campo in campos_fixos or nome_campo not in request.form:
+                continue
+            valor_form = request.form.get(nome_campo, '').strip()
+            if campo.get('tipo') == 'numero':
+                try:
+                    campos_extra[nome_campo] = int(valor_form) if valor_form else None
+                except ValueError:
+                    campos_extra[nome_campo] = None
+            else:
+                campos_extra[nome_campo] = valor_form
+
+        foto_url = p.get('foto_url')
+        if foto_url_compartilhada and 'imagem' in {c.get('tipo') for c in campos_tpl}:
+            foto_url = foto_url_compartilhada
+
+        execute("""
+            UPDATE brindes_paginas
+            SET titulo = %s, mensagem = %s, foto_url = %s, campos_extra = %s
+            WHERE id = %s
+        """, (
+            titulo,
+            mensagem,
+            foto_url,
+            psycopg2.extras.Json(campos_extra),
+            p['id'],
+        ))
+        atualizados += 1
+
+    flash(f'{atualizados} cartão(ões) atualizado(s) com sucesso!', 'success')
     return redirect('/painel')
 
 
