@@ -729,7 +729,7 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
           <table>
             <thead>
               <tr>
-                <th>Link (slug)</th><th>E-mail</th><th>Destino</th><th>Plano</th>
+                <th>Link (slug)</th><th>E-mail</th><th>Destino</th><th>Template</th><th>Plano</th>
                 <th>Scans</th><th>Status</th><th>Criada em</th><th>Ações</th>
               </tr>
             </thead>
@@ -748,6 +748,18 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
                   <input form="editar-pagina-{{ p.id }}" type="email" name="email" value="{{ p.email or '' }}" placeholder="sem e-mail" style="width:170px; font-size:12.5px; padding:6px 8px; border:1px solid var(--border2); border-radius:6px;">
                 </td>
                 <td class="td-muted">{{ p.tipo_destino }}</td>
+                <td>
+                  <!-- Admin pode atribuir QUALQUER template aqui, incluindo os
+                       marcados "exclusivo" no .json — essa tela não passa pela
+                       checagem de templates_extras (essa é só pro painel do
+                       próprio cliente). É o jeito de dar um template único pra
+                       uma página específica sem precisar de conta Fidelize. -->
+                  <select form="editar-pagina-{{ p.id }}" name="template" style="width:150px; font-size:12.5px; padding:6px 8px; border:1px solid var(--border2); border-radius:6px; background:#fff;">
+                    {% for t in templates %}
+                      <option value="{{ t.slug }}" {{ 'selected' if p.template == t.slug }}>{{ t.nome }}{{ ' (exclusivo)' if t.exclusivo }}</option>
+                    {% endfor %}
+                  </select>
+                </td>
                 <td><span class="badge {{ 'badge-green' if p.plano == 'pago' else 'badge-gray' }}">{{ p.plano }}</span></td>
                 <td style="font-weight:600;">{{ p.total_scans }}</td>
                 <td><span class="badge {{ 'badge-green' if p.ativo else 'badge-gray' }}">{{ 'Ativa' if p.ativo else 'Inativa' }}</span></td>
@@ -762,7 +774,7 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
                 </td>
               </tr>
               {% else %}
-              <tr><td colspan="8" class="empty-state">Nenhuma página criada ainda.</td></tr>
+              <tr><td colspan="9" class="empty-state">Nenhuma página criada ainda.</td></tr>
               {% endfor %}
             </tbody>
           </table>
