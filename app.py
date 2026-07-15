@@ -34,6 +34,14 @@ def _env_obrigatoria(nome):
 app = Flask(__name__)
 app.secret_key = _env_obrigatoria("SECRET_KEY")
 
+# --- SUBDOMÍNIO (fidelize.qrcodebrindes.com.br) ---
+# SERVER_NAME só existe se a env SERVER_NAME estiver setada. Sem isso, o
+# Werkzeug não tem como calcular subdomínio a partir do Host (é assim que o
+# Flask decide se uma rota com subdomain='fidelize' bate ou não) — mas setar
+# fixo no código quebraria o `app.run()` local, onde o Host é localhost:5002.
+# Em produção (Dokploy), defina SERVER_NAME=qrcodebrindes.com.br no .env.
+app.config['SERVER_NAME'] = os.getenv('SERVER_NAME')
+
 # --- CONFIGURAÇÕES ---
 BASE_URL = os.getenv("BASE_URL", "https://qrcodebrindes.com")
 
@@ -187,6 +195,26 @@ def admin_required(f):
             return redirect('/admin/login')
         return f(*args, **kwargs)
     return decorated
+
+
+# --- REDE DE SEGURANÇA PRO SERVER_NAME ---
+@app.before_request
+def redireciona_www_para_apex():
+    """Com SERVER_NAME fixo (necessário pro subdomínio fidelize funcionar),
+    um Host 'www.qrcodebrindes.com.br' NÃO bate com nenhuma rota — o Werkzeug
+    trataria 'www' como se fosse só mais um subdomínio desconhecido, e tudo
+    devolveria 404. Isso só é um problema se o Traefik alguma hora mandar
+    tráfego de www direto pro container; se o Traefik já redireciona www pra
+    apex antes de chegar aqui, este bloco nunca dispara — é só um seguro.
+    Só entra em ação se SERVER_NAME estiver configurado (ou seja, em produção)."""
+    server_name = app.config.get('SERVER_NAME')
+    if not server_name:
+        return
+    host = request.host
+    host_sem_porta = host.split(':')[0].lower()
+    if host_sem_porta == f"www.{server_name}".lower():
+        apex_com_porta = host[4:]  # remove só o "www." do início, preserva porta se houver
+        return redirect(f"{request.scheme}://{apex_com_porta}{request.full_path}", code=301)
 
 
 # --- MIDDLEWARE ANTI-BOT (mesmo padrão do SOS Motoboy) ---
@@ -616,6 +644,183 @@ def qr_png(slug):
     img.save(buf, format='PNG')
     buf.seek(0)
     return send_file(buf, mimetype='image/png')
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# FIDELIZE — SaaS de fidelidade B2B (fidelize.qrcodebrindes.com.br)
+# Mesmo app, mesmo banco. Isolado por subdomain='fidelize' em cada rota.
+# Reaproveita (NÃO duplica): render_pagina, carregar_templates,
+# get_template_por_slug, geração de QR (qrcode.make), query_one/query_all/
+# execute/execute_returning, generate_password_hash/check_password_hash,
+# check_limit/get_ip, gerar_senha_aleatoria e slugify_cidade — tudo já
+# definido acima. A rota pública /q/<slug> e /<slug> (sem subdomínio)
+# continuam sendo o único ponto de entrada dos clientes finais, tenham eles
+# conta_id ou não — nada muda lá.
+#
+# Chave de sessão própria (fidelize_conta_id), separada de pagina_id /
+# admin_id, pra não conflitar com os outros logins do projeto.
+# ═══════════════════════════════════════════════════════════════════════
+
+def get_conta_fidelize_by_email(email):
+    return query_one(
+        "SELECT * FROM brindes_fidelidade_contas WHERE email = %s",
+        (email,)
+    )
+
+
+def fidelize_login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get('fidelize_conta_id'):
+            return redirect('/login')
+        return f(*args, **kwargs)
+    return decorated
+
+
+def _fidelize_gerar_slug_unico(nome_negocio):
+    """Slug público pra página de fidelidade: nome do negócio + sufixo
+    aleatório curto, verificando colisão contra brindes_paginas."""
+    base = slugify_cidade(nome_negocio) or 'fidelidade'
+    for _ in range(20):
+        candidato = f"{base}-{secrets.token_hex(3)}"
+        if not get_pagina_by_slug(candidato):
+            return candidato
+    return f"fidelidade-{secrets.token_hex(6)}"  # fallback, praticamente nunca deve cair aqui
+
+
+@app.route('/', subdomain='fidelize')
+def fidelize_home():
+    return render_template('fidelize/home.html', current_year=datetime.now().year)
+
+
+@app.route('/cadastro', methods=['GET', 'POST'], subdomain='fidelize')
+def fidelize_cadastro():
+    erro = None
+    if request.method == 'POST':
+        if not check_limit(f"fidelize_cadastro_{get_ip()}", 10, 3600):
+            flash('Muitas tentativas. Tente novamente mais tarde.', 'error')
+            return redirect('/cadastro')
+
+        nome_negocio = (request.form.get('nome_negocio') or '').strip()
+        email = (request.form.get('email') or '').strip().lower()
+        senha = request.form.get('senha') or ''
+
+        if not nome_negocio or not email or not senha:
+            erro = 'Preencha todos os campos.'
+        elif get_conta_fidelize_by_email(email):
+            erro = 'Já existe uma conta com esse e-mail.'
+        else:
+            conta_id = execute_returning("""
+                INSERT INTO brindes_fidelidade_contas
+                    (nome_negocio, email, senha_hash, plano_tipo, qr_codes_disponiveis, mensalidade_ativa, ativo)
+                VALUES (%s, %s, %s, 'pacote', 0, FALSE, TRUE)
+                RETURNING id
+            """, (nome_negocio, email, generate_password_hash(senha)))
+
+            session['fidelize_conta_id'] = conta_id
+            session['fidelize_conta_nome'] = nome_negocio
+            flash('Conta criada com sucesso! Fale com a gente pra liberar seu primeiro pacote de QR codes.', 'success')
+            return redirect('/painel')
+
+    return render_template('fidelize/cadastro.html', erro=erro, current_year=datetime.now().year)
+
+
+@app.route('/login', methods=['GET', 'POST'], subdomain='fidelize')
+def fidelize_login():
+    erro = None
+    if request.method == 'POST':
+        if not check_limit(f"fidelize_login_{get_ip()}", 10, 60):
+            flash('Muitas tentativas. Aguarde.', 'error')
+            return render_template('fidelize/login.html', current_year=datetime.now().year)
+
+        email = (request.form.get('email') or '').strip().lower()
+        senha = request.form.get('senha') or ''
+        conta = get_conta_fidelize_by_email(email)
+
+        if conta and conta['ativo'] and check_password_hash(conta['senha_hash'], senha):
+            session['fidelize_conta_id'] = conta['id']
+            session['fidelize_conta_nome'] = conta['nome_negocio']
+            return redirect('/painel')
+        erro = 'E-mail ou senha incorretos.'
+
+    return render_template('fidelize/login.html', erro=erro, current_year=datetime.now().year)
+
+
+@app.route('/painel', subdomain='fidelize')
+@fidelize_login_required
+def fidelize_painel():
+    conta_id = session['fidelize_conta_id']
+    conta = query_one("SELECT * FROM brindes_fidelidade_contas WHERE id = %s", (conta_id,))
+    if not conta:
+        session.pop('fidelize_conta_id', None)
+        return redirect('/login')
+
+    paginas = query_all("""
+        SELECT p.id, p.slug, p.template, p.titulo,
+               (SELECT COUNT(*) FROM brindes_scans s WHERE s.pagina_id = p.id) AS total_scans
+        FROM brindes_paginas p
+        WHERE p.conta_id = %s
+        ORDER BY p.id DESC
+    """, (conta_id,))
+
+    return render_template(
+        'fidelize/painel.html',
+        conta=conta,
+        paginas=paginas,
+        base_url=BASE_URL,
+        current_year=datetime.now().year,
+    )
+
+
+@app.route('/painel/criar-qr', methods=['POST'], subdomain='fidelize')
+@fidelize_login_required
+def fidelize_criar_qr():
+    conta_id = session['fidelize_conta_id']
+    conta = query_one("SELECT * FROM brindes_fidelidade_contas WHERE id = %s", (conta_id,))
+    if not conta:
+        session.pop('fidelize_conta_id', None)
+        return redirect('/login')
+
+    if not (conta['mensalidade_ativa'] or conta['qr_codes_disponiveis'] > 0):
+        flash('Você não tem QR codes disponíveis. Fale com a gente pra liberar um pacote novo.', 'error')
+        return redirect('/painel')
+
+    slug = _fidelize_gerar_slug_unico(conta['nome_negocio'])
+    # A coluna senha_hash é usada pelo login individual de /<slug>/login (fluxo
+    # já existente do projeto); no fluxo fidelize o dono não usa essa senha —
+    # ele gerencia tudo pelo /painel — mas geramos uma pra manter a coluna
+    # preenchida e a Pagina 100% compatível com o resto da infra existente.
+    senha_interna = gerar_senha_aleatoria()
+
+    execute("""
+        INSERT INTO brindes_paginas
+            (slug, senha_hash, tipo_destino, template, titulo, email, plano, ativo, conta_id)
+        VALUES (%s, %s, 'pagina', 'gamificacao', %s, %s, 'gratis', TRUE, %s)
+    """, (
+        slug,
+        generate_password_hash(senha_interna),
+        conta['nome_negocio'],
+        conta['email'],
+        conta_id,
+    ))
+
+    if conta['plano_tipo'] == 'pacote':
+        execute(
+            "UPDATE brindes_fidelidade_contas SET qr_codes_disponiveis = qr_codes_disponiveis - 1 WHERE id = %s",
+            (conta_id,)
+        )
+
+    flash('QR code criado com sucesso!', 'success')
+    return redirect('/painel')
+
+
+@app.route('/logout', subdomain='fidelize')
+def fidelize_logout():
+    # session.pop específico (não session.clear()) pra não derrubar, por
+    # exemplo, uma sessão de /<slug>/login aberta na mesma aba/domínio.
+    session.pop('fidelize_conta_id', None)
+    session.pop('fidelize_conta_nome', None)
+    return redirect('/')
 
 
 # --- LOGIN DA PÁGINA (slug + senha) ---
