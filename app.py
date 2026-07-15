@@ -1361,6 +1361,10 @@ def _admin_contexto_base():
         'total_empresas': query_one("SELECT COUNT(*) as c FROM brindes_empresas WHERE ativo = TRUE")['c'],
         'empresas_pendentes': query_one("SELECT COUNT(*) as c FROM brindes_empresas WHERE ativo = FALSE")['c'],
         'leads_pendentes': query_one("SELECT COUNT(*) as c FROM brindes_leads WHERE status = 'pendente'")['c'],
+        'fidelize_aguardando': query_one("""
+            SELECT COUNT(*) as c FROM brindes_fidelidade_contas
+            WHERE ativo = TRUE AND mensalidade_ativa = FALSE AND qr_codes_disponiveis = 0
+        """)['c'],
     }
     ocasioes = query_all("SELECT * FROM brindes_ocasioes ORDER BY nome")
     tipos = query_all("SELECT * FROM brindes_tipos_impressao ORDER BY nome")
@@ -1394,6 +1398,13 @@ def _admin_contexto_base():
         ORDER BY p.created_at DESC
     """)
     templates = carregar_templates()
+    contas_fidelize = query_all("""
+        SELECT c.*, COUNT(p.id) as total_qrs_criados
+        FROM brindes_fidelidade_contas c
+        LEFT JOIN brindes_paginas p ON p.conta_id = c.id
+        GROUP BY c.id
+        ORDER BY c.criado_em DESC
+    """)
     # Cidades distintas com slug preenchido, pra popular o select de escopo
     # de anúncio por cidade (usa as mesmas cidades já cadastradas em empresas).
     cidades = query_all("""
@@ -1406,6 +1417,7 @@ def _admin_contexto_base():
         stats=stats, ocasioes=ocasioes, tipos=tipos,
         brindes=brindes, empresas=empresas, empresas_pendentes=empresas_pendentes,
         leads=leads, paginas=paginas, templates=templates, cidades=cidades,
+        contas_fidelize=contas_fidelize,
     )
 
 
@@ -1904,6 +1916,55 @@ def admin_empresas_toggle_plano(item_id):
 def admin_empresas_delete(item_id):
     execute("DELETE FROM brindes_empresas WHERE id = %s", (item_id,))
     return redirect('/admin#empresas')
+
+
+# --- FIDELIZE (liberação manual de conta, mesmo padrão de "template pago":
+# sem gateway integrado, admin confirma o pagamento fora do sistema e libera
+# um pacote de QR codes na mão) ---
+@app.route('/admin/fidelize/<int:conta_id>/liberar', methods=['POST'])
+@admin_required
+def admin_fidelize_liberar(conta_id):
+    try:
+        quantidade = int(request.form.get('quantidade', '0'))
+    except (TypeError, ValueError):
+        quantidade = 0
+
+    if quantidade > 0:
+        execute(
+            "UPDATE brindes_fidelidade_contas SET qr_codes_disponiveis = qr_codes_disponiveis + %s WHERE id = %s",
+            (quantidade, conta_id)
+        )
+        flash(f'{quantidade} QR code(s) liberado(s) com sucesso.', 'success')
+    else:
+        flash('Informe uma quantidade válida.', 'error')
+
+    return redirect('/admin#fidelize')
+
+
+@app.route('/admin/fidelize/<int:conta_id>/toggle-mensalidade', methods=['POST'])
+@admin_required
+def admin_fidelize_toggle_mensalidade(conta_id):
+    conta = query_one("SELECT mensalidade_ativa FROM brindes_fidelidade_contas WHERE id = %s", (conta_id,))
+    if conta:
+        execute(
+            "UPDATE brindes_fidelidade_contas SET mensalidade_ativa = %s WHERE id = %s",
+            (not conta['mensalidade_ativa'], conta_id)
+        )
+    return redirect('/admin#fidelize')
+
+
+@app.route('/admin/fidelize/<int:conta_id>/toggle', methods=['POST'])
+@admin_required
+def admin_fidelize_toggle(conta_id):
+    """Ativa/bloqueia a conta inteira — conta bloqueada não consegue mais
+    logar em fidelize.qrcodebrindes.com.br (checado em fidelize_login)."""
+    conta = query_one("SELECT ativo FROM brindes_fidelidade_contas WHERE id = %s", (conta_id,))
+    if conta:
+        execute(
+            "UPDATE brindes_fidelidade_contas SET ativo = %s WHERE id = %s",
+            (not conta['ativo'], conta_id)
+        )
+    return redirect('/admin#fidelize')
 
 
 # --- LEADS ---
