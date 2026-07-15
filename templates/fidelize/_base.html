@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block titulo %}Fidelize — Cartão fidelidade com QR code pro seu negócio{% endblock %}</title>
+<meta name="description" content="{% block descricao %}Fidelize seus clientes com um cartão de fidelidade digital via QR code. Cada cliente ganha um cartão que evolui conforme ele volta.{% endblock %}">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#ffffff">
+
+<link rel="icon" type="image/png" href="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+    --bg:#ffffff;
+    --surface:#f6f6f8;
+    --surface-2:#eeeef1;
+    --ink:#17171a;
+    --ink-soft:#63636c;
+    --ink-faint:#9797a0;
+    --line:#e2e2e7;
+    --line-strong:#cfcfd6;
+    --chrome-1:#fcfcfd;
+    --chrome-2:#d7d7dd;
+    --chrome-3:#9a9aa2;
+    --chrome-4:#4a4a52;
+    --ink-black:#111113;
+    --focus:#3b6ef0;
+    --radius:14px;
+    --shadow-sm:0 1px 2px rgba(20,20,25,.06);
+    --shadow-md:0 8px 24px rgba(20,20,25,.08);
+    --shadow-lg:0 24px 64px rgba(20,20,25,.14);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Montserrat',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+    max-width:100%;
+}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+.container{max-width:1180px;margin:0 auto;padding:0 24px}
+h1,h2,h3{font-family:'Montserrat',sans-serif;margin:0;color:var(--ink-black)}
+:focus-visible{outline:2px solid var(--focus);outline-offset:3px;border-radius:4px}
+
+/* ============ HEADER ============ */
+header{
+    position:relative;
+    background:rgba(255,255,255,.88);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 24px;
+    gap:16px;
+}
+.header-logo a{display:flex;align-items:center;gap:10px}
+.header-logo img{height:38px;width:auto;border-radius:8px}
+.header-logo span{font-weight:800;font-size:1.15em;color:var(--ink-black);letter-spacing:-.01em}
+.desktop-nav ul{list-style:none;display:flex;gap:26px;margin:0;padding:0;align-items:center}
+.desktop-nav a{font-size:.94em;font-weight:500;color:var(--ink-soft);transition:color .15s}
+.desktop-nav a:hover{color:var(--ink-black)}
+.header-actions{display:flex;align-items:center;gap:12px}
+.btn-nav-cta{
+    background:linear-gradient(180deg, var(--chrome-1) 0%, #e3e3e8 55%, var(--chrome-2) 100%);
+    color:var(--ink-black);
+    padding:11px 22px;border-radius:10px;
+    font-size:.9em;font-weight:700;letter-spacing:.01em;
+    border:1px solid var(--line-strong);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 0 1px 3px rgba(20,20,25,.1);
+    transition:transform .15s, box-shadow .15s, background .15s;
+    cursor:pointer;
+}
+.btn-nav-cta:hover{
+    background:linear-gradient(180deg, #ffffff 0%, var(--chrome-2) 55%, var(--chrome-3) 100%);
+    transform:translateY(-1px);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 0 6px 16px rgba(20,20,25,.16);
+}
+.btn-nav-secondary{
+    background:transparent;
+    color:var(--ink-black);
+    padding:10px 20px;border-radius:10px;
+    font-size:.9em;font-weight:700;letter-spacing:.01em;
+    border:1px solid var(--line-strong);
+    transition:background .15s, border-color .15s;
+    cursor:pointer;
+}
+.btn-nav-secondary:hover{
+    background:rgba(20,20,25,.05);
+    border-color:var(--ink-black);
+}
+
+/* ============ FLASH ============ */
+.flash-wrap{max-width:640px;margin:20px auto 0;padding:0 24px}
+.flash{
+    border-radius:10px;padding:13px 16px;font-size:.92em;font-weight:600;
+    border:1px solid var(--line-strong);margin-bottom:10px;
+}
+.flash-success{background:#eefaf0;color:#1c6b31;border-color:#bfe8c8}
+.flash-error{background:#fdeeee;color:#a02323;border-color:#f3c6c6}
+
+/* ============ FORM CARD (login/cadastro) ============ */
+.form-wrap{max-width:460px;margin:56px auto 80px;padding:0 24px}
+.form-card{
+    background:var(--chrome-1);
+    border:1px solid var(--line-strong);
+    border-radius:var(--radius);
+    padding:32px 28px;
+    box-shadow:var(--shadow-lg);
+}
+.form-card h1{font-size:1.5em;margin-bottom:8px}
+.form-card .sub{color:var(--ink-soft);font-size:.94em;margin-bottom:24px;line-height:1.5}
+.form-field{margin-bottom:16px}
+.form-field label{display:block;font-size:.82em;font-weight:700;color:var(--chrome-4);text-transform:uppercase;letter-spacing:.04em;margin-bottom:7px}
+.form-input{
+    width:100%;background:var(--surface);border:1px solid var(--line-strong);border-radius:10px;
+    padding:13px 14px;font-size:.98em;font-family:'Montserrat',sans-serif;color:var(--ink);
+}
+.form-input:focus{outline:2px solid var(--focus);outline-offset:1px}
+.btn-form{
+    width:100%;background:var(--ink-black);color:#fff;border:1px solid var(--ink-black);
+    padding:14px 22px;border-radius:10px;font-weight:700;font-size:.98em;cursor:pointer;
+    margin-top:6px;transition:transform .15s, box-shadow .15s;
+}
+.btn-form:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(17,17,19,.28)}
+.form-footer-link{text-align:center;margin-top:20px;font-size:.9em;color:var(--ink-soft)}
+.form-footer-link a{color:var(--ink-black);font-weight:700}
+
+/* ============ FOOTER ============ */
+footer{background:#0c0c0e;color:#e8e8ea;padding:40px 0 24px;margin-top:60px}
+footer p{color:#9a9aa4;font-size:.9em;line-height:1.6;max-width:44ch;margin:8px 0 0}
+.footer-bottom{
+    border-top:1px solid #2a2a2e;margin-top:26px;padding-top:20px;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
+    font-size:.82em;color:#7a7a84;
+}
+.footer-logo{display:flex;align-items:center;gap:10px;font-weight:800;color:#fff}
+.footer-logo img{height:30px;border-radius:6px}
+
+@media (max-width:900px){
+    .desktop-nav{display:none}
+    header{padding:12px 18px}
+    .form-wrap{margin:36px auto 56px}
+    .form-card{padding:26px 20px}
+}
+{% block extra_css %}{% endblock %}
+</style>
+</head>
+<body>
+
+<header>
+    <div class="header-logo">
+        <a href="/" aria-label="Fidelize — página inicial">
+            <img src="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png" alt="">
+            <span>Fidelize</span>
+        </a>
+    </div>
+    <nav class="desktop-nav" aria-label="Navegação principal">
+        <ul>
+            {% if session.get('fidelize_conta_id') %}
+                <li><a href="/painel">Meu painel</a></li>
+            {% else %}
+                <li><a href="https://{{ base_url_apex or 'qrcodebrindes.com.br' }}">QR Code Brindes</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    <div class="header-actions">
+        {% if session.get('fidelize_conta_id') %}
+            <a class="btn-nav-secondary" href="/logout">Sair</a>
+        {% else %}
+            <a class="btn-nav-secondary" href="/login">Entrar</a>
+            <a class="btn-nav-cta" href="/cadastro">Criar minha conta grátis</a>
+        {% endif %}
+    </div>
+</header>
+
+{% with mensagens = get_flashed_messages(with_categories=true) %}
+    {% if mensagens %}
+        <div class="flash-wrap">
+            {% for categoria, msg in mensagens %}
+                <div class="flash flash-{{ 'success' if categoria == 'success' else 'error' }}">{{ msg }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+{% block conteudo %}{% endblock %}
+
+<footer>
+    <div class="container">
+        <div class="footer-logo">
+            <img src="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png" alt="">
+            <span>Fidelize</span>
+        </div>
+        <p>Um produto QR Code Brindes — cartão de fidelidade digital via QR code pro seu negócio.</p>
+        <div class="footer-bottom">
+            <span>© {{ current_year }} Fidelize</span>
+            <span>Cada cliente que volta, você vê aqui</span>
+        </div>
+    </div>
+</footer>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

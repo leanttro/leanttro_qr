@@ -1,0 +1,96 @@
+{% extends "fidelize/_base.html" %}
+
+{% block extra_css %}
+.hero{
+    border-bottom:1px solid var(--line);
+    padding:64px 0 56px;
+    background:linear-gradient(180deg, #ffffff 0%, var(--surface) 100%);
+}
+.hero-inner{max-width:720px;margin:0 auto;text-align:center}
+.eyebrow{
+    display:inline-flex;align-items:baseline;gap:12px;
+    font-size:.78em;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--chrome-4);margin-bottom:22px;
+}
+.hero h1{font-size:clamp(2em,4vw,3em);line-height:1.1;font-weight:700;letter-spacing:-.01em;margin-bottom:18px}
+.hero-sub{font-size:1.1em;color:var(--ink-soft);line-height:1.6;margin:0 auto 32px;max-width:52ch}
+.hero-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+.como-funciona{padding:64px 0;border-bottom:1px solid var(--line)}
+.como-funciona h2{font-size:1.7em;text-align:center;margin-bottom:44px}
+.passos{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:980px;margin:0 auto}
+.passo{background:var(--chrome-1);border:1px solid var(--line-strong);border-radius:var(--radius);padding:26px;box-shadow:var(--shadow-sm)}
+.passo-num{
+    width:34px;height:34px;border-radius:50%;background:var(--ink-black);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9em;margin-bottom:14px;
+}
+.passo h3{font-size:1.05em;margin-bottom:8px}
+.passo p{color:var(--ink-soft);font-size:.92em;line-height:1.6;margin:0}
+
+.modelo{padding:64px 0}
+.modelo-card{
+    max-width:760px;margin:0 auto;background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--radius);padding:32px;
+}
+.modelo-card h2{font-size:1.4em;margin-bottom:14px}
+.modelo-card p{color:var(--ink-soft);line-height:1.7;margin:0 0 14px}
+.modelo-lista{list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:10px}
+.modelo-lista li{display:flex;gap:10px;font-size:.95em;color:var(--ink)}
+.modelo-lista li::before{content:"✓";font-weight:700;color:var(--ink-black)}
+
+@media (max-width:900px){
+    .passos{grid-template-columns:1fr}
+}
+{% endblock %}
+
+{% block conteudo %}
+<section class="hero">
+    <div class="container hero-inner">
+        <div class="eyebrow">Fidelidade sem app pra baixar</div>
+        <h1>Fidelize seus clientes com um QR code — cada um ganha um cartão que evolui conforme ele volta</h1>
+        <p class="hero-sub">Seu cliente escaneia, acompanha os carimbos e sabe exatamente quanto falta pro prêmio. Sem app, sem cartão de papel pra perder.</p>
+        <div class="hero-ctas">
+            <a class="btn-nav-cta" href="/cadastro">Criar minha conta grátis</a>
+            <a class="btn-nav-secondary" href="/login">Já tenho conta</a>
+        </div>
+    </div>
+</section>
+
+<section class="como-funciona">
+    <div class="container">
+        <h2>Como funciona</h2>
+        <div class="passos">
+            <div class="passo">
+                <div class="passo-num">1</div>
+                <h3>Você cria sua conta</h3>
+                <p>Cadastro rápido com o nome do seu negócio, e-mail e senha. Sem cartão de crédito.</p>
+            </div>
+            <div class="passo">
+                <div class="passo-num">2</div>
+                <h3>Gera o QR code fidelidade</h3>
+                <p>No seu painel, cria um Cartão Fidelidade digital em um clique e coloca o QR no balcão.</p>
+            </div>
+            <div class="passo">
+                <div class="passo-num">3</div>
+                <h3>Cliente escaneia e volta mais</h3>
+                <p>A cada visita, o cliente vê o progresso do cartão — e você acompanha tudo pelo painel.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="modelo">
+    <div class="container">
+        <div class="modelo-card">
+            <h2>Como funciona o pacote de QR codes</h2>
+            <p>Você compra um pacote com uma quantidade de QR codes de fidelidade. Cada QR code criado no seu painel consome um do pacote — quando acabar, é só renovar.</p>
+            <ul class="modelo-lista">
+                <li>Sem mensalidade obrigatória pra começar</li>
+                <li>Cada QR code é um cartão de fidelidade completo, com progresso e prêmio</li>
+                <li>Painel simples: veja scans e cartões ativos num só lugar</li>
+            </ul>
+            <a class="btn-nav-cta" href="/cadastro">Criar minha conta grátis</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
