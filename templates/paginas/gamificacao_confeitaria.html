@@ -14,7 +14,7 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Cartão Fidelidade — Doce Encanto</title>
+<title>{{ page.titulo }}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -35,7 +35,7 @@
   html, body { margin: 0; padding: 0; min-height: 100%; }
 
   body {
-    font-family: 'Montserrat', sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    font-family: 'Montserrat', {{ font_css }}, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
     font-weight: 500;
     color: var(--cor-texto);
     min-height: 100vh;
@@ -115,8 +115,8 @@
   }
 
   .titulo {
-    font-family: 'Montserrat', sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-    font-size: calc(15px + 8px);
+    font-family: 'Montserrat', {{ font_css }}, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    font-size: calc({{ font_size_val }}px + 8px);
     font-weight: 800;
     letter-spacing: -0.02em;
     color: var(--choc-1);
@@ -126,7 +126,7 @@
   }
 
   .mensagem {
-    font-size: 15px;
+    font-size: {{ font_size_val }}px;
     font-weight: 400;
     line-height: 1.75;
     color: var(--cor-texto-suave);
@@ -261,17 +261,17 @@
 
   @media (max-width: 380px) {
     .card { padding: 32px 20px 26px; border-radius: 18px; }
-    .titulo { font-size: calc(15px + 5px); }
+    .titulo { font-size: calc({{ font_size_val }}px + 5px); }
     .carimbo { width: 34px; height: 34px; }
   }
 </style>
 </head>
 <body>
 
-  
-  
-  
-  
+  {% set meta = (page.meta or 10) | int %}
+  {% set atual_bruto = (carimbos_atual or 0) | int %}
+  {% set atual = [atual_bruto, meta] | min %}
+  {% set completo = atual_bruto >= meta %}
 
   <!-- confeitos espalhados pelo fundo -->
   <span class="confete-bg" style="left:6%; top:12%; background:#ffffff; animation-delay:0s;"></span>
@@ -289,73 +289,47 @@
 
   <div class="wrapper">
     <div class="card">
-      <h1 class="titulo">Cartão Fidelidade — Doce Encanto</h1>
-      <p class="mensagem">A cada encomenda, peça pra gente carimbar seu cartão!
-Junte e ganhe uma delícia especial.</p>
+      <h1 class="titulo">{{ page.titulo }}</h1>
+      <p class="mensagem">{{ page.mensagem }}</p>
 
       <div class="fidelidade-bloco">
         <p class="fidelidade-label">Seu cartão de docinhos</p>
 
         <div class="carimbos-grid">
-          
+          {% for i in range(meta) %}
+            {% if i < atual %}
               <span class="carimbo cheio">
                 <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
                   <path d="M12 21c-.3 0-.58-.11-.8-.32C8.1 17.9 5 14.6 5 11.2 5 8.6 6.9 6.7 9.3 6.7c1.1 0 2.15.5 2.7 1.3.55-.8 1.6-1.3 2.7-1.3 2.4 0 4.3 1.9 4.3 4.5 0 3.4-3.1 6.7-6.2 9.48-.22.21-.5.32-.8.32z"/>
                 </svg>
               </span>
-            
-              <span class="carimbo cheio">
-                <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                  <path d="M12 21c-.3 0-.58-.11-.8-.32C8.1 17.9 5 14.6 5 11.2 5 8.6 6.9 6.7 9.3 6.7c1.1 0 2.15.5 2.7 1.3.55-.8 1.6-1.3 2.7-1.3 2.4 0 4.3 1.9 4.3 4.5 0 3.4-3.1 6.7-6.2 9.48-.22.21-.5.32-.8.32z"/>
-                </svg>
-              </span>
-            
-              <span class="carimbo cheio">
-                <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                  <path d="M12 21c-.3 0-.58-.11-.8-.32C8.1 17.9 5 14.6 5 11.2 5 8.6 6.9 6.7 9.3 6.7c1.1 0 2.15.5 2.7 1.3.55-.8 1.6-1.3 2.7-1.3 2.4 0 4.3 1.9 4.3 4.5 0 3.4-3.1 6.7-6.2 9.48-.22.21-.5.32-.8.32z"/>
-                </svg>
-              </span>
-            
-              <span class="carimbo cheio">
-                <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                  <path d="M12 21c-.3 0-.58-.11-.8-.32C8.1 17.9 5 14.6 5 11.2 5 8.6 6.9 6.7 9.3 6.7c1.1 0 2.15.5 2.7 1.3.55-.8 1.6-1.3 2.7-1.3 2.4 0 4.3 1.9 4.3 4.5 0 3.4-3.1 6.7-6.2 9.48-.22.21-.5.32-.8.32z"/>
-                </svg>
-              </span>
-            
-              <span class="carimbo cheio">
-                <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                  <path d="M12 21c-.3 0-.58-.11-.8-.32C8.1 17.9 5 14.6 5 11.2 5 8.6 6.9 6.7 9.3 6.7c1.1 0 2.15.5 2.7 1.3.55-.8 1.6-1.3 2.7-1.3 2.4 0 4.3 1.9 4.3 4.5 0 3.4-3.1 6.7-6.2 9.48-.22.21-.5.32-.8.32z"/>
-                </svg>
-              </span>
-            
-              <span class="carimbo cheio">
-                <svg viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                  <path d="M12 21c-.3 0-.58-.11-.8-.32C8.1 17.9 5 14.6 5 11.2 5 8.6 6.9 6.7 9.3 6.7c1.1 0 2.15.5 2.7 1.3.55-.8 1.6-1.3 2.7-1.3 2.4 0 4.3 1.9 4.3 4.5 0 3.4-3.1 6.7-6.2 9.48-.22.21-.5.32-.8.32z"/>
-                </svg>
-              </span>
-            
+            {% else %}
               <span class="carimbo vazio"></span>
-            
-              <span class="carimbo vazio"></span>
-            
-              <span class="carimbo vazio"></span>
-            
-              <span class="carimbo vazio"></span>
-            
+            {% endif %}
+          {% endfor %}
         </div>
 
-        
-          <p class="fidelidade-status"><strong>6/10</strong> docinhos — faltam 4 pro prêmio</p>
-        
+        {% if completo %}
+          <p class="fidelidade-status"><strong>{{ meta }}/{{ meta }}</strong> docinhos completos!</p>
+        {% else %}
+          <p class="fidelidade-status"><strong>{{ atual }}/{{ meta }}</strong> docinhos — faltam {{ meta - atual }} pro prêmio</p>
+        {% endif %}
 
-        <p class="fidelidade-premio">Prêmio: <strong>1 dúzia de brigadeiros grátis</strong></p>
+        <p class="fidelidade-premio">Prêmio: <strong>{{ page.premio }}</strong></p>
 
-        
+        {% if completo %}
+          <span class="selo-completo">
+            🍰 Prêmio liberado — vem buscar sua delícia!
+            <span class="confete-selo" style="left:-4px; top:-2px; background:var(--rosa-2); animation-delay:0s;"></span>
+            <span class="confete-selo" style="right:-2px; top:2px; background:#6b4030; animation-delay:0.6s;"></span>
+            <span class="confete-selo" style="right:14px; bottom:-4px; background:var(--rosa-1); animation-delay:1.2s;"></span>
+          </span>
+        {% endif %}
       </div>
     </div>
 
     <div class="rodape">
-      <a href="https://qrcodebrindes.com.br" target="_blank" rel="noopener">Feito com QR Code Brindes &copy; 2026</a>
+      <a href="https://qrcodebrindes.com.br" target="_blank" rel="noopener">Feito com QR Code Brindes &copy; {{ current_year }}</a>
     </div>
   </div>
 
