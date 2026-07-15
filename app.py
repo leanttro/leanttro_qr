@@ -44,6 +44,7 @@ app.config['SERVER_NAME'] = os.getenv('SERVER_NAME')
 
 # --- CONFIGURAÇÕES ---
 BASE_URL = os.getenv("BASE_URL", "https://qrcodebrindes.com")
+FIDELIZE_BASE_URL = os.getenv("FIDELIZE_BASE_URL", "https://fidelize.qrcodebrindes.com.br")
 
 DB_CONFIG = {
     "host": _env_obrigatoria("DB_HOST"),
@@ -824,6 +825,20 @@ def fidelize_logout():
 
 
 # --- LOGIN DA PÁGINA (slug + senha) ---
+def pode_gerenciar_pagina(pagina):
+    """Quem pode editar/carimbar uma Pagina: (a) quem logou individualmente
+    nela (session['pagina_id']), OU (b) o dono da conta fidelize à qual essa
+    Pagina pertence (session['fidelize_conta_id'] == pagina['conta_id']) —
+    assim o dono do negócio gerencia o cartão pelo /painel do Fidelize sem
+    precisar da senha individual aleatória gerada em fidelize_criar_qr."""
+    if session.get('pagina_id') == pagina['id']:
+        return True
+    conta_id = pagina.get('conta_id')
+    if conta_id and session.get('fidelize_conta_id') == conta_id:
+        return True
+    return False
+
+
 @app.route('/<slug>/login', methods=['GET', 'POST'])
 def login_pagina(slug):
     if not check_limit(f"login_{get_ip()}", 10, 60):
@@ -898,7 +913,13 @@ def esqueci_senha(slug):
 
 @app.route('/<slug>/logout')
 def logout_pagina(slug):
-    session.clear()
+    # session.pop específico (não session.clear()) — se quem saiu foi o dono
+    # de uma conta fidelize gerenciando essa página pelo /painel dele, não
+    # queremos derrubar a sessão fidelize_conta_id junto.
+    session.pop('pagina_id', None)
+    session.pop('pagina_slug', None)
+    if session.get('fidelize_conta_id'):
+        return redirect(f'{FIDELIZE_BASE_URL}/painel')
     return redirect(f'/{slug}')
 
 
@@ -909,7 +930,10 @@ def painel_pagina(slug):
     if not pagina:
         abort(404)
 
-    if session.get('pagina_id') != pagina['id']:
+    if not pode_gerenciar_pagina(pagina):
+        if pagina.get('conta_id'):
+            flash('Faça login na sua conta Fidelize pra gerenciar esse QR code.', 'error')
+            return redirect(f'{FIDELIZE_BASE_URL}/login')
         return redirect(f'/{slug}/login')
 
     templates_disponiveis = carregar_templates()
@@ -1014,6 +1038,7 @@ def painel_pagina(slug):
         campos_por_template=campos_por_template,
         anuncio_topo=get_anuncio('topo', contexto='funcionalidade'),
         base_url=BASE_URL,
+        fidelize_base_url=FIDELIZE_BASE_URL,
     )
 
 
@@ -1023,7 +1048,10 @@ def carimbar_pagina(slug):
     pagina = get_pagina_by_slug(slug)
     if not pagina:
         abort(404)
-    if session.get('pagina_id') != pagina['id']:
+    if not pode_gerenciar_pagina(pagina):
+        if pagina.get('conta_id'):
+            flash('Faça login na sua conta Fidelize pra gerenciar esse QR code.', 'error')
+            return redirect(f'{FIDELIZE_BASE_URL}/login')
         return redirect(f'/{slug}/login')
 
     campos_extra = pagina.get('campos_extra') or {}
