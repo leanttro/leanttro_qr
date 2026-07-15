@@ -8,7 +8,7 @@
 .painel-header h1{font-size:1.6em}
 .painel-header p{color:var(--ink-soft);margin:6px 0 0;font-size:.94em}
 
-.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px}
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:28px}
 .stat-card{
     background:var(--chrome-1);border:1px solid var(--line-strong);border-radius:var(--radius);
     padding:20px 22px;box-shadow:var(--shadow-sm);
@@ -171,12 +171,22 @@
             <div class="label">Mensalidade</div>
             <div class="valor">{{ 'Ativa' if conta.mensalidade_ativa else 'Inativa' }}</div>
         </div>
+        <div class="stat-card">
+            <div class="label">QR codes da conta</div>
+            <div class="valor">{{ total_qr_codes_conta }} / {{ limite_qr_codes }}</div>
+        </div>
     </div>
 
-    <form class="criar-qr-form" method="POST" action="/painel/criar-qr">
-        <p>Cria um novo Cartão Fidelidade e gera o QR code pra imprimir no seu balcão.</p>
-        <button class="btn-nav-cta" type="submit">+ Criar novo QR code</button>
-    </form>
+    {% if total_qr_codes_conta >= limite_qr_codes %}
+        <div class="criar-qr-form">
+            <p>Você atingiu o limite de {{ limite_qr_codes }} QR codes da conta. Fale com a gente se precisar de mais.</p>
+        </div>
+    {% else %}
+        <form class="criar-qr-form" method="POST" action="/painel/criar-qr">
+            <p>Cria um novo Cartão Fidelidade e gera o QR code pra imprimir no seu balcão.</p>
+            <button class="btn-nav-cta" type="submit">+ Criar novo QR code</button>
+        </form>
+    {% endif %}
 
     {% if paginas %}
         <div class="criar-qr-form">
@@ -366,7 +376,7 @@
         <div class="modal-box modal-box-ajuda">
             <h3>Como funciona o painel</h3>
             <ul>
-                <li><strong>+ Criar novo QR code</strong> — gera um cartão fidelidade novo, com link e QR code próprios pra um cliente/unidade.</li>
+                <li><strong>+ Criar novo QR code</strong> — gera um cartão fidelidade novo, com link e QR code próprios pra um cliente/unidade. Limite de {{ limite_qr_codes }} QR codes por conta.</li>
                 <li><strong>Editar</strong> (em cada linha) — muda título, mensagem, meta de carimbos e prêmio daquele cartão específico{% if templates_gamificacao|length > 1 %} (e o modelo visual, se você tiver mais de um){% endif %}.</li>
                 <li><strong>+1 / Zerar</strong> — carimba (ou zera) o cartão na mão, direto do painel, sem precisar abrir o link do cliente.</li>
                 <li><strong>Baixar PNG</strong> — baixa a imagem do QR code pra imprimir e colar no balcão.</li>
