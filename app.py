@@ -150,6 +150,16 @@ def rodar_auto_migracoes():
         print(f"Aviso: auto-migração de campos_extra falhou ({e}). "
               f"Salvar campos extras de template pode não funcionar até isso ser corrigido.")
 
+    try:
+        execute("""
+            ALTER TABLE brindes_paginas
+            ADD COLUMN IF NOT EXISTS apelido_slug TEXT
+        """)
+        print("Auto-migração ok: coluna apelido_slug confirmada em brindes_paginas.")
+    except Exception as e:
+        print(f"Aviso: auto-migração de apelido_slug falhou ({e}). "
+              f"Edição de link do Fidelize pode não funcionar até isso ser corrigido.")
+
 
 rodar_auto_migracoes()
 
@@ -753,7 +763,11 @@ def fidelize_login():
         if conta and conta['ativo'] and check_password_hash(conta['senha_hash'], senha):
             session['fidelize_conta_id'] = conta['id']
             session['fidelize_conta_nome'] = conta['nome_negocio']
-            return redirect('/painel')
+            # Se ela veio de um /<slug>/painel ou /<slug>/carimbar sem sessão
+            # válida (ex: primeira visita ao apex depois de logar só no
+            # subdomínio), volta pra lá em vez de sempre cair no /painel.
+            destino = session.pop('fidelize_redirect_apos_login', None)
+            return redirect(destino or '/painel')
         erro = 'E-mail ou senha incorretos.'
 
     return render_template('fidelize/login.html', erro=erro, current_year=datetime.now().year)
@@ -769,7 +783,7 @@ def fidelize_painel():
         return redirect('/login')
 
     paginas = query_all("""
-        SELECT p.id, p.slug, p.template, p.titulo,
+        SELECT p.id, p.slug, p.template, p.titulo, p.apelido_slug,
                (SELECT COUNT(*) FROM brindes_scans s WHERE s.pagina_id = p.id) AS total_scans
         FROM brindes_paginas p
         WHERE p.conta_id = %s
@@ -781,7 +795,13 @@ def fidelize_painel():
     # (slugify_cidade) usada em _fidelize_gerar_slug_unico, pra consistência.
     prefixo_slug = (slugify_cidade(conta['nome_negocio']) or 'fidelidade') + '-'
     for p in paginas:
-        p['sufixo_atual'] = p['slug'][len(prefixo_slug):] if p['slug'].startswith(prefixo_slug) else p['slug']
+        # sufixo_atual é só o "apelido" que ela digitou (ex: teste1) — o
+        # sufixo aleatório escondido que garante o link único (ex: -a1b2)
+        # não aparece aqui, fica só dentro de p['slug'] (o link real).
+        if p.get('apelido_slug'):
+            p['sufixo_atual'] = p['apelido_slug']
+        else:
+            p['sufixo_atual'] = p['slug'][len(prefixo_slug):] if p['slug'].startswith(prefixo_slug) else p['slug']
 
     return render_template(
         'fidelize/painel.html',
@@ -836,7 +856,10 @@ def fidelize_criar_qr():
 
 
 # --- EDITAR O LINK (slug) DE UM QR CODE — prefixo fixo (nome do negócio),
-# só a parte de trás é livre pra ela escolher. ---
+# só a parte de trás é livre pra ela escolher. O que ela digita ("apelido")
+# fica salvo separado do slug real: o slug real leva um sufixo aleatório
+# escondido (nunca aparece no formulário) pra ninguém adivinhar o link de
+# outro cliente só testando nomes comuns. ---
 @app.route('/painel/pagina/<int:pagina_id>/slug', methods=['POST'], subdomain='fidelize')
 @fidelize_login_required
 def fidelize_editar_slug(pagina_id):
@@ -849,28 +872,42 @@ def fidelize_editar_slug(pagina_id):
     # WHERE conta_id = %s garante que ela só edita página da própria conta,
     # mesmo que alguém tente forjar o pagina_id na URL.
     pagina = query_one(
-        "SELECT id, slug FROM brindes_paginas WHERE id = %s AND conta_id = %s",
+        "SELECT id, slug, apelido_slug FROM brindes_paginas WHERE id = %s AND conta_id = %s",
         (pagina_id, conta_id)
     )
     if not pagina:
         abort(404)
 
     prefixo_slug = (slugify_cidade(conta['nome_negocio']) or 'fidelidade') + '-'
-    sufixo = slugify_cidade(request.form.get('sufixo', ''))
+    apelido = slugify_cidade(request.form.get('sufixo', ''))
 
-    if not sufixo:
+    if not apelido:
         flash('Digite um complemento válido pro link (só letras, números e hífen).', 'error')
         return redirect('/painel')
 
-    novo_slug = f"{prefixo_slug}{sufixo}"
+    # Se o apelido não mudou, não mexe no link — evita gerar um sufixo novo
+    # (e quebrar um link que ela já distribuiu) só porque clicou em "Salvar
+    # link" de novo sem editar o texto.
+    if apelido == pagina.get('apelido_slug'):
+        return redirect('/painel')
 
-    if novo_slug != pagina['slug']:
-        colisao = query_one("SELECT id FROM brindes_paginas WHERE slug = %s", (novo_slug,))
-        if colisao and colisao['id'] != pagina_id:
-            flash('Esse link já está em uso, escolha outro complemento.', 'error')
-            return redirect('/painel')
-        execute("UPDATE brindes_paginas SET slug = %s WHERE id = %s", (novo_slug, pagina_id))
-        flash('Link atualizado com sucesso!', 'success')
+    novo_slug = None
+    for _ in range(20):
+        candidato = f"{prefixo_slug}{apelido}-{secrets.token_hex(2)}"
+        colisao = query_one("SELECT id FROM brindes_paginas WHERE slug = %s", (candidato,))
+        if not colisao:
+            novo_slug = candidato
+            break
+
+    if not novo_slug:
+        flash('Não foi possível gerar um link único agora, tenta de novo.', 'error')
+        return redirect('/painel')
+
+    execute(
+        "UPDATE brindes_paginas SET slug = %s, apelido_slug = %s WHERE id = %s",
+        (novo_slug, apelido, pagina_id)
+    )
+    flash('Link atualizado com sucesso!', 'success')
 
     return redirect('/painel')
 
@@ -992,6 +1029,10 @@ def painel_pagina(slug):
 
     if not pode_gerenciar_pagina(pagina):
         if pagina.get('conta_id'):
+            # Guarda pra onde ela queria ir — sem isso, fidelize_login()
+            # manda sempre pro /painel (lista), nunca pro painel dessa
+            # página específica, e ela nunca chega no carimbo.
+            session['fidelize_redirect_apos_login'] = f'{BASE_URL}/{slug}/painel'
             flash('Faça login na sua conta Fidelize pra gerenciar esse QR code.', 'error')
             return redirect(f'{FIDELIZE_BASE_URL}/login')
         return redirect(f'/{slug}/login')
@@ -1110,6 +1151,7 @@ def carimbar_pagina(slug):
         abort(404)
     if not pode_gerenciar_pagina(pagina):
         if pagina.get('conta_id'):
+            session['fidelize_redirect_apos_login'] = f'{BASE_URL}/{slug}/painel'
             flash('Faça login na sua conta Fidelize pra gerenciar esse QR code.', 'error')
             return redirect(f'{FIDELIZE_BASE_URL}/login')
         return redirect(f'/{slug}/login')
