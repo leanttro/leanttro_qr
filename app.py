@@ -817,6 +817,12 @@ def fidelize_painel():
         ORDER BY p.id DESC
     """, (conta_id,))
 
+    # Mesmo teto usado em fidelize_criar_qr — mandado pro template só pra
+    # exibir "X de 100 QR codes usados" no painel, não é a validação em si
+    # (a validação real acontece de novo na hora de criar, servidor-side).
+    LIMITE_QR_CODES_POR_CONTA = 100
+    total_qr_codes_conta = len(paginas)
+
     templates_disponiveis = carregar_templates()
     campos_por_template = {t['slug']: t.get('campos', []) for t in templates_disponiveis}
 
@@ -890,6 +896,8 @@ def fidelize_painel():
         templates_gamificacao=templates_gamificacao,
         templates_gamificacao_json=templates_gamificacao_json,
         campos_bulk_uniao=campos_bulk_uniao,
+        limite_qr_codes=LIMITE_QR_CODES_POR_CONTA,
+        total_qr_codes_conta=total_qr_codes_conta,
     )
 
 
@@ -904,6 +912,20 @@ def fidelize_criar_qr():
 
     if not (conta['mensalidade_ativa'] or conta['qr_codes_disponiveis'] > 0):
         flash('Você não tem QR codes disponíveis. Fale com a gente pra liberar um pacote novo.', 'error')
+        return redirect('/painel')
+
+    # Teto de 100 QR codes por conta, mesmo pra quem já paga mensalidade
+    # (sem isso, mensalidade_ativa=True liberaria criação ilimitada). Conta
+    # todas as páginas da conta, sem filtrar por 'ativo' — desativar uma
+    # página não libera vaga nova, é teto de "já criados", não de "em uso
+    # agora".
+    LIMITE_QR_CODES_POR_CONTA = 100
+    total_qr_codes_conta = query_one(
+        "SELECT COUNT(*) as c FROM brindes_paginas WHERE conta_id = %s",
+        (conta_id,)
+    )['c']
+    if total_qr_codes_conta >= LIMITE_QR_CODES_POR_CONTA:
+        flash(f'Você atingiu o limite de {LIMITE_QR_CODES_POR_CONTA} QR codes da conta. Fale com a gente se precisar de mais.', 'error')
         return redirect('/painel')
 
     slug = _fidelize_gerar_slug_unico(conta['nome_negocio'])
