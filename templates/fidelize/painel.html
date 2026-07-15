@@ -31,6 +31,12 @@
 .upsell-banner p{margin:0;color:var(--ink);font-size:.94em;max-width:48ch}
 .upsell-banner p strong{color:var(--ink-black)}
 
+.plano-info{
+    display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    font-size:.86em;color:var(--ink-soft);margin:-14px 0 24px;
+}
+.plano-info a{color:var(--ink-black);font-weight:700;text-decoration:underline}
+
 .tabela-paginas{width:100%;border-collapse:collapse;background:var(--chrome-1);border:1px solid var(--line-strong);border-radius:var(--radius);overflow:hidden}
 .tabela-paginas th,.tabela-paginas td{padding:13px 16px;text-align:left;font-size:.92em;border-bottom:1px solid var(--line)}
 .tabela-paginas th{background:var(--surface);color:var(--chrome-4);text-transform:uppercase;font-size:.76em;letter-spacing:.05em}
@@ -183,6 +189,15 @@
             <div class="label">QR codes da conta</div>
             <div class="valor">{{ total_qr_codes_conta }} / {{ limite_qr_codes }}</div>
         </div>
+    </div>
+
+    <div class="plano-info">
+        {% if conta.mensalidade_ativa %}
+            Mensalidade ativa — R$ {{ '%.2f'|format(preco_mensalidade) }}/mês libera até {{ limite_qr_codes }} QR codes na conta.
+        {% else %}
+            Sua conta inclui {{ qr_codes_trial }} QR codes grátis pra testar. Depois, R$ {{ '%.2f'|format(preco_mensalidade) }}/mês libera até {{ limite_qr_codes }}.
+            {% if not saldo_esgotado %}<a href="/painel/assinar">Assinar agora</a>{% endif %}
+        {% endif %}
     </div>
 
     {% if saldo_esgotado %}
