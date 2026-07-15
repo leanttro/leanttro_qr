@@ -783,7 +783,7 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
               <tr>
                 <th>Negócio</th><th>E-mail</th><th>Plano</th>
                 <th>QR codes disp.</th><th>Mensalidade</th><th>QRs criados</th>
-                <th>Status</th><th>Criada em</th><th>Ações</th>
+                <th>Status</th><th>Criada em</th><th>Templates exclusivos</th><th>Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -797,6 +797,27 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
                 <td class="td-muted">{{ c.total_qrs_criados }}</td>
                 <td><span class="badge {{ 'badge-green' if c.ativo else 'badge-gray' }}">{{ 'Ativa' if c.ativo else 'Bloqueada' }}</span></td>
                 <td class="td-muted">{{ c.criado_em.strftime('%d/%m/%Y') if c.criado_em else '' }}</td>
+                <td style="min-width:160px;">
+                  {% for slug_extra in (c.templates_extras or []) %}
+                    <form method="POST" action="/admin/fidelize/{{ c.id }}/revogar-template" style="display:inline-flex; align-items:center; gap:4px; margin:0 4px 4px 0;">
+                      <input type="hidden" name="template_slug" value="{{ slug_extra }}">
+                      <span class="badge badge-gray" style="font-size:11px;">{{ slug_extra }}</span>
+                      <button class="btn-link" style="color:var(--red); font-size:11px; padding:0;" title="Revogar" type="submit">✕</button>
+                    </form>
+                  {% else %}
+                    <span class="td-muted" style="font-size:12px;">nenhum</span>
+                  {% endfor %}
+                  {% if templates_exclusivos %}
+                    <form method="POST" action="/admin/fidelize/{{ c.id }}/liberar-template" style="display:flex; gap:4px; align-items:center; margin-top:6px;">
+                      <select name="template_slug" style="font-size:12px; padding:4px 6px; border:1px solid var(--border2); border-radius:6px;">
+                        {% for t in templates_exclusivos %}
+                          <option value="{{ t.slug }}">{{ t.nome or t.slug }}</option>
+                        {% endfor %}
+                      </select>
+                      <button class="btn btn-primary" style="font-size:12px;padding:5px 10px;" type="submit">Liberar</button>
+                    </form>
+                  {% endif %}
+                </td>
                 <td class="td-actions">
                   <form method="POST" action="/admin/fidelize/{{ c.id }}/liberar" style="display:flex; gap:4px; align-items:center;">
                     <input type="number" name="quantidade" min="1" value="10" style="width:56px; padding:5px 6px; border:1px solid var(--border2); border-radius:6px; font-size:12.5px;">
@@ -807,7 +828,7 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
                 </td>
               </tr>
               {% else %}
-              <tr><td colspan="9" class="empty-state">Nenhuma conta fidelize cadastrada ainda.</td></tr>
+              <tr><td colspan="10" class="empty-state">Nenhuma conta fidelize cadastrada ainda.</td></tr>
               {% endfor %}
             </tbody>
           </table>
