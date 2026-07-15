@@ -834,7 +834,7 @@ def render_pagina(pagina):
         page=page,
         timeline_events=gerar_timeline_events(pagina),
         current_year=datetime.now().year,
-        font_css="'Inter', sans-serif",
+        font_css="'Montserrat', sans-serif",
         font_size_val="1.1rem",
         total_scans=total_scans,
         carimbos_atual=carimbos_atual,
@@ -853,7 +853,7 @@ def demo_template(template_slug):
         tpl['arquivo'], page=pagina_fake,
         timeline_events=pagina_fake.get('timeline', []),
         current_year=datetime.now().year,
-        font_css="'Inter', sans-serif", font_size_val="1.1rem",
+        font_css="'Montserrat', sans-serif", font_size_val="1.1rem",
         anuncio_topo=get_anuncio('topo', contexto='funcionalidade'),
         total_scans=total_scans,
         carimbos_atual=tpl.get('demo_carimbos_atual', 0),
@@ -2272,6 +2272,11 @@ def admin_templates_editar(slug):
 def admin_paginas_editar(item_id):
     novo_slug = request.form.get('slug', '').strip().lower()
     novo_email = request.form.get('email', '').strip()
+    # Admin escolhe o template livremente — diferente do fluxo do cliente
+    # (conta_pode_usar_template), aqui não valida "exclusivo"/templates_extras
+    # porque quem está atribuindo já é o admin de confiança. Só confere que
+    # o slug enviado realmente existe em disco, pra não gravar lixo.
+    novo_template_form = (request.form.get('template') or '').strip()
 
     if not novo_slug:
         flash('O link (slug) não pode ficar vazio.', 'error')
@@ -2285,10 +2290,20 @@ def admin_paginas_editar(item_id):
         flash('Esse link já está em uso por outra página.', 'error')
         return redirect('/admin#paginas')
 
+    pagina_atual = query_one("SELECT template FROM brindes_paginas WHERE id = %s", (item_id,))
+    if not pagina_atual:
+        flash('Página não encontrada.', 'error')
+        return redirect('/admin#paginas')
+
+    if novo_template_form and get_template_por_slug(novo_template_form):
+        novo_template = novo_template_form
+    else:
+        novo_template = pagina_atual['template']
+
     try:
         execute(
-            "UPDATE brindes_paginas SET slug = %s, email = %s WHERE id = %s",
-            (novo_slug, novo_email or None, item_id)
+            "UPDATE brindes_paginas SET slug = %s, email = %s, template = %s WHERE id = %s",
+            (novo_slug, novo_email or None, novo_template, item_id)
         )
         flash('Página atualizada.', 'success')
     except Exception:
