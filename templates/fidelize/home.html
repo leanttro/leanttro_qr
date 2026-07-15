@@ -34,6 +34,8 @@
 }
 .modelo-card h2{font-size:1.4em;margin-bottom:14px}
 .modelo-card p{color:var(--ink-soft);line-height:1.7;margin:0 0 14px}
+.modelo-preco{font-size:1.25em;font-weight:700;color:var(--ink-black)!important;margin:0 0 18px!important}
+.modelo-preco span{font-size:.7em;font-weight:600;color:var(--ink-soft)}
 .modelo-lista{list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:10px}
 .modelo-lista li{display:flex;gap:10px;font-size:.95em;color:var(--ink)}
 .modelo-lista li::before{content:"✓";font-weight:700;color:var(--ink-black)}
@@ -82,12 +84,14 @@
 <section class="modelo">
     <div class="container">
         <div class="modelo-card">
-            <h2>Como funciona o pacote de QR codes</h2>
-            <p>Você compra um pacote com uma quantidade de QR codes de fidelidade. Cada QR code criado no seu painel consome um do pacote — quando acabar, é só renovar.</p>
+            <h2>Comece grátis, pague só se continuar usando</h2>
+            <p>Toda conta nova ganha <strong>{{ qr_codes_trial }} QR codes grátis</strong> na hora do cadastro — sem cartão, sem pagar nada, pra você testar o painel de verdade com seus próprios clientes.</p>
+            <p class="modelo-preco">R$ {{ '%.2f'|format(preco_mensalidade) }}<span>/mês</span> — libera até {{ limite_qr_codes }} QR codes na conta</p>
             <ul class="modelo-lista">
-                <li>Sem mensalidade obrigatória pra começar</li>
+                <li>{{ qr_codes_trial }} QR codes grátis liberados automaticamente no cadastro</li>
+                <li>Quando acabar, é só assinar direto no painel — Pix, confirmação rápida</li>
                 <li>Cada QR code é um cartão de fidelidade completo, com progresso e prêmio</li>
-                <li>Painel simples: veja scans e cartões ativos num só lugar</li>
+                <li>Precisa de mais de {{ limite_qr_codes }}? A gente combina um plano maior no WhatsApp</li>
             </ul>
             <a class="btn-nav-cta" href="/cadastro">Criar minha conta grátis</a>
         </div>
