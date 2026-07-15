@@ -133,50 +133,36 @@
     box-shadow: 0 14px 26px rgba(232,121,154,0.5);
   }
 
-  /* ===== etiqueta pendurada ===== */
+  /* ===== etiqueta no canto do cartao ===== */
   @keyframes etiquetaBalanca {
-    0%, 100% { transform: rotate(-5deg); }
-    50%      { transform: rotate(5deg); }
+    0%, 100% { transform: rotate(3deg); }
+    50%      { transform: rotate(-2deg); }
   }
   @keyframes etiquetaEntra {
-    from { opacity: 0; transform: translateY(-18px) rotate(0deg); }
+    from { opacity: 0; transform: translateY(-10px) rotate(3deg); }
     to   { opacity: 1; }
   }
-  .etiqueta-fio {
-    position: absolute;
-    top: -18px;
-    right: 34px;
-    width: 2px;
-    height: 20px;
-    background: #f0a9bb;
-    z-index: 2;
-  }
+  .etiqueta-fio { display: none; }
   .etiqueta {
     position: absolute;
-    top: -2px;
-    right: 14px;
+    top: 64px;
+    right: 0;
+    max-width: 46%;
     background: linear-gradient(135deg, var(--rosa-2), var(--rosa-1));
     color: #fff;
-    font-size: 10.5px;
+    font-size: 10px;
     font-weight: 800;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.03em;
     text-transform: uppercase;
-    padding: 7px 14px 7px 12px;
-    border-radius: 4px 12px 12px 4px;
+    line-height: 1.3;
+    padding: 7px 12px 7px 14px;
+    border-radius: 12px 0 0 12px;
     box-shadow: 0 8px 18px rgba(232,121,154,0.5);
-    transform-origin: top center;
+    transform-origin: right center;
+    z-index: 2;
+    white-space: normal;
+    text-align: right;
     animation: etiquetaEntra 0.5s ease 0.5s both, etiquetaBalanca 2.6s ease-in-out 1.1s infinite;
-  }
-  .etiqueta::before {
-    content: "";
-    position: absolute;
-    left: -4px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 8px;
-    height: 8px;
-    background: #fff5f7;
-    border-radius: 50%;
   }
 
   /* ===== ticket / card ===== */
@@ -204,7 +190,7 @@
     font-weight: 800;
     letter-spacing: -0.02em;
     color: var(--cor-texto);
-    margin: 0 0 12px;
+    margin: 10px 0 12px;
     line-height: 1.2;
   }
 
@@ -428,10 +414,11 @@
   .rodape a:hover { color: var(--rosa-2); text-decoration: underline; }
 
   @media (max-width: 380px) {
-    .ticket { padding: 50px 18px 26px; }
-    .titulo { font-size: calc({{ font_size_val }} + 5px); }
-    .carimbo { width: 34px; height: 34px; }
-    .emblema img { height: 76px; width: 76px; }
+    .ticket { padding: 46px 16px 26px; }
+    .titulo { font-size: calc({{ font_size_val }} + 4px); margin-top: 6px; }
+    .carimbo { width: 32px; height: 32px; }
+    .emblema img { height: 70px; width: 70px; }
+    .etiqueta { top: 54px; font-size: 9px; max-width: 44%; padding: 6px 10px 6px 12px; }
   }
 </style>
 </head>
@@ -463,7 +450,7 @@
       <span class="etiqueta">Cliente Especial 💕</span>
 
       <h1 class="titulo">{{ page.titulo }}</h1>
-      <p class="mensagem">{{ page.mensagem }}</p>
+      <p class="mensagem">{{ page.mensagem or 'Junte carimbos e ganhe prêmios especiais!' }}</p>
 
       <div class="divisor">
         <span class="linha"></span>
@@ -498,7 +485,7 @@
       {% endif %}
 
       <div class="caixa-premio">
-        Prêmio: <strong>{{ page.premio }}</strong>
+        Prêmio: <strong>{{ page.premio or 'a definir' }}</strong>
       </div>
 
       {% if completo %}
