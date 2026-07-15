@@ -58,6 +58,28 @@ p{color:var(--ink-soft);font-size:.98em;line-height:1.6;margin:0 0 18px}
 .voltar{display:inline-block;margin-top:18px;font-size:.88em;color:var(--ink-soft);text-decoration:underline}
 .voltar:hover{color:var(--ink-black)}
 footer{text-align:center;padding:0 0 30px;font-size:.8em;color:var(--ink-faint)}
+
+.qr-box{background:#fff;border:1px solid var(--line-strong);border-radius:10px;padding:18px;margin-bottom:16px}
+.qr-box img{width:220px;height:220px;max-width:100%;display:block;margin:0 auto}
+.copia-cola{display:flex;gap:8px;margin-bottom:14px}
+.copia-cola input{
+    flex:1;min-width:0;font-family:monospace;font-size:.78em;color:var(--ink-soft);
+    background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;
+    padding:10px 12px;
+}
+.btn-copiar{
+    flex-shrink:0;background:var(--ink-black);color:#fff;border:none;border-radius:8px;
+    padding:0 16px;font-weight:600;font-size:.86em;cursor:pointer;font-family:inherit;
+}
+.btn-copiar:hover{background:var(--chrome-4)}
+.btn-copiar.copiado{background:#1f9d55}
+.btn-whatsapp{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;
+    background:#25D366;color:#fff;padding:14px;border-radius:10px;font-weight:600;
+    font-size:.98em;margin-bottom:14px;
+}
+.btn-whatsapp:hover{background:#1fb959}
+.slug-reservado{font-size:.86em;color:var(--ink-faint);margin:-8px 0 18px}
 </style>
 </head>
 <body>
@@ -69,13 +91,31 @@ footer{text-align:center;padding:0 0 30px;font-size:.8em;color:var(--ink-faint)}
         <h1>{{ template.nome }}</h1>
         <p class="preco">R$ {{ '%.2f'|format(template.preco or 0) }}</p>
         <p>Esse modelo de página é um recurso pago. Sua página ainda não foi criada — conclua o pagamento pra gente liberar ela pra você.</p>
+        <p class="slug-reservado">Link reservado por 48h: <strong>/{{ slug }}</strong></p>
 
-        {% if link_pagamento %}
+        {% if pix_qr_base64 %}
+        <div class="qr-box">
+            <img src="data:image/png;base64,{{ pix_qr_base64 }}" alt="QR Code Pix">
+        </div>
+
+        <div class="copia-cola">
+            <input type="text" id="pixCopiaCola" value="{{ pix_payload }}" readonly onclick="this.select()">
+            <button type="button" class="btn-copiar" id="btnCopiar" onclick="copiarPix()">Copiar</button>
+        </div>
+
+        <p style="font-size:.86em;">Escaneie o QR ou copie o código acima no app do seu banco.</p>
+        {% elif link_pagamento %}
         <a class="btn-pagamento" href="{{ link_pagamento }}" target="_blank" rel="noopener">Pagar agora →</a>
         {% endif %}
 
+        {% if whatsapp_link %}
+        <a class="btn-whatsapp" href="{{ whatsapp_link }}" target="_blank" rel="noopener">
+            Enviar comprovante no WhatsApp →
+        </a>
+        {% endif %}
+
         <div class="aviso">
-            Depois de pagar, chame a gente pelo WhatsApp ou e-mail informando o link (slug) que você escolheu, que liberamos sua página o quanto antes.
+            Depois de pagar, manda o comprovante pelo WhatsApp informando o link (<strong>/{{ slug }}</strong>) que você escolheu, que a gente libera sua página o quanto antes.
         </div>
 
         <a class="voltar" href="{{ url_for('gerar_qr') }}">← Voltar e escolher outro modelo</a>
@@ -83,6 +123,25 @@ footer{text-align:center;padding:0 0 30px;font-size:.8em;color:var(--ink-faint)}
 </div>
 
 <footer>© {{ current_year or '' }} QR Code Brindes</footer>
+
+<script>
+function copiarPix(){
+    var campo = document.getElementById('pixCopiaCola');
+    var btn = document.getElementById('btnCopiar');
+    campo.select();
+    campo.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(campo.value).then(function(){
+        btn.textContent = 'Copiado ✓';
+        btn.classList.add('copiado');
+        setTimeout(function(){
+            btn.textContent = 'Copiar';
+            btn.classList.remove('copiado');
+        }, 2000);
+    }).catch(function(){
+        document.execCommand('copy');
+    });
+}
+</script>
 
 </body>
 </html>
