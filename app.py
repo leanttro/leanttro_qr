@@ -280,6 +280,24 @@ def slugify_cidade(texto):
     return texto or None
 
 
+# Validação só de FORMATO (não confirma que a caixa de e-mail existe de
+# verdade — isso exigiria e-mail de confirmação ou sondagem SMTP, que não
+# foram pedidos). Padrão simples e prático: algo@algo.algo, sem espaço.
+EMAIL_REGEX = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+
+
+def email_ja_usado_nesse_template(email, template_slug):
+    """Verifica se esse e-mail já criou um QR code com ESSE MESMO template
+    (fluxo /gerar-qr, catálogo geral). Mesmo e-mail com template diferente
+    é permitido de propósito — é o jeito da pessoa testar templates
+    diferentes sem trocar de e-mail. Só considera páginas ativas."""
+    existente = query_one(
+        "SELECT id FROM brindes_paginas WHERE email = %s AND template = %s AND ativo = TRUE",
+        (email, template_slug)
+    )
+    return existente is not None
+
+
 def carregar_templates():
     """Varre templates/paginas/ e devolve os metadados (<slug>.json) de cada
     template disponível (<slug>.html + <slug>.json lado a lado).
@@ -524,7 +542,7 @@ def gerar_qr():
         senha = request.form.get('senha', '')
         tipo_destino = request.form.get('tipo_destino', 'link')
         destino_url = request.form.get('destino_url', '').strip()
-        email = request.form.get('email', '').strip()
+        email = request.form.get('email', '').strip().lower()
         titulo = request.form.get('titulo', '').strip()
         template_slug = request.form.get('template', 'classic')
 
@@ -538,6 +556,14 @@ def gerar_qr():
 
         if tipo_destino == 'pagina' and not email:
             flash('Email é obrigatório para criar uma página própria (usado para pagamento e recuperação).', 'error')
+            return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year, anuncio_topo=get_anuncio('topo', contexto='funcionalidade'))
+
+        if email and not EMAIL_REGEX.match(email):
+            flash('Digite um e-mail válido.', 'error')
+            return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year, anuncio_topo=get_anuncio('topo', contexto='funcionalidade'))
+
+        if email and email_ja_usado_nesse_template(email, template_slug):
+            flash('Esse e-mail já tem um QR code criado com esse mesmo template. Escolha um template diferente pra testar outro, ou entre no QR code que você já criou.', 'error')
             return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year, anuncio_topo=get_anuncio('topo', contexto='funcionalidade'))
 
         if tipo_destino == 'link' and not destino_url:
