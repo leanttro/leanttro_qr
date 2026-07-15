@@ -783,12 +783,16 @@ def fidelize_painel():
         return redirect('/login')
 
     paginas = query_all("""
-        SELECT p.id, p.slug, p.template, p.titulo, p.apelido_slug, p.campos_extra,
+        SELECT p.id, p.slug, p.template, p.titulo, p.mensagem, p.foto_url,
+               p.apelido_slug, p.campos_extra,
                (SELECT COUNT(*) FROM brindes_scans s WHERE s.pagina_id = p.id) AS total_scans
         FROM brindes_paginas p
         WHERE p.conta_id = %s
         ORDER BY p.id DESC
     """, (conta_id,))
+
+    templates_disponiveis = carregar_templates()
+    campos_por_template = {t['slug']: t.get('campos', []) for t in templates_disponiveis}
 
     # Prefixo fixo do link (nome do negócio slugificado + '-'), pra manter a
     # marca no link mesmo quando ela edita a parte de trás. Mesma função
@@ -816,6 +820,11 @@ def fidelize_painel():
             p['carimbos_atual'] = int(campos_extra.get('carimbos_atual', 0) or 0)
         except (ValueError, TypeError):
             p['carimbos_atual'] = 0
+
+        # Dict já parseado, pra o modal de edição preencher os campos extras
+        # do template (ex: meta, premio) sem precisar reprocessar no HTML.
+        p['campos_extra_dict'] = campos_extra
+        p['campos_template'] = campos_por_template.get(p['template'], [])
 
     return render_template(
         'fidelize/painel.html',
@@ -941,6 +950,79 @@ def fidelize_logout():
 # pro apex (qrcodebrindes.com.br), que é o que tava causando o loop de login.
 # A checagem "WHERE conta_id = %s" garante que ela só carimba página da
 # própria conta, sem precisar de pode_gerenciar_pagina/sessão cruzada.
+# --- EDITAR OS CAMPOS DO CARTÃO (modal) DIRETO DO PAINEL DO FIDELIZE ---
+# Mesma ideia da rota de carimbar: fica 100% dentro do subdomínio fidelize,
+# sem depender da sessão viajar pro apex. Só edita título/mensagem/foto e os
+# campos extras do template ATUAL (ex: meta, premio do Cartão Fidelidade) —
+# não permite trocar de template por aqui, isso continua no painel completo
+# (/<slug>/painel) no apex.
+@app.route('/painel/pagina/<int:pagina_id>/editar', methods=['POST'], subdomain='fidelize')
+@fidelize_login_required
+def fidelize_editar_pagina(pagina_id):
+    conta_id = session['fidelize_conta_id']
+    pagina = query_one(
+        "SELECT * FROM brindes_paginas WHERE id = %s AND conta_id = %s",
+        (pagina_id, conta_id)
+    )
+    if not pagina:
+        abort(404)
+
+    template_slug = pagina.get('template', 'classic')
+    tpl_selecionado = get_template_por_slug(template_slug)
+    campos_tpl = (tpl_selecionado or {}).get('campos', [])
+    tipos_presentes = {c.get('tipo') for c in campos_tpl}
+
+    # Só mexe em foto_url se o template atual realmente tiver campo de
+    # imagem — mesma regra do painel completo, pra não apagar a foto antiga
+    # quando o campo nem aparece no formulário.
+    foto_url = pagina.get('foto_url')
+    if 'imagem' in tipos_presentes:
+        f = request.files.get('foto')
+        if f and f.filename:
+            nova_url = upload_imgur(f)
+            if nova_url:
+                foto_url = nova_url
+            else:
+                flash('Dados salvos, mas houve erro ao enviar a foto.', 'error')
+
+    campos_extra_existentes = pagina.get('campos_extra') or {}
+    if isinstance(campos_extra_existentes, str):
+        try:
+            campos_extra_existentes = json.loads(campos_extra_existentes)
+        except (ValueError, TypeError):
+            campos_extra_existentes = {}
+    campos_extra = dict(campos_extra_existentes)
+    campos_fixos = {'titulo', 'mensagem', 'foto', 'imagem', 'timeline'}
+    for campo in campos_tpl:
+        nome_campo = campo.get('nome')
+        if not nome_campo or nome_campo in campos_fixos:
+            continue
+        valor_form = request.form.get(nome_campo, '').strip()
+        if campo.get('tipo') == 'numero':
+            try:
+                campos_extra[nome_campo] = int(valor_form) if valor_form else None
+            except ValueError:
+                campos_extra[nome_campo] = None
+        else:
+            campos_extra[nome_campo] = valor_form
+    campos_extra_json = psycopg2.extras.Json(campos_extra)
+
+    execute("""
+        UPDATE brindes_paginas
+        SET titulo = %s, mensagem = %s, foto_url = %s, campos_extra = %s
+        WHERE id = %s
+    """, (
+        request.form.get('titulo', ''),
+        request.form.get('mensagem', ''),
+        foto_url,
+        campos_extra_json,
+        pagina_id,
+    ))
+
+    flash('Cartão atualizado com sucesso!', 'success')
+    return redirect('/painel')
+
+
 @app.route('/painel/pagina/<int:pagina_id>/carimbar', methods=['POST'], subdomain='fidelize')
 @fidelize_login_required
 def fidelize_carimbar(pagina_id):
