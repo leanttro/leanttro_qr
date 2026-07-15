@@ -919,7 +919,13 @@ def _fidelize_gerar_slug_unico(nome_negocio):
 
 @app.route('/', subdomain='fidelize')
 def fidelize_home():
-    return render_template('fidelize/home.html', current_year=datetime.now().year)
+    return render_template(
+        'fidelize/home.html',
+        current_year=datetime.now().year,
+        qr_codes_trial=FIDELIZE_QR_CODES_TRIAL,
+        limite_qr_codes=FIDELIZE_LIMITE_QR_CODES_POR_CONTA,
+        preco_mensalidade=FIDELIZE_PRECO_MENSALIDADE,
+    )
 
 
 @app.route('/cadastro', methods=['GET', 'POST'], subdomain='fidelize')
@@ -951,7 +957,12 @@ def fidelize_cadastro():
             flash(f'Conta criada com sucesso! Você já ganhou {FIDELIZE_QR_CODES_TRIAL} QR codes grátis pra testar.', 'success')
             return redirect('/painel')
 
-    return render_template('fidelize/cadastro.html', erro=erro, current_year=datetime.now().year)
+    return render_template(
+        'fidelize/cadastro.html',
+        erro=erro,
+        current_year=datetime.now().year,
+        qr_codes_trial=FIDELIZE_QR_CODES_TRIAL,
+    )
 
 
 @app.route('/login', methods=['GET', 'POST'], subdomain='fidelize')
