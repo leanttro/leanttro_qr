@@ -1119,6 +1119,56 @@ def fidelize_painel():
 
 
 # --- ASSINAR MENSALIDADE (Pix dinâmico, mesmo padrão do template pago) ---
+@app.route('/painel/conta', methods=['POST'], subdomain='fidelize')
+@fidelize_login_required
+def fidelize_atualizar_conta():
+    """Permite a dona da conta trocar o próprio e-mail e/ou senha, direto do
+    painel — sempre exigindo a senha ATUAL como confirmação, mesmo pra
+    trocar só o e-mail (evita que alguém com a sessão aberta numa máquina
+    compartilhada sequestre a conta sem saber a senha)."""
+    conta_id = session['fidelize_conta_id']
+    conta = query_one("SELECT * FROM brindes_fidelidade_contas WHERE id = %s", (conta_id,))
+    if not conta:
+        session.pop('fidelize_conta_id', None)
+        return redirect('/login')
+
+    if not check_limit(f"fidelize_conta_update_{conta_id}", 10, 3600):
+        flash('Muitas tentativas. Tente novamente mais tarde.', 'error')
+        return redirect('/painel')
+
+    senha_atual = request.form.get('senha_atual') or ''
+    if not check_password_hash(conta['senha_hash'], senha_atual):
+        flash('Senha atual incorreta — nada foi alterado.', 'error')
+        return redirect('/painel')
+
+    novo_email = (request.form.get('novo_email') or '').strip().lower()
+    senha_nova = request.form.get('senha_nova') or ''
+
+    if novo_email and novo_email != conta['email']:
+        existente = get_conta_fidelize_by_email(novo_email)
+        if existente and existente['id'] != conta_id:
+            flash('Esse e-mail já está em uso por outra conta.', 'error')
+            return redirect('/painel')
+        execute(
+            "UPDATE brindes_fidelidade_contas SET email = %s WHERE id = %s",
+            (novo_email, conta_id)
+        )
+        session['fidelize_conta_email'] = novo_email
+        flash('E-mail atualizado com sucesso.', 'success')
+
+    if senha_nova:
+        if len(senha_nova) < 6:
+            flash('A nova senha precisa ter pelo menos 6 caracteres.', 'error')
+            return redirect('/painel')
+        execute(
+            "UPDATE brindes_fidelidade_contas SET senha_hash = %s WHERE id = %s",
+            (generate_password_hash(senha_nova), conta_id)
+        )
+        flash('Senha atualizada com sucesso.', 'success')
+
+    return redirect('/painel')
+
+
 @app.route('/painel/assinar', subdomain='fidelize')
 @fidelize_login_required
 def fidelize_assinar():
