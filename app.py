@@ -160,6 +160,16 @@ def rodar_auto_migracoes():
         print(f"Aviso: auto-migração de apelido_slug falhou ({e}). "
               f"Edição de link do Fidelize pode não funcionar até isso ser corrigido.")
 
+    try:
+        execute("""
+            ALTER TABLE brindes_fidelidade_contas
+            ADD COLUMN IF NOT EXISTS templates_extras JSONB DEFAULT '[]'::jsonb
+        """)
+        print("Auto-migração ok: coluna templates_extras confirmada em brindes_fidelidade_contas.")
+    except Exception as e:
+        print(f"Aviso: auto-migração de templates_extras falhou ({e}). "
+              f"Templates exclusivos do Fidelize podem não funcionar até isso ser corrigido.")
+
 
 rodar_auto_migracoes()
 
@@ -337,6 +347,25 @@ def carregar_templates():
 
 def get_template_por_slug(slug):
     return next((t for t in carregar_templates() if t['slug'] == slug), None)
+
+
+def conta_pode_usar_template(conta, template_meta):
+    """Um template só é restrito se o .json dele tiver "exclusivo": true.
+    Templates sem essa marcação continuam liberados pra qualquer conta,
+    exatamente como sempre foi. Pra um exclusivo, só libera se o slug dele
+    estiver na lista templates_extras daquela conta (coluna JSONB, editada
+    pelo admin em /admin/fidelize/<id>/liberar-template)."""
+    if not template_meta:
+        return False
+    if not template_meta.get('exclusivo'):
+        return True
+    extras = conta.get('templates_extras') or []
+    if isinstance(extras, str):
+        try:
+            extras = json.loads(extras)
+        except (ValueError, TypeError):
+            extras = []
+    return template_meta['slug'] in extras
 
 
 app.jinja_env.globals['get_template_por_slug'] = get_template_por_slug
@@ -828,9 +857,14 @@ def fidelize_painel():
 
     # Só os templates da família "gamificacao*" (prefixo no slug) — o modal
     # de edição do Fidelize só pode oferecer troca entre esses, nunca o
-    # catálogo geral (presente/ocasião) do QRCodeBrindes.
+    # catálogo geral (presente/ocasião) do QRCodeBrindes. Além disso, filtra
+    # os marcados como "exclusivo" no .json: só entram na lista se essa
+    # conta específica tiver o slug liberado em templates_extras (ver
+    # conta_pode_usar_template) — assim um template vendido separadamente
+    # não aparece pra quem não pagou por ele.
     templates_gamificacao = [
-        t for t in templates_disponiveis if t['slug'].startswith('gamificacao')
+        t for t in templates_disponiveis
+        if t['slug'].startswith('gamificacao') and conta_pode_usar_template(conta, t)
     ]
     # Mandado pro template como JSON pra alimentar o JS do modal (troca de
     # template re-renderiza os campos extras no navegador, sem reload).
@@ -968,9 +1002,12 @@ def fidelize_criar_qr():
 @fidelize_login_required
 def fidelize_aplicar_template_todos():
     conta_id = session['fidelize_conta_id']
+    conta = query_one("SELECT templates_extras FROM brindes_fidelidade_contas WHERE id = %s", (conta_id,))
     template_form = (request.form.get('template') or '').strip()
+    template_meta = get_template_por_slug(template_form) if template_form else None
 
-    if not (template_form.startswith('gamificacao') and get_template_por_slug(template_form)):
+    if not (template_form.startswith('gamificacao') and template_meta
+            and conta_pode_usar_template(conta or {}, template_meta)):
         flash('Modelo inválido.', 'error')
         return redirect('/painel')
 
@@ -1159,12 +1196,17 @@ def fidelize_editar_pagina(pagina_id):
     template_form = (request.form.get('template') or '').strip()
 
     # Segurança: só aceita trocar de template se o valor enviado pelo form
-    # (a) começar com "gamificacao" e (b) existir de fato em disco — nunca
+    # (a) começar com "gamificacao", (b) existir de fato em disco e (c) essa
+    # conta ter direito a ele (templates marcados "exclusivo" no .json só
+    # liberam se o slug estiver em conta['templates_extras']) — nunca
     # confia cegamente no que vem do form, pra ela não conseguir (por engano
     # ou manipulação de request) trocar pro catálogo geral (presente/ocasião)
-    # do QRCodeBrindes, que não faz sentido nesse contexto. Se o valor não
-    # passar na validação, mantém o template que a página já tinha.
-    if template_form and template_form.startswith('gamificacao') and get_template_por_slug(template_form):
+    # do QRCodeBrindes, nem pra um template exclusivo de outra conta. Se o
+    # valor não passar na validação, mantém o template que a página já tinha.
+    conta_da_pagina = query_one("SELECT templates_extras FROM brindes_fidelidade_contas WHERE id = %s", (conta_id,))
+    template_meta_form = get_template_por_slug(template_form) if template_form else None
+    if (template_form and template_form.startswith('gamificacao')
+            and template_meta_form and conta_pode_usar_template(conta_da_pagina or {}, template_meta_form)):
         novo_template = template_form
     else:
         novo_template = template_atual
@@ -1872,6 +1914,9 @@ def _admin_contexto_base():
         ORDER BY p.created_at DESC
     """)
     templates = carregar_templates()
+    # Só os marcados "exclusivo": true no .json — usados pra popular o
+    # dropdown de "liberar template" na tabela de contas do Fidelize.
+    templates_exclusivos = [t for t in templates if t.get('exclusivo')]
     contas_fidelize = query_all("""
         SELECT c.*, COUNT(p.id) as total_qrs_criados
         FROM brindes_fidelidade_contas c
@@ -1891,7 +1936,7 @@ def _admin_contexto_base():
         stats=stats, ocasioes=ocasioes, tipos=tipos,
         brindes=brindes, empresas=empresas, empresas_pendentes=empresas_pendentes,
         leads=leads, paginas=paginas, templates=templates, cidades=cidades,
-        contas_fidelize=contas_fidelize,
+        contas_fidelize=contas_fidelize, templates_exclusivos=templates_exclusivos,
     )
 
 
@@ -2438,6 +2483,77 @@ def admin_fidelize_toggle(conta_id):
             "UPDATE brindes_fidelidade_contas SET ativo = %s WHERE id = %s",
             (not conta['ativo'], conta_id)
         )
+    return redirect('/admin#fidelize')
+
+
+@app.route('/admin/fidelize/<int:conta_id>/liberar-template', methods=['POST'])
+@admin_required
+def admin_fidelize_liberar_template(conta_id):
+    """Adiciona um slug de template exclusivo à lista templates_extras da
+    conta — é isso que faz o template vendido separadamente aparecer no
+    dropdown dela em /painel. Valida que o slug realmente existe e está
+    marcado "exclusivo" no .json, pra não liberar qualquer coisa por engano
+    (template comum não precisa disso, já é liberado pra todo mundo)."""
+    template_slug = (request.form.get('template_slug') or '').strip()
+    template_meta = get_template_por_slug(template_slug)
+
+    if not (template_meta and template_meta.get('exclusivo')):
+        flash('Esse template não existe ou não é um template exclusivo.', 'error')
+        return redirect('/admin#fidelize')
+
+    conta = query_one("SELECT templates_extras FROM brindes_fidelidade_contas WHERE id = %s", (conta_id,))
+    if not conta:
+        flash('Conta não encontrada.', 'error')
+        return redirect('/admin#fidelize')
+
+    extras = conta.get('templates_extras') or []
+    if isinstance(extras, str):
+        try:
+            extras = json.loads(extras)
+        except (ValueError, TypeError):
+            extras = []
+
+    if template_slug not in extras:
+        extras.append(template_slug)
+        execute(
+            "UPDATE brindes_fidelidade_contas SET templates_extras = %s WHERE id = %s",
+            (psycopg2.extras.Json(extras), conta_id)
+        )
+        flash(f'Template "{template_slug}" liberado pra essa conta.', 'success')
+    else:
+        flash('Essa conta já tinha esse template liberado.', 'success')
+
+    return redirect('/admin#fidelize')
+
+
+@app.route('/admin/fidelize/<int:conta_id>/revogar-template', methods=['POST'])
+@admin_required
+def admin_fidelize_revogar_template(conta_id):
+    """Remove um slug da lista templates_extras — a conta deixa de ver e
+    conseguir usar esse template exclusivo. Não mexe nas páginas que já
+    estavam usando ele (se ela já tinha aplicado, o cartão continua com
+    aquele template até ela trocar manualmente pra outro)."""
+    template_slug = (request.form.get('template_slug') or '').strip()
+    conta = query_one("SELECT templates_extras FROM brindes_fidelidade_contas WHERE id = %s", (conta_id,))
+    if not conta:
+        flash('Conta não encontrada.', 'error')
+        return redirect('/admin#fidelize')
+
+    extras = conta.get('templates_extras') or []
+    if isinstance(extras, str):
+        try:
+            extras = json.loads(extras)
+        except (ValueError, TypeError):
+            extras = []
+
+    if template_slug in extras:
+        extras.remove(template_slug)
+        execute(
+            "UPDATE brindes_fidelidade_contas SET templates_extras = %s WHERE id = %s",
+            (psycopg2.extras.Json(extras), conta_id)
+        )
+        flash(f'Template "{template_slug}" revogado dessa conta.', 'success')
+
     return redirect('/admin#fidelize')
 
 
