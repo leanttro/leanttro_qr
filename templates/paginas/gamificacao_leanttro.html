@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7617881885143728"
+     crossorigin="anonymous"></script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-15CQV2LD4W"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-15CQV2LD4W');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>{{ page.titulo }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --roxo-1: #4c1d95;
+    --roxo-2: #6d28d9;
+    --roxo-3: #7c3aed;
+    --roxo-4: #a78bfa;
+    --roxo-suave: #ede9fe;
+    --cor-card: #ffffff;
+    --cor-texto: #140a24;
+    --whats: #25d366;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; min-height: 100%; }
+
+  body {
+    font-family: 'Montserrat', {{ font_css }}, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    font-weight: 500;
+    color: var(--cor-texto);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 16px 60px;
+    position: relative;
+    overflow-x: hidden;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(255,255,255,0.16) 0%, transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(167,139,250,0.35) 0%, transparent 55%),
+      linear-gradient(155deg, #7c3aed 0%, #6d28d9 45%, #4c1d95 100%);
+    background-size: 200% 200%;
+    animation: gradienteVivo 14s ease infinite;
+  }
+
+  @keyframes gradienteVivo {
+    0%   { background-position: 0% 0%; }
+    50%  { background-position: 100% 100%; }
+    100% { background-position: 0% 0%; }
+  }
+
+  /* ===== brilho ambiente que cruza o fundo ===== */
+  .brilho-varredura {
+    position: fixed;
+    inset: -20% -20%;
+    background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.12) 48%, transparent 62%);
+    background-size: 250% 250%;
+    animation: varrer 7s linear infinite;
+    z-index: 0;
+    pointer-events: none;
+  }
+  @keyframes varrer {
+    0%   { background-position: 0% 0%; }
+    100% { background-position: 100% 100%; }
+  }
+
+  /* ===== confete espalhado pelo fundo ===== */
+  .confete-bg {
+    position: fixed;
+    width: 9px;
+    height: 13px;
+    opacity: 0.85;
+    z-index: 0;
+    border-radius: 2px;
+    animation: confeteCair 6s ease-in-out infinite;
+  }
+  @keyframes confeteCair {
+    0%   { transform: translateY(-12px) rotate(0deg); opacity: 0.85; }
+    50%  { transform: translateY(16px) rotate(180deg); opacity: 0.5; }
+    100% { transform: translateY(-12px) rotate(360deg); opacity: 0.85; }
+  }
+
+  .wrapper {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ===== Logo topo ===== */
+  @keyframes logoFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+  }
+  @keyframes logoIn {
+    from { opacity: 0; transform: translateY(-14px) scale(0.9); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .logo-topo {
+    margin-bottom: 22px;
+    animation: logoIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .logo-topo img {
+    height: 34px;
+    width: auto;
+    display: block;
+    filter: drop-shadow(0 6px 16px rgba(0,0,0,0.25));
+    animation: logoFloat 4s ease-in-out infinite;
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(22px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .card {
+    width: 100%;
+    background: var(--cor-card);
+    border-radius: 26px;
+    padding: 42px 28px 32px;
+    box-shadow: 0 30px 60px rgba(30, 10, 60, 0.5);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    animation: cardIn 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--roxo-1), var(--roxo-3), var(--roxo-4), var(--roxo-2), var(--roxo-1));
+    background-size: 250% 100%;
+    animation: barraCorrida 3s linear infinite;
+  }
+  @keyframes barraCorrida {
+    0%   { background-position: 0% 0%; }
+    100% { background-position: 250% 0%; }
+  }
+
+  .selo-flash {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: linear-gradient(135deg, var(--roxo-3), var(--roxo-1));
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 6px 11px;
+    border-radius: 999px;
+    box-shadow: 0 6px 16px rgba(109, 40, 217, 0.45);
+    animation: pulsarSelo 2.4s ease-in-out infinite;
+  }
+  @keyframes pulsarSelo {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.07); }
+  }
+
+  .titulo {
+    font-size: calc({{ font_size_val }}px + 9px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--cor-texto);
+    margin: 0 0 14px;
+    line-height: 1.22;
+  }
+  .titulo .ponto { color: var(--roxo-3); }
+
+  .mensagem {
+    font-size: {{ font_size_val }}px;
+    font-weight: 400;
+    line-height: 1.75;
+    color: #4b3f63;
+    white-space: pre-line;
+    margin: 0;
+    word-wrap: break-word;
+  }
+
+  /* ===== Cartão de fidelidade (carimbos) ===== */
+  .fidelidade-bloco {
+    margin-top: 30px;
+    padding-top: 26px;
+    border-top: 1px dashed #e4d9fb;
+  }
+
+  .fidelidade-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--roxo-3);
+    margin: 0 0 16px;
+  }
+
+  /* ===== Barra de progresso ===== */
+  .progresso-shell {
+    width: 100%;
+    height: 10px;
+    background: var(--roxo-suave);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .progresso-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--roxo-2), var(--roxo-3), var(--roxo-4));
+    background-size: 200% 100%;
+    animation: fluxoProgresso 2.5s linear infinite;
+    transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+  }
+  @keyframes fluxoProgresso {
+    0%   { background-position: 0% 0%; }
+    100% { background-position: 200% 0%; }
+  }
+  .progresso-fill::after {
+    content: "";
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 14px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.85));
+    animation: brilhoPonta 1.6s ease-in-out infinite;
+  }
+  @keyframes brilhoPonta {
+    0%, 100% { opacity: 0.4; }
+    50%      { opacity: 1; }
+  }
+
+  .carimbos-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  @keyframes carimboPop {
+    0%   { opacity: 0; transform: scale(0.4) rotate(-25deg); }
+    60%  { transform: scale(1.15) rotate(6deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg); }
+  }
+
+  .carimbo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .carimbo.vazio {
+    border: 2px dashed #d9c9fb;
+    background: rgba(237, 233, 254, 0.4);
+  }
+
+  .carimbo.cheio {
+    background: linear-gradient(155deg, var(--roxo-4) 0%, var(--roxo-3) 55%, var(--roxo-1) 100%);
+    box-shadow: 0 6px 16px rgba(109, 40, 217, 0.55);
+    animation: carimboPop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .carimbo.cheio.ultimo::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid var(--roxo-3);
+    animation: anelPulso 1.6s ease-out infinite;
+  }
+  @keyframes anelPulso {
+    0%   { transform: scale(0.9); opacity: 0.9; }
+    100% { transform: scale(1.5); opacity: 0; }
+  }
+
+  .carimbo.cheio svg {
+    width: 18px;
+    height: 18px;
+    color: #ffffff;
+  }
+
+  .fidelidade-status {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--cor-texto);
+    margin: 0 0 4px;
+  }
+  .fidelidade-status strong { color: var(--roxo-2); }
+
+  .fidelidade-premio {
+    font-size: 13px;
+    color: #4b3f63;
+    margin: 6px 0 0;
+    line-height: 1.5;
+  }
+  .fidelidade-premio strong { color: var(--cor-texto); font-weight: 700; }
+
+  /* ===== Estado completo / resgate liberado ===== */
+  @keyframes selBounce {
+    0%   { opacity: 0; transform: translateY(10px) scale(0.85); }
+    60%  { transform: translateY(-3px) scale(1.05); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .selo-completo {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 11px 20px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #ede9fe, #ddd0fb);
+    border: 1px solid var(--roxo-3);
+    color: var(--roxo-1);
+    font-weight: 800;
+    font-size: 13.5px;
+    position: relative;
+    animation: selBounce 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+  }
+
+  .confete-selo {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 2px;
+    opacity: 0.9;
+    animation: confeteFloat 2.6s ease-in-out infinite;
+  }
+  @keyframes confeteFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.9; }
+    50%      { transform: translateY(-13px) rotate(180deg); opacity: 0.4; }
+  }
+
+  /* ===== CTA WhatsApp estilo Leanttro ===== */
+  .cta-whats {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 24px;
+    padding: 13px 24px;
+    border-radius: 999px;
+    background: var(--whats);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 13.5px;
+    text-decoration: none;
+    box-shadow: 0 10px 24px rgba(37, 211, 102, 0.45);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-whats:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px rgba(37, 211, 102, 0.55);
+  }
+  .cta-whats svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .rodape { margin-top: 26px; text-align: center; }
+  .rodape a {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    letter-spacing: 0.02em;
+    transition: color 0.2s ease;
+  }
+  .rodape a:hover { color: #ffffff; text-decoration: underline; }
+
+  @media (max-width: 380px) {
+    .card { padding: 34px 20px 26px; border-radius: 18px; }
+    .titulo { font-size: calc({{ font_size_val }}px + 6px); }
+    .carimbo { width: 36px; height: 36px; }
+    .logo-topo img { height: 28px; }
+  }
+</style>
+</head>
+<body>
+
+  {% set meta = (page.meta or 10) | int %}
+  {% set atual_bruto = (carimbos_atual or 0) | int %}
+  {% set atual = [atual_bruto, meta] | min %}
+  {% set completo = atual_bruto >= meta %}
+  {% set percentual = ((atual / meta) * 100) if meta > 0 else 0 %}
+
+  <div class="brilho-varredura"></div>
+
+  <!-- confetes espalhados pelo fundo -->
+  <span class="confete-bg" style="left:6%; top:12%; background:#ffffff; animation-delay:0s;"></span>
+  <span class="confete-bg" style="left:14%; top:70%; background:#a78bfa; animation-delay:0.4s;"></span>
+  <span class="confete-bg" style="left:22%; top:35%; background:#ffffff; animation-delay:0.8s;"></span>
+  <span class="confete-bg" style="left:30%; top:88%; background:#4c1d95; animation-delay:1.2s;"></span>
+  <span class="confete-bg" style="left:8%; top:50%; background:#c4b5fd; animation-delay:1.6s;"></span>
+  <span class="confete-bg" style="right:10%; top:8%; background:#ffffff; animation-delay:0.2s;"></span>
+  <span class="confete-bg" style="right:18%; top:60%; background:#a78bfa; animation-delay:0.6s;"></span>
+  <span class="confete-bg" style="right:6%; top:30%; background:#ffffff; animation-delay:1s;"></span>
+  <span class="confete-bg" style="right:26%; top:80%; background:#4c1d95; animation-delay:1.4s;"></span>
+  <span class="confete-bg" style="right:14%; top:45%; background:#c4b5fd; animation-delay:1.8s;"></span>
+  <span class="confete-bg" style="left:48%; top:6%; background:#a78bfa; animation-delay:0.3s;"></span>
+  <span class="confete-bg" style="left:42%; top:92%; background:#ffffff; animation-delay:0.9s;"></span>
+
+  <div class="wrapper">
+
+    <div class="logo-topo">
+      <img src="https://res.cloudinary.com/dhu1cqvrb/image/upload/v1779207400/leanttro_bohuce.png" alt="Leanttro">
+    </div>
+
+    <div class="card">
+      <span class="selo-flash">Cliente Leanttro</span>
+
+      <h1 class="titulo">{{ page.titulo }}</h1>
+      <p class="mensagem">{{ page.mensagem }}</p>
+
+      <div class="fidelidade-bloco">
+        <p class="fidelidade-label">Seu cartão fidelidade</p>
+
+        <div class="progresso-shell">
+          <div class="progresso-fill" style="width: {{ percentual }}%;"></div>
+        </div>
+
+        <div class="carimbos-grid">
+          {% for i in range(meta) %}
+            {% if i < atual %}
+              <span class="carimbo cheio{% if i == atual - 1 %} ultimo{% endif %}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 6 9 17l-5-5"/>
+                </svg>
+              </span>
+            {% else %}
+              <span class="carimbo vazio"></span>
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        {% if completo %}
+          <p class="fidelidade-status"><strong>{{ meta }}/{{ meta }}</strong> carimbos completos!</p>
+        {% else %}
+          <p class="fidelidade-status"><strong>{{ atual }}/{{ meta }}</strong> carimbos — faltam {{ meta - atual }} pro prêmio</p>
+        {% endif %}
+
+        <p class="fidelidade-premio">Prêmio: <strong>{{ page.premio }}</strong></p>
+
+        {% if completo %}
+          <span class="selo-completo">
+            🎉 Prêmio liberado — é só resgatar!
+            <span class="confete-selo" style="left:-4px; top:-2px; background:var(--roxo-3); animation-delay:0s;"></span>
+            <span class="confete-selo" style="right:-2px; top:2px; background:#4c1d95; animation-delay:0.6s;"></span>
+            <span class="confete-selo" style="right:14px; bottom:-4px; background:var(--roxo-1); animation-delay:1.2s;"></span>
+          </span>
+        {% endif %}
+
+        <div>
+          <a class="cta-whats" href="https://wa.me/" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.28-1.38a9.9 9.9 0 0 0 4.76 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.86 9.86 0 0 0 12.04 2z"/></svg>
+            Falar no WhatsApp
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="rodape">
+      <a href="https://qrcodebrindes.com.br" target="_blank" rel="noopener">Feito com QR Code Brindes &copy; {{ current_year }}</a>
+    </div>
+  </div>
+
+</body>
+</html>

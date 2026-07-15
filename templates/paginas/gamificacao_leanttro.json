@@ -1,0 +1,20 @@
+{
+  "nome": "Cartão Fidelidade — Leanttro",
+  "tier": "exclusivo",
+  "exclusivo": true,
+  "preco": 0,
+  "preview_url": "",
+  "demo_carimbos_atual": 7,
+  "campos": [
+    {"tipo": "texto", "nome": "titulo", "label": "Nome da promoção/estabelecimento"},
+    {"tipo": "textarea", "nome": "mensagem", "label": "Mensagem pro cliente"},
+    {"tipo": "numero", "nome": "meta", "label": "Quantos carimbos pra ganhar o prêmio"},
+    {"tipo": "texto", "nome": "premio", "label": "Qual é o prêmio"}
+  ],
+  "demo": {
+    "titulo": "Cartão Fidelidade — Leanttro",
+    "mensagem": "A cada projeto fechado, a gente carimba seu cartão!\nJunte e ganhe um desconto exclusivo no próximo site.",
+    "meta": 10,
+    "premio": "20% OFF na próxima entrega"
+  }
+}
