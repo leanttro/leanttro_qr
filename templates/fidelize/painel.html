@@ -66,6 +66,22 @@
     border:none;padding:0;cursor:pointer;text-decoration:underline;font-family:inherit;
 }
 
+.modal-box-ajuda{max-width:540px}
+.modal-box-ajuda ul{margin:0 0 4px;padding-left:20px}
+.modal-box-ajuda li{margin-bottom:12px;font-size:.92em;line-height:1.5;color:var(--ink)}
+.modal-box-ajuda li strong{color:var(--ink-black)}
+
+.ajuda-flutuante{
+    position:fixed;bottom:22px;right:22px;width:46px;height:46px;border-radius:50%;
+    background:var(--ink-black);color:#fff;border:none;font-weight:800;font-size:1.15em;
+    cursor:pointer;box-shadow:var(--shadow-sm);z-index:90;
+    display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;
+}
+.ajuda-flutuante:hover{background:var(--chrome-4)}
+@media (max-width:700px){
+    .ajuda-flutuante{bottom:16px;right:16px;width:42px;height:42px}
+}
+
 .modal-overlay{
     display:none;position:fixed;inset:0;background:rgba(20,20,20,.45);
     align-items:center;justify-content:center;z-index:100;padding:20px;
@@ -163,6 +179,13 @@
     </form>
 
     {% if paginas %}
+        <div class="criar-qr-form">
+            <p>Sobrescreve título, mensagem e os campos abaixo em <strong>todos</strong> os seus cartões de uma vez.</p>
+            <button class="btn-nav-secondary" type="button" onclick="abrirModal('bulk-editar')">Editar todos os cartões</button>
+        </div>
+    {% endif %}
+
+    {% if paginas %}
         <div class="sorteio-box">
             <p>Sorteia um dos seus QR codes/cartões — útil pra escolher uma unidade, brinde ou destaque do mês.</p>
             <button class="btn-nav-secondary" type="button" id="btn-sortear">🎲 Sortear um QR code</button>
@@ -234,6 +257,51 @@
         <div class="vazio">Você ainda não criou nenhum QR code de fidelidade. Clique em "Criar novo QR code" acima.</div>
     {% endif %}
 
+    {% if paginas %}
+        <div class="modal-overlay" id="modal-bulk-editar">
+            <div class="modal-box">
+                <h3>Editar todos os cartões</h3>
+                <p style="margin:-8px 0 18px;font-size:.86em;color:var(--ink-soft)">
+                    Isso substitui título e mensagem em <strong>todos</strong> os seus cartões pelo mesmo valor.
+                    Os campos abaixo (ex: meta, prêmio) só são aplicados a um cartão se o template <em>daquele</em> cartão realmente tiver esse campo — os demais são ignorados sem erro.
+                </p>
+                <form method="POST" action="/painel/aplicar-campos-todos" enctype="multipart/form-data"
+                      onsubmit="return confirm('Isso vai sobrescrever título, mensagem e os campos abaixo em TODOS os seus QR codes/cartões. Não dá pra desfazer. Continuar?');">
+                    <div class="modal-campo">
+                        <label for="bulk-titulo">Título</label>
+                        <input type="text" id="bulk-titulo" name="titulo" maxlength="120" required>
+                    </div>
+                    <div class="modal-campo">
+                        <label for="bulk-mensagem">Mensagem</label>
+                        <textarea id="bulk-mensagem" name="mensagem" required></textarea>
+                    </div>
+                    {% for campo in campos_bulk_uniao %}
+                        {% if campo.tipo == 'imagem' %}
+                            <div class="modal-campo">
+                                <label for="bulk-foto">{{ campo.label or 'Foto' }} (opcional — se enviar, vale pra todos)</label>
+                                <input type="file" id="bulk-foto" name="foto" accept="image/*">
+                            </div>
+                        {% elif campo.tipo == 'numero' %}
+                            <div class="modal-campo">
+                                <label for="bulk-{{ campo.nome }}">{{ campo.label or campo.nome }}</label>
+                                <input type="number" id="bulk-{{ campo.nome }}" name="{{ campo.nome }}">
+                            </div>
+                        {% else %}
+                            <div class="modal-campo">
+                                <label for="bulk-{{ campo.nome }}">{{ campo.label or campo.nome }}</label>
+                                <input type="text" id="bulk-{{ campo.nome }}" name="{{ campo.nome }}">
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    <div class="modal-acoes">
+                        <button type="button" class="modal-cancelar" onclick="fecharModal('bulk-editar')">Cancelar</button>
+                        <button type="submit" class="modal-salvar">Salvar em todos</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+
     {% for p in paginas %}
         <div class="modal-overlay" id="modal-{{ p.id }}">
             <div class="modal-box">
@@ -293,6 +361,26 @@
             (window.CAMPOS_ATUAIS = window.CAMPOS_ATUAIS || {})['{{ p.id }}'] = {{ p.campos_extra_dict | tojson }};
         </script>
     {% endfor %}
+
+    <div class="modal-overlay" id="modal-ajuda">
+        <div class="modal-box modal-box-ajuda">
+            <h3>Como funciona o painel</h3>
+            <ul>
+                <li><strong>+ Criar novo QR code</strong> — gera um cartão fidelidade novo, com link e QR code próprios pra um cliente/unidade.</li>
+                <li><strong>Editar</strong> (em cada linha) — muda título, mensagem, meta de carimbos e prêmio daquele cartão específico{% if templates_gamificacao|length > 1 %} (e o modelo visual, se você tiver mais de um){% endif %}.</li>
+                <li><strong>+1 / Zerar</strong> — carimba (ou zera) o cartão na mão, direto do painel, sem precisar abrir o link do cliente.</li>
+                <li><strong>Baixar PNG</strong> — baixa a imagem do QR code pra imprimir e colar no balcão.</li>
+                <li><strong>Abrir / Compartilhar</strong> — abre o link do cartão ou manda pro cliente (WhatsApp, etc.).</li>
+                <li><strong>Salvar link</strong> — troca só a parte final do endereço; o começo continua fixo com o nome do seu negócio.</li>
+                <li><strong>Sortear um QR code</strong> — sorteia aleatoriamente um dos seus cartões, útil pra escolher uma unidade ou destaque do mês.</li>
+                {% if paginas %}<li><strong>Editar todos os cartões</strong>{% if templates_gamificacao|length > 1 %} / <strong>Aplicar a todos</strong>{% endif %} — muda título, mensagem e campos{% if templates_gamificacao|length > 1 %} (ou o modelo visual){% endif %} de uma vez só, em todos os seus cartões.</li>{% endif %}
+            </ul>
+            <div class="modal-acoes">
+                <button type="button" class="modal-salvar" onclick="fecharModalAjuda()">Entendi</button>
+            </div>
+        </div>
+    </div>
+    <button type="button" class="ajuda-flutuante" title="Como funciona o painel" onclick="abrirModal('ajuda')">?</button>
 </div>
 
 <script>
@@ -380,6 +468,30 @@ function fecharModal(id) {
     const modal = document.getElementById('modal-' + id);
     if (modal) modal.classList.remove('aberto');
 }
+
+// --- Pop-up de "como funciona", só aparece sozinho na primeira vez ---
+// (fica salvo no localStorage do navegador, por conta — se ela trocar de
+// navegador/aparelho, vê de novo uma vez; isso é esperado e inofensivo).
+const CHAVE_ONBOARDING = 'fidelize_onboarding_visto_{{ conta.id }}';
+
+function marcarOnboardingVisto() {
+    try { localStorage.setItem(CHAVE_ONBOARDING, '1'); } catch (e) { /* navegador sem localStorage, ignora */ }
+}
+
+function fecharModalAjuda() {
+    fecharModal('ajuda');
+    marcarOnboardingVisto();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    let jaViu = false;
+    try { jaViu = localStorage.getItem(CHAVE_ONBOARDING) === '1'; } catch (e) { /* ignora */ }
+    if (!jaViu) {
+        abrirModal('ajuda');
+        marcarOnboardingVisto();
+    }
+});
+
 document.addEventListener('click', function (e) {
     if (e.target.classList.contains('modal-overlay')) {
         e.target.classList.remove('aberto');
