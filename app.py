@@ -776,10 +776,18 @@ def fidelize_painel():
         ORDER BY p.id DESC
     """, (conta_id,))
 
+    # Prefixo fixo do link (nome do negócio slugificado + '-'), pra manter a
+    # marca no link mesmo quando ela edita a parte de trás. Mesma função
+    # (slugify_cidade) usada em _fidelize_gerar_slug_unico, pra consistência.
+    prefixo_slug = (slugify_cidade(conta['nome_negocio']) or 'fidelidade') + '-'
+    for p in paginas:
+        p['sufixo_atual'] = p['slug'][len(prefixo_slug):] if p['slug'].startswith(prefixo_slug) else p['slug']
+
     return render_template(
         'fidelize/painel.html',
         conta=conta,
         paginas=paginas,
+        prefixo_slug=prefixo_slug,
         base_url=BASE_URL,
         current_year=datetime.now().year,
     )
@@ -824,6 +832,46 @@ def fidelize_criar_qr():
         )
 
     flash('QR code criado com sucesso!', 'success')
+    return redirect('/painel')
+
+
+# --- EDITAR O LINK (slug) DE UM QR CODE — prefixo fixo (nome do negócio),
+# só a parte de trás é livre pra ela escolher. ---
+@app.route('/painel/pagina/<int:pagina_id>/slug', methods=['POST'], subdomain='fidelize')
+@fidelize_login_required
+def fidelize_editar_slug(pagina_id):
+    conta_id = session['fidelize_conta_id']
+    conta = query_one("SELECT * FROM brindes_fidelidade_contas WHERE id = %s", (conta_id,))
+    if not conta:
+        session.pop('fidelize_conta_id', None)
+        return redirect('/login')
+
+    # WHERE conta_id = %s garante que ela só edita página da própria conta,
+    # mesmo que alguém tente forjar o pagina_id na URL.
+    pagina = query_one(
+        "SELECT id, slug FROM brindes_paginas WHERE id = %s AND conta_id = %s",
+        (pagina_id, conta_id)
+    )
+    if not pagina:
+        abort(404)
+
+    prefixo_slug = (slugify_cidade(conta['nome_negocio']) or 'fidelidade') + '-'
+    sufixo = slugify_cidade(request.form.get('sufixo', ''))
+
+    if not sufixo:
+        flash('Digite um complemento válido pro link (só letras, números e hífen).', 'error')
+        return redirect('/painel')
+
+    novo_slug = f"{prefixo_slug}{sufixo}"
+
+    if novo_slug != pagina['slug']:
+        colisao = query_one("SELECT id FROM brindes_paginas WHERE slug = %s", (novo_slug,))
+        if colisao and colisao['id'] != pagina_id:
+            flash('Esse link já está em uso, escolha outro complemento.', 'error')
+            return redirect('/painel')
+        execute("UPDATE brindes_paginas SET slug = %s WHERE id = %s", (novo_slug, pagina_id))
+        flash('Link atualizado com sucesso!', 'success')
+
     return redirect('/painel')
 
 
