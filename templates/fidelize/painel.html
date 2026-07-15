@@ -108,7 +108,7 @@
 .modal-box h3{margin:0 0 18px;font-size:1.2em}
 .modal-campo{margin-bottom:16px}
 .modal-campo label{display:block;font-size:.82em;font-weight:700;color:var(--chrome-4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
-.modal-campo input[type="text"],.modal-campo input[type="number"],.modal-campo textarea,.modal-campo select{
+.modal-campo input[type="text"],.modal-campo input[type="number"],.modal-campo input[type="password"],.modal-campo input[type="email"],.modal-campo textarea,.modal-campo select{
     width:100%;padding:9px 11px;border:1px solid var(--line-strong);border-radius:8px;
     font-size:.94em;font-family:'Montserrat',sans-serif;color:var(--ink);box-sizing:border-box;
 }
@@ -174,6 +174,7 @@
             <h1>{{ conta.nome_negocio }}</h1>
             <p>Seus cartões de fidelidade e QR codes.</p>
         </div>
+        <button type="button" class="btn-nav-secondary" onclick="abrirModal('conta')">⚙️ Minha conta</button>
     </div>
 
     <div class="stats-row">
@@ -399,6 +400,30 @@
             (window.CAMPOS_ATUAIS = window.CAMPOS_ATUAIS || {})['{{ p.id }}'] = {{ p.campos_extra_dict | tojson }};
         </script>
     {% endfor %}
+
+    <div class="modal-overlay" id="modal-conta">
+        <div class="modal-box">
+            <h3>Minha conta</h3>
+            <form method="POST" action="/painel/conta">
+                <div class="modal-campo">
+                    <label for="conta-email">E-mail</label>
+                    <input type="text" id="conta-email" name="novo_email" value="{{ conta.email }}">
+                </div>
+                <div class="modal-campo">
+                    <label for="conta-senha-nova">Nova senha (deixe em branco pra manter a atual)</label>
+                    <input type="password" id="conta-senha-nova" name="senha_nova" minlength="6" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+                </div>
+                <div class="modal-campo">
+                    <label for="conta-senha-atual">Senha atual (obrigatória pra confirmar)</label>
+                    <input type="password" id="conta-senha-atual" name="senha_atual" required autocomplete="current-password">
+                </div>
+                <div class="modal-acoes">
+                    <button type="button" class="modal-cancelar" onclick="fecharModal('conta')">Cancelar</button>
+                    <button type="submit" class="modal-salvar">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <div class="modal-overlay" id="modal-ajuda">
         <div class="modal-box modal-box-ajuda">
