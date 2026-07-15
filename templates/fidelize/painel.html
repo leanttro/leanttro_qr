@@ -78,7 +78,7 @@
 .modal-box h3{margin:0 0 18px;font-size:1.2em}
 .modal-campo{margin-bottom:16px}
 .modal-campo label{display:block;font-size:.82em;font-weight:700;color:var(--chrome-4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
-.modal-campo input[type="text"],.modal-campo input[type="number"],.modal-campo textarea{
+.modal-campo input[type="text"],.modal-campo input[type="number"],.modal-campo textarea,.modal-campo select{
     width:100%;padding:9px 11px;border:1px solid var(--line-strong);border-radius:8px;
     font-size:.94em;font-family:'Montserrat',sans-serif;color:var(--ink);box-sizing:border-box;
 }
@@ -221,27 +221,41 @@
                         <label for="mensagem-{{ p.id }}">Mensagem</label>
                         <textarea id="mensagem-{{ p.id }}" name="mensagem">{{ p.mensagem or '' }}</textarea>
                     </div>
-                    {% for campo in p.campos_template %}
-                        {% if campo.nome and campo.nome not in ['titulo', 'mensagem', 'foto', 'timeline'] %}
-                            {% if campo.tipo == 'imagem' %}
-                                <div class="modal-campo">
-                                    <label for="foto-{{ p.id }}">{{ campo.label or 'Foto' }}</label>
-                                    {% if p.foto_url %}<div class="foto-atual">Já tem uma foto salva — escolha um arquivo só se quiser trocar.</div>{% endif %}
-                                    <input type="file" id="foto-{{ p.id }}" name="foto" accept="image/*">
-                                </div>
-                            {% elif campo.tipo == 'numero' %}
-                                <div class="modal-campo">
-                                    <label for="{{ campo.nome }}-{{ p.id }}">{{ campo.label or campo.nome }}</label>
-                                    <input type="number" id="{{ campo.nome }}-{{ p.id }}" name="{{ campo.nome }}" value="{{ p.campos_extra_dict.get(campo.nome, '') }}">
-                                </div>
-                            {% else %}
-                                <div class="modal-campo">
-                                    <label for="{{ campo.nome }}-{{ p.id }}">{{ campo.label or campo.nome }}</label>
-                                    <input type="text" id="{{ campo.nome }}-{{ p.id }}" name="{{ campo.nome }}" value="{{ p.campos_extra_dict.get(campo.nome, '') }}">
-                                </div>
+                    {% if templates_gamificacao|length > 1 %}
+                        <div class="modal-campo">
+                            <label for="template-{{ p.id }}">Modelo do cartão</label>
+                            <select id="template-{{ p.id }}" name="template" onchange="renderizarCamposTemplate('{{ p.id }}', this.value)">
+                                {% for t in templates_gamificacao %}
+                                    <option value="{{ t.slug }}" {% if t.slug == p.template %}selected{% endif %}>{{ t.nome or t.slug }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    {% else %}
+                        <input type="hidden" name="template" value="{{ p.template }}">
+                    {% endif %}
+                    <div id="campos-dinamicos-{{ p.id }}" data-foto-url="{{ p.foto_url or '' }}">
+                        {% for campo in p.campos_template %}
+                            {% if campo.nome and campo.nome not in ['titulo', 'mensagem', 'foto', 'timeline'] %}
+                                {% if campo.tipo == 'imagem' %}
+                                    <div class="modal-campo">
+                                        <label for="foto-{{ p.id }}">{{ campo.label or 'Foto' }}</label>
+                                        {% if p.foto_url %}<div class="foto-atual">Já tem uma foto salva — escolha um arquivo só se quiser trocar.</div>{% endif %}
+                                        <input type="file" id="foto-{{ p.id }}" name="foto" accept="image/*">
+                                    </div>
+                                {% elif campo.tipo == 'numero' %}
+                                    <div class="modal-campo">
+                                        <label for="{{ campo.nome }}-{{ p.id }}">{{ campo.label or campo.nome }}</label>
+                                        <input type="number" id="{{ campo.nome }}-{{ p.id }}" name="{{ campo.nome }}" value="{{ p.campos_extra_dict.get(campo.nome, '') }}">
+                                    </div>
+                                {% else %}
+                                    <div class="modal-campo">
+                                        <label for="{{ campo.nome }}-{{ p.id }}">{{ campo.label or campo.nome }}</label>
+                                        <input type="text" id="{{ campo.nome }}-{{ p.id }}" name="{{ campo.nome }}" value="{{ p.campos_extra_dict.get(campo.nome, '') }}">
+                                    </div>
+                                {% endif %}
                             {% endif %}
-                        {% endif %}
-                    {% endfor %}
+                        {% endfor %}
+                    </div>
                     <div class="modal-acoes">
                         <button type="button" class="modal-cancelar" onclick="fecharModal('{{ p.id }}')">Cancelar</button>
                         <button type="submit" class="modal-salvar">Salvar</button>
@@ -249,10 +263,73 @@
                 </form>
             </div>
         </div>
+        <script>
+            (window.CAMPOS_ATUAIS = window.CAMPOS_ATUAIS || {})['{{ p.id }}'] = {{ p.campos_extra_dict | tojson }};
+        </script>
     {% endfor %}
 </div>
 
 <script>
+// Catálogo dos templates da família "gamificacao*" (slug, nome, campos) —
+// usado pra re-renderizar os campos extras do modal no navegador quando o
+// dono troca o dropdown de modelo, sem precisar recarregar a página.
+const TEMPLATES_GAMIFICACAO = {{ templates_gamificacao_json | safe }};
+
+const CAMPOS_FIXOS_MODAL = ['titulo', 'mensagem', 'foto', 'timeline'];
+
+function renderizarCamposTemplate(pageId, slugSelecionado) {
+    const container = document.getElementById('campos-dinamicos-' + pageId);
+    if (!container) return;
+
+    const tpl = TEMPLATES_GAMIFICACAO.find(t => t.slug === slugSelecionado);
+    const campos = tpl ? (tpl.campos || []) : [];
+    const valoresAtuais = (window.CAMPOS_ATUAIS && window.CAMPOS_ATUAIS[pageId]) || {};
+    const fotoUrlAtual = container.dataset.fotoUrl || '';
+
+    container.innerHTML = '';
+    campos.forEach(campo => {
+        if (!campo.nome || CAMPOS_FIXOS_MODAL.includes(campo.nome)) return;
+
+        const wrap = document.createElement('div');
+        wrap.className = 'modal-campo';
+
+        const label = document.createElement('label');
+        const inputId = campo.nome + '-' + pageId;
+        label.setAttribute('for', inputId);
+        label.textContent = campo.label || campo.nome;
+        wrap.appendChild(label);
+
+        if (campo.tipo === 'imagem') {
+            if (fotoUrlAtual) {
+                const aviso = document.createElement('div');
+                aviso.className = 'foto-atual';
+                aviso.textContent = 'Já tem uma foto salva — escolha um arquivo só se quiser trocar.';
+                wrap.appendChild(aviso);
+            }
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.id = inputId;
+            input.name = 'foto';
+            input.accept = 'image/*';
+            wrap.appendChild(input);
+        } else {
+            const input = document.createElement('input');
+            input.type = campo.tipo === 'numero' ? 'number' : 'text';
+            input.id = inputId;
+            input.name = campo.nome;
+            // Preserva o valor se já existir um campo com o mesmo nome
+            // salvo (compartilhado entre o template antigo e o novo).
+            const valorExistente = valoresAtuais[campo.nome];
+            if (valorExistente !== undefined && valorExistente !== null) {
+                input.value = valorExistente;
+            }
+            wrap.appendChild(input);
+        }
+
+        container.appendChild(wrap);
+    });
+}
+
 function compartilharLink(url, titulo) {
     if (navigator.share) {
         navigator.share({ title: titulo, url: url }).catch(() => {});
