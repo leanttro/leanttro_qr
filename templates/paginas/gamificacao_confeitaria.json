@@ -1,0 +1,19 @@
+{
+  "nome": "Cartão Fidelidade Confeitaria",
+  "tier": "gratis",
+  "preco": 0,
+  "preview_url": "",
+  "demo_carimbos_atual": 6,
+  "campos": [
+    {"tipo": "texto", "nome": "titulo", "label": "Nome da promoção/estabelecimento"},
+    {"tipo": "textarea", "nome": "mensagem", "label": "Mensagem pro cliente"},
+    {"tipo": "numero", "nome": "meta", "label": "Quantos carimbos pra ganhar o prêmio"},
+    {"tipo": "texto", "nome": "premio", "label": "Qual é o prêmio"}
+  ],
+  "demo": {
+    "titulo": "Cartão Fidelidade — Doce Encanto",
+    "mensagem": "A cada encomenda, peça pra gente carimbar seu cartão!\nJunte e ganhe uma delícia especial.",
+    "meta": 10,
+    "premio": "1 dúzia de brigadeiros grátis"
+  }
+}
