@@ -893,6 +893,33 @@ def fidelize_criar_qr():
     return redirect('/painel')
 
 
+# --- TROCAR O TEMPLATE DE TODOS OS QR CODES DE UMA VEZ ---
+# Mesma validação de segurança do modal de edição individual (só aceita
+# slug que comece com "gamificacao" e que exista de fato em disco) — só que
+# aplicada a todas as páginas da conta de uma só vez, sem precisar abrir o
+# modal QR code por QR code. Não mexe em campos_extra de nenhuma página: os
+# valores continuam salvos, só passam a ser lidos pela lente do template
+# novo (mesmo comportamento não-destrutivo da troca individual).
+@app.route('/painel/aplicar-template-todos', methods=['POST'], subdomain='fidelize')
+@fidelize_login_required
+def fidelize_aplicar_template_todos():
+    conta_id = session['fidelize_conta_id']
+    template_form = (request.form.get('template') or '').strip()
+
+    if not (template_form.startswith('gamificacao') and get_template_por_slug(template_form)):
+        flash('Modelo inválido.', 'error')
+        return redirect('/painel')
+
+    execute("""
+        UPDATE brindes_paginas
+        SET template = %s
+        WHERE conta_id = %s AND template LIKE 'gamificacao%%'
+    """, (template_form, conta_id))
+
+    flash('Modelo aplicado a todos os seus QR codes!', 'success')
+    return redirect('/painel')
+
+
 # --- EDITAR O LINK (slug) DE UM QR CODE — prefixo fixo (nome do negócio),
 # só a parte de trás é livre pra ela escolher. O que ela digita ("apelido")
 # fica salvo separado do slug real: o slug real leva um sufixo aleatório
