@@ -1,0 +1,90 @@
+{% extends "fidelize/_base.html" %}
+
+{% block titulo %}Meu painel — Fidelize{% endblock %}
+
+{% block extra_css %}
+.painel-wrap{max-width:900px;margin:44px auto 80px;padding:0 24px}
+.painel-header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+.painel-header h1{font-size:1.6em}
+.painel-header p{color:var(--ink-soft);margin:6px 0 0;font-size:.94em}
+
+.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:28px}
+.stat-card{
+    background:var(--chrome-1);border:1px solid var(--line-strong);border-radius:var(--radius);
+    padding:20px 22px;box-shadow:var(--shadow-sm);
+}
+.stat-card .label{font-size:.76em;text-transform:uppercase;letter-spacing:.06em;color:var(--chrome-4);font-weight:700;margin-bottom:8px}
+.stat-card .valor{font-size:1.9em;font-weight:700;color:var(--ink-black)}
+
+.criar-qr-form{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    margin-bottom:32px;
+}
+.criar-qr-form p{margin:0;color:var(--ink-soft);font-size:.92em;max-width:44ch}
+
+.tabela-paginas{width:100%;border-collapse:collapse;background:var(--chrome-1);border:1px solid var(--line-strong);border-radius:var(--radius);overflow:hidden}
+.tabela-paginas th,.tabela-paginas td{padding:13px 16px;text-align:left;font-size:.92em;border-bottom:1px solid var(--line)}
+.tabela-paginas th{background:var(--surface);color:var(--chrome-4);text-transform:uppercase;font-size:.76em;letter-spacing:.05em}
+.tabela-paginas tr:last-child td{border-bottom:none}
+.tabela-paginas a{font-weight:700;color:var(--ink-black)}
+.tabela-paginas a:hover{text-decoration:underline}
+.vazio{text-align:center;color:var(--ink-soft);padding:40px 20px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--line)}
+
+@media (max-width:700px){
+    .stats-row{grid-template-columns:1fr}
+    .tabela-paginas{display:block;overflow-x:auto}
+}
+{% endblock %}
+
+{% block conteudo %}
+<div class="painel-wrap">
+    <div class="painel-header">
+        <div>
+            <h1>{{ conta.nome_negocio }}</h1>
+            <p>Seus cartões de fidelidade e QR codes.</p>
+        </div>
+    </div>
+
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="label">QR codes disponíveis</div>
+            <div class="valor">{{ conta.qr_codes_disponiveis }}</div>
+        </div>
+        <div class="stat-card">
+            <div class="label">Mensalidade</div>
+            <div class="valor">{{ 'Ativa' if conta.mensalidade_ativa else 'Inativa' }}</div>
+        </div>
+    </div>
+
+    <form class="criar-qr-form" method="POST" action="/painel/criar-qr">
+        <p>Cria um novo Cartão Fidelidade e gera o QR code pra imprimir no seu balcão.</p>
+        <button class="btn-nav-cta" type="submit">+ Criar novo QR code</button>
+    </form>
+
+    {% if paginas %}
+        <table class="tabela-paginas">
+            <thead>
+                <tr>
+                    <th>Link</th>
+                    <th>Template</th>
+                    <th>Scans</th>
+                    <th>QR code</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in paginas %}
+                    <tr>
+                        <td><a href="{{ base_url }}/{{ p.slug }}" target="_blank" rel="noopener">{{ p.titulo or p.slug }}</a></td>
+                        <td>{{ p.template }}</td>
+                        <td>{{ p.total_scans }}</td>
+                        <td><a href="{{ base_url }}/{{ p.slug }}/qr.png" target="_blank" rel="noopener">Baixar PNG</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="vazio">Você ainda não criou nenhum QR code de fidelidade. Clique em "Criar novo QR code" acima.</div>
+    {% endif %}
+</div>
+{% endblock %}
