@@ -93,6 +93,24 @@ WHATSAPP_COMPROVANTE = os.getenv("WHATSAPP_COMPROVANTE", "")
 # ainda não pagou. Depois disso, o slug é liberado de novo pra qualquer um.
 PIX_RESERVA_HORAS = 48
 
+# --- FIDELIZE — trial e mensalidade ---
+# Quantos QR codes toda conta nova ganha de graça no cadastro, sem precisar
+# de pagamento nenhum (ver fidelize_cadastro). Ela pode usar e testar na
+# hora; o Pix só entra quando esse saldo acabar.
+FIDELIZE_QR_CODES_TRIAL = 3
+# Teto de QR codes por conta, mesmo pra quem já paga mensalidade (ver
+# fidelize_criar_qr) — sem isso, mensalidade_ativa=True liberaria criação
+# ilimitada.
+FIDELIZE_LIMITE_QR_CODES_POR_CONTA = 100
+# Valor da mensalidade que libera criação até o teto acima. Planos maiores
+# (mais de 100 QR codes) ainda não têm preço fechado — continuam sendo
+# negociados na mão pelo WhatsApp, sem Pix automático.
+FIDELIZE_PRECO_MENSALIDADE = 19.00
+# Número pra onde o botão de "mandar comprovante" do Fidelize aponta. Cai no
+# mesmo WhatsApp do QRCodeBrindes por padrão; dá pra separar depois com uma
+# env própria (WHATSAPP_FIDELIZE) se você quiser atender em número diferente.
+WHATSAPP_FIDELIZE = os.getenv("WHATSAPP_FIDELIZE", WHATSAPP_COMPROVANTE)
+
 # --- BANCO ---
 def get_db():
     conn = psycopg2.connect(**DB_CONFIG)
@@ -924,13 +942,13 @@ def fidelize_cadastro():
             conta_id = execute_returning("""
                 INSERT INTO brindes_fidelidade_contas
                     (nome_negocio, email, senha_hash, plano_tipo, qr_codes_disponiveis, mensalidade_ativa, ativo)
-                VALUES (%s, %s, %s, 'pacote', 0, FALSE, TRUE)
+                VALUES (%s, %s, %s, 'pacote', %s, FALSE, TRUE)
                 RETURNING id
-            """, (nome_negocio, email, generate_password_hash(senha)))
+            """, (nome_negocio, email, generate_password_hash(senha), FIDELIZE_QR_CODES_TRIAL))
 
             session['fidelize_conta_id'] = conta_id
             session['fidelize_conta_nome'] = nome_negocio
-            flash('Conta criada com sucesso! Fale com a gente pra liberar seu primeiro pacote de QR codes.', 'success')
+            flash(f'Conta criada com sucesso! Você já ganhou {FIDELIZE_QR_CODES_TRIAL} QR codes grátis pra testar.', 'success')
             return redirect('/painel')
 
     return render_template('fidelize/cadastro.html', erro=erro, current_year=datetime.now().year)
@@ -982,8 +1000,16 @@ def fidelize_painel():
     # Mesmo teto usado em fidelize_criar_qr — mandado pro template só pra
     # exibir "X de 100 QR codes usados" no painel, não é a validação em si
     # (a validação real acontece de novo na hora de criar, servidor-side).
-    LIMITE_QR_CODES_POR_CONTA = 100
     total_qr_codes_conta = len(paginas)
+
+    # Saldo grátis/pacote esgotado e sem mensalidade ativa = ela precisa
+    # assinar pra continuar criando. Calculado aqui pra mostrar o banner de
+    # cobrança no painel antes mesmo dela tentar criar e tomar o erro.
+    saldo_esgotado = (
+        not conta['mensalidade_ativa']
+        and conta['qr_codes_disponiveis'] <= 0
+        and total_qr_codes_conta < FIDELIZE_LIMITE_QR_CODES_POR_CONTA
+    )
 
     templates_disponiveis = carregar_templates()
     campos_por_template = {t['slug']: t.get('campos', []) for t in templates_disponiveis}
@@ -1063,8 +1089,53 @@ def fidelize_painel():
         templates_gamificacao=templates_gamificacao,
         templates_gamificacao_json=templates_gamificacao_json,
         campos_bulk_uniao=campos_bulk_uniao,
-        limite_qr_codes=LIMITE_QR_CODES_POR_CONTA,
+        limite_qr_codes=FIDELIZE_LIMITE_QR_CODES_POR_CONTA,
         total_qr_codes_conta=total_qr_codes_conta,
+        saldo_esgotado=saldo_esgotado,
+        preco_mensalidade=FIDELIZE_PRECO_MENSALIDADE,
+    )
+
+
+# --- ASSINAR MENSALIDADE (Pix dinâmico, mesmo padrão do template pago) ---
+@app.route('/painel/assinar', subdomain='fidelize')
+@fidelize_login_required
+def fidelize_assinar():
+    conta_id = session['fidelize_conta_id']
+    conta = query_one("SELECT * FROM brindes_fidelidade_contas WHERE id = %s", (conta_id,))
+    if not conta:
+        session.pop('fidelize_conta_id', None)
+        return redirect('/login')
+
+    preco = FIDELIZE_PRECO_MENSALIDADE
+    pix_payload = None
+    pix_qr_base64 = None
+    whatsapp_link = None
+
+    # txid leva o id da conta (não o slug — aqui não existe um slug único
+    # de cobrança) pra você identificar de quem é o Pix na hora de conferir
+    # e liberar em /admin#fidelize.
+    if PIX_CHAVE and PIX_NOME_RECEBEDOR and PIX_CIDADE and preco > 0:
+        pix_payload = gerar_pix_payload(
+            PIX_CHAVE, PIX_NOME_RECEBEDOR, PIX_CIDADE, preco, f"FIDELIZE{conta_id}"
+        )
+        pix_qr_base64 = gerar_pix_qr_base64(pix_payload)
+
+    if WHATSAPP_FIDELIZE:
+        msg = (
+            f"Oi! Paguei a mensalidade do Fidelize (R$ {preco:.2f}). "
+            f"Minha conta: {conta['nome_negocio']} ({conta['email']}). Segue o comprovante:"
+        )
+        whatsapp_link = f"https://wa.me/{WHATSAPP_FIDELIZE}?text={quote(msg)}"
+
+    return render_template(
+        'fidelize/pagamento.html',
+        conta=conta,
+        preco=preco,
+        limite_qr_codes=FIDELIZE_LIMITE_QR_CODES_POR_CONTA,
+        pix_payload=pix_payload,
+        pix_qr_base64=pix_qr_base64,
+        whatsapp_link=whatsapp_link,
+        current_year=datetime.now().year,
     )
 
 
@@ -1078,21 +1149,19 @@ def fidelize_criar_qr():
         return redirect('/login')
 
     if not (conta['mensalidade_ativa'] or conta['qr_codes_disponiveis'] > 0):
-        flash('Você não tem QR codes disponíveis. Fale com a gente pra liberar um pacote novo.', 'error')
+        flash(f'Seus QR codes grátis acabaram. Assine por R$ {FIDELIZE_PRECO_MENSALIDADE:.2f}/mês pra continuar criando.', 'error')
         return redirect('/painel')
 
-    # Teto de 100 QR codes por conta, mesmo pra quem já paga mensalidade
-    # (sem isso, mensalidade_ativa=True liberaria criação ilimitada). Conta
-    # todas as páginas da conta, sem filtrar por 'ativo' — desativar uma
-    # página não libera vaga nova, é teto de "já criados", não de "em uso
-    # agora".
-    LIMITE_QR_CODES_POR_CONTA = 100
+    # Teto de QR codes por conta, mesmo pra quem já paga mensalidade (sem
+    # isso, mensalidade_ativa=True liberaria criação ilimitada). Conta todas
+    # as páginas da conta, sem filtrar por 'ativo' — desativar uma página
+    # não libera vaga nova, é teto de "já criados", não de "em uso agora".
     total_qr_codes_conta = query_one(
         "SELECT COUNT(*) as c FROM brindes_paginas WHERE conta_id = %s",
         (conta_id,)
     )['c']
-    if total_qr_codes_conta >= LIMITE_QR_CODES_POR_CONTA:
-        flash(f'Você atingiu o limite de {LIMITE_QR_CODES_POR_CONTA} QR codes da conta. Fale com a gente se precisar de mais.', 'error')
+    if total_qr_codes_conta >= FIDELIZE_LIMITE_QR_CODES_POR_CONTA:
+        flash(f'Você atingiu o limite de {FIDELIZE_LIMITE_QR_CODES_POR_CONTA} QR codes da conta. Fale com a gente se precisar de mais.', 'error')
         return redirect('/painel')
 
     slug = _fidelize_gerar_slug_unico(conta['nome_negocio'])
