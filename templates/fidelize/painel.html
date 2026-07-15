@@ -70,6 +70,7 @@
                     <th>Template</th>
                     <th>Scans</th>
                     <th>QR code</th>
+                    <th>Gerenciar</th>
                 </tr>
             </thead>
             <tbody>
@@ -79,6 +80,7 @@
                         <td>{{ p.template }}</td>
                         <td>{{ p.total_scans }}</td>
                         <td><a href="{{ base_url }}/{{ p.slug }}/qr.png" target="_blank" rel="noopener">Baixar PNG</a></td>
+                        <td><a href="{{ base_url }}/{{ p.slug }}/painel">Editar / carimbar</a></td>
                     </tr>
                 {% endfor %}
             </tbody>
