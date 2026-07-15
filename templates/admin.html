@@ -318,6 +318,7 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
     <button class="nav-item" data-section="paginas">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><line x1="17.5" y1="14" x2="17.5" y2="21"/><line x1="14" y1="17.5" x2="21" y2="17.5"/></svg>
       Páginas (usuários)
+      {% if stats.paginas_pendentes %}<span class="badge badge-amber" style="margin-left:auto;">{{ stats.paginas_pendentes }}</span>{% endif %}
     </button>
     <button class="nav-item" data-section="templates">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
@@ -377,7 +378,7 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-label">Páginas / QR criados</div>
-          <div class="stat-value">{{ stats.total_paginas }}</div>
+          <div class="stat-value">{{ stats.total_paginas }}{% if stats.paginas_pendentes %} <span style="font-size:.55em;background:var(--amber);color:#1a1a1a;border-radius:999px;padding:2px 8px;vertical-align:middle;">{{ stats.paginas_pendentes }} pendente{{ 's' if stats.paginas_pendentes > 1 }}</span>{% endif %}</div>
         </div>
         <div class="stat-card">
           <div class="stat-label">Scans / acessos</div>
@@ -688,6 +689,41 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
 
     <!-- ═══════════════ PÁGINAS (USUÁRIOS) ═══════════════ -->
     <div class="section" id="sec-paginas">
+
+      {% if paginas_pendentes %}
+      <div class="card" style="border-left:4px solid var(--amber);">
+        <div class="card-header" style="gap:10px;">
+          <span class="card-title">⏳ Pagamentos pendentes (Pix)</span>
+          <span class="badge badge-amber">{{ paginas_pendentes|length }}</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Link (slug)</th><th>E-mail</th><th>Título</th><th>Template</th><th>Valor</th><th>Reservada em</th><th>Ações</th></tr></thead>
+            <tbody>
+              {% for p in paginas_pendentes %}
+              <tr>
+                <td style="font-weight:600;">/{{ p.slug }}</td>
+                <td class="td-muted">{{ p.email or '—' }}</td>
+                <td class="td-muted">{{ p.titulo or '—' }}</td>
+                <td class="td-muted">{{ p.template_nome }}</td>
+                <td>{% if p.template_preco %}R$ {{ '%.2f'|format(p.template_preco) }}{% else %}—{% endif %}</td>
+                <td class="td-muted">{{ p.created_at.strftime('%d/%m/%Y %H:%M') if p.created_at else '' }}</td>
+                <td class="td-actions">
+                  <form method="POST" action="/admin/paginas/{{ p.id }}/confirmar-pagamento" onsubmit="return confirm('Confirmar pagamento e ativar /{{ p.slug }}?');">
+                    <button class="btn btn-primary" style="font-size:12px;padding:5px 12px;">✓ Confirmar pagamento</button>
+                  </form>
+                  <form method="POST" action="/admin/paginas/{{ p.id }}/delete" onsubmit="return confirm('Excluir esta reserva pendente?');">
+                    <button class="btn-link" style="color:var(--red);font-size:12px;">✕ Excluir</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+
       <div class="card">
         <div class="table-wrap">
           <table>
