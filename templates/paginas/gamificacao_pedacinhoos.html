@@ -143,11 +143,15 @@
     to   { opacity: 1; }
   }
   .etiqueta-fio { display: none; }
+  .etiqueta-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 6px;
+  }
   .etiqueta {
-    position: absolute;
-    top: 64px;
-    right: 0;
-    max-width: 46%;
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
     background: linear-gradient(135deg, var(--rosa-2), var(--rosa-1));
     color: #fff;
     font-size: 10px;
@@ -155,13 +159,12 @@
     letter-spacing: 0.03em;
     text-transform: uppercase;
     line-height: 1.3;
-    padding: 7px 12px 7px 14px;
-    border-radius: 12px 0 0 12px;
+    padding: 7px 16px;
+    border-radius: 999px;
     box-shadow: 0 8px 18px rgba(232,121,154,0.5);
-    transform-origin: right center;
     z-index: 2;
-    white-space: normal;
-    text-align: right;
+    white-space: nowrap;
+    text-align: center;
     animation: etiquetaEntra 0.5s ease 0.5s both, etiquetaBalanca 2.6s ease-in-out 1.1s infinite;
   }
 
@@ -418,7 +421,7 @@
     .titulo { font-size: calc({{ font_size_val }} + 4px); margin-top: 6px; }
     .carimbo { width: 32px; height: 32px; }
     .emblema img { height: 70px; width: 70px; }
-    .etiqueta { top: 54px; font-size: 9px; max-width: 44%; padding: 6px 10px 6px 12px; }
+    .etiqueta { font-size: 9px; padding: 6px 14px; }
   }
 </style>
 </head>
@@ -447,7 +450,9 @@
     <div class="ticket e2">
       <div class="ticket-recorte"></div>
       <div class="etiqueta-fio"></div>
-      <span class="etiqueta">Cliente Especial 💕</span>
+      <div class="etiqueta-wrap">
+        <span class="etiqueta">Cliente Especial 💕</span>
+      </div>
 
       <h1 class="titulo">{{ page.titulo }}</h1>
       <p class="mensagem">{{ page.mensagem or 'Junte carimbos e ganhe prêmios especiais!' }}</p>
