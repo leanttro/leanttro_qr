@@ -794,6 +794,19 @@ def fidelize_painel():
     templates_disponiveis = carregar_templates()
     campos_por_template = {t['slug']: t.get('campos', []) for t in templates_disponiveis}
 
+    # Só os templates da família "gamificacao*" (prefixo no slug) — o modal
+    # de edição do Fidelize só pode oferecer troca entre esses, nunca o
+    # catálogo geral (presente/ocasião) do QRCodeBrindes.
+    templates_gamificacao = [
+        t for t in templates_disponiveis if t['slug'].startswith('gamificacao')
+    ]
+    # Mandado pro template como JSON pra alimentar o JS do modal (troca de
+    # template re-renderiza os campos extras no navegador, sem reload).
+    templates_gamificacao_json = json.dumps([
+        {'slug': t['slug'], 'nome': t.get('nome', t['slug']), 'campos': t.get('campos', [])}
+        for t in templates_gamificacao
+    ])
+
     # Prefixo fixo do link (nome do negócio slugificado + '-'), pra manter a
     # marca no link mesmo quando ela edita a parte de trás. Mesma função
     # (slugify_cidade) usada em _fidelize_gerar_slug_unico, pra consistência.
@@ -833,6 +846,8 @@ def fidelize_painel():
         prefixo_slug=prefixo_slug,
         base_url=BASE_URL,
         current_year=datetime.now().year,
+        templates_gamificacao=templates_gamificacao,
+        templates_gamificacao_json=templates_gamificacao_json,
     )
 
 
@@ -967,8 +982,24 @@ def fidelize_editar_pagina(pagina_id):
     if not pagina:
         abort(404)
 
-    template_slug = pagina.get('template', 'classic')
-    tpl_selecionado = get_template_por_slug(template_slug)
+    template_atual = pagina.get('template', 'classic')
+    template_form = (request.form.get('template') or '').strip()
+
+    # Segurança: só aceita trocar de template se o valor enviado pelo form
+    # (a) começar com "gamificacao" e (b) existir de fato em disco — nunca
+    # confia cegamente no que vem do form, pra ela não conseguir (por engano
+    # ou manipulação de request) trocar pro catálogo geral (presente/ocasião)
+    # do QRCodeBrindes, que não faz sentido nesse contexto. Se o valor não
+    # passar na validação, mantém o template que a página já tinha.
+    if template_form and template_form.startswith('gamificacao') and get_template_por_slug(template_form):
+        novo_template = template_form
+    else:
+        novo_template = template_atual
+
+    # Os campos extras processados abaixo são os do template NOVO (não do
+    # antigo) — assim, ao trocar de template, o form já valida/salva os
+    # campos certos pro template escolhido.
+    tpl_selecionado = get_template_por_slug(novo_template)
     campos_tpl = (tpl_selecionado or {}).get('campos', [])
     tipos_presentes = {c.get('tipo') for c in campos_tpl}
 
@@ -1009,13 +1040,14 @@ def fidelize_editar_pagina(pagina_id):
 
     execute("""
         UPDATE brindes_paginas
-        SET titulo = %s, mensagem = %s, foto_url = %s, campos_extra = %s
+        SET titulo = %s, mensagem = %s, foto_url = %s, campos_extra = %s, template = %s
         WHERE id = %s
     """, (
         request.form.get('titulo', ''),
         request.form.get('mensagem', ''),
         foto_url,
         campos_extra_json,
+        novo_template,
         pagina_id,
     ))
 
