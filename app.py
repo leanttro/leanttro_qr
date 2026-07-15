@@ -42,6 +42,18 @@ app.secret_key = _env_obrigatoria("SECRET_KEY")
 # Em produção (Dokploy), defina SERVER_NAME=qrcodebrindes.com.br no .env.
 app.config['SERVER_NAME'] = os.getenv('SERVER_NAME')
 
+# Desde o Flask 2.3, SESSION_COOKIE_DOMAIN deixou de ser derivado
+# automaticamente do SERVER_NAME — precisa ser setado explícito. Sem isso, o
+# cookie de sessão fica preso ao host exato onde foi criado: alguém logado em
+# fidelize.qrcodebrindes.com.br (fidelize_conta_id) NÃO leva a sessão pro
+# domínio apex (qrcodebrindes.com.br), e rotas como /<slug>/painel (que
+# vivem no apex e checam fidelize_conta_id via pode_gerenciar_pagina) nunca
+# reconhecem esse login — é exatamente o loop de redirecionamento pro /login
+# que estava acontecendo. O "." na frente faz o cookie valer tanto pro apex
+# quanto pra qualquer subdomínio (fidelize.*, e futuros).
+if app.config['SERVER_NAME']:
+    app.config['SESSION_COOKIE_DOMAIN'] = f".{app.config['SERVER_NAME']}"
+
 # --- CONFIGURAÇÕES ---
 BASE_URL = os.getenv("BASE_URL", "https://qrcodebrindes.com")
 FIDELIZE_BASE_URL = os.getenv("FIDELIZE_BASE_URL", "https://fidelize.qrcodebrindes.com.br")
