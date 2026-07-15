@@ -43,6 +43,14 @@
 }
 .slug-salvar:hover{background:var(--chrome-2)}
 
+.link-acoes{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.link-btn{
+    font-size:.78em;font-weight:700;color:var(--ink-black);background:var(--surface);
+    border:1px solid var(--line-strong);border-radius:6px;padding:5px 9px;cursor:pointer;
+    text-decoration:none;display:inline-block;
+}
+.link-btn:hover{background:var(--chrome-2);text-decoration:none}
+
 .carimbo-cell{display:flex;align-items:center;gap:8px}
 .carimbo-num{font-weight:700;font-size:1.05em;min-width:1.4em;text-align:center}
 .carimbo-form{display:inline}
@@ -52,6 +60,39 @@
 }
 .carimbo-btn:hover{background:var(--chrome-2)}
 .carimbo-btn-zerar{color:var(--ink-soft)}
+
+.editar-btn{
+    font-size:.92em;font-weight:700;color:var(--ink-black);background:none;
+    border:none;padding:0;cursor:pointer;text-decoration:underline;font-family:inherit;
+}
+
+.modal-overlay{
+    display:none;position:fixed;inset:0;background:rgba(20,20,20,.45);
+    align-items:center;justify-content:center;z-index:100;padding:20px;
+}
+.modal-overlay.aberto{display:flex}
+.modal-box{
+    background:var(--chrome-1);border-radius:var(--radius);max-width:440px;width:100%;
+    max-height:88vh;overflow-y:auto;padding:26px 26px 22px;box-shadow:var(--shadow-sm);
+}
+.modal-box h3{margin:0 0 18px;font-size:1.2em}
+.modal-campo{margin-bottom:16px}
+.modal-campo label{display:block;font-size:.82em;font-weight:700;color:var(--chrome-4);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.modal-campo input[type="text"],.modal-campo input[type="number"],.modal-campo textarea{
+    width:100%;padding:9px 11px;border:1px solid var(--line-strong);border-radius:8px;
+    font-size:.94em;font-family:'Montserrat',sans-serif;color:var(--ink);box-sizing:border-box;
+}
+.modal-campo textarea{min-height:70px;resize:vertical}
+.modal-campo .foto-atual{font-size:.82em;color:var(--ink-soft);margin-bottom:6px}
+.modal-acoes{display:flex;gap:10px;margin-top:22px;justify-content:flex-end}
+.modal-cancelar{
+    font-weight:700;color:var(--ink-soft);background:none;border:1px solid var(--line-strong);
+    border-radius:8px;padding:9px 16px;cursor:pointer;
+}
+.modal-salvar{
+    font-weight:700;color:#fff;background:var(--ink-black);border:none;
+    border-radius:8px;padding:9px 18px;cursor:pointer;
+}
 
 .sorteio-box{
     background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
@@ -66,7 +107,21 @@
 .tabela-paginas tr.sorteio-highlight{background:#fff6e0;transition:background .15s}
 @media (max-width:700px){
     .stats-row{grid-template-columns:1fr}
-    .tabela-paginas{display:block;overflow-x:auto}
+
+    .tabela-paginas{border:none;background:none;box-shadow:none}
+    .tabela-paginas thead{display:none}
+    .tabela-paginas, .tabela-paginas tbody{display:block;width:100%}
+    .tabela-paginas tr{
+        display:block;width:100%;background:var(--chrome-1);border:1px solid var(--line-strong);
+        border-radius:var(--radius);margin-bottom:14px;box-shadow:var(--shadow-sm);
+    }
+    .tabela-paginas td{display:block;width:100%;box-sizing:border-box;border-bottom:none;padding:10px 16px}
+    .tabela-paginas td:first-child{padding-top:16px}
+    .tabela-paginas td:last-child{padding-bottom:16px}
+    .tabela-paginas td[data-label]:before{
+        content:attr(data-label);display:block;font-size:.72em;text-transform:uppercase;
+        letter-spacing:.05em;color:var(--chrome-4);font-weight:700;margin-bottom:4px;
+    }
 }
 {% endblock %}
 
@@ -116,17 +171,21 @@
             <tbody>
                 {% for p in paginas %}
                     <tr data-titulo="{{ p.titulo or p.slug }}">
-                        <td>
+                        <td data-label="Link">
                             <a href="{{ base_url }}/{{ p.slug }}" target="_blank" rel="noopener">{{ p.titulo or p.slug }}</a>
                             <form class="slug-edit-form" method="POST" action="/painel/pagina/{{ p.id }}/slug">
                                 <span class="slug-prefix">{{ base_url.split('://')[-1] }}/{{ prefixo_slug }}</span>
                                 <input class="slug-input" type="text" name="sufixo" value="{{ p.sufixo_atual }}" required maxlength="60">
                                 <button class="slug-salvar" type="submit">Salvar link</button>
                             </form>
+                            <div class="link-acoes">
+                                <a class="link-btn" href="{{ base_url }}/{{ p.slug }}" target="_blank" rel="noopener">Abrir</a>
+                                <button class="link-btn" type="button" onclick="compartilharLink('{{ base_url }}/{{ p.slug }}', '{{ (p.titulo or p.slug)|replace("'", "") }}')">Compartilhar</button>
+                            </div>
                         </td>
-                        <td>{{ p.template }}</td>
-                        <td>{{ p.total_scans }}</td>
-                        <td>
+                        <td data-label="Template">{{ p.template }}</td>
+                        <td data-label="Scans">{{ p.total_scans }}</td>
+                        <td data-label="Carimbos">
                             <div class="carimbo-cell">
                                 <span class="carimbo-num">{{ p.carimbos_atual }}</span>
                                 <form class="carimbo-form" method="POST" action="/painel/pagina/{{ p.id }}/carimbar">
@@ -139,8 +198,8 @@
                                 </form>
                             </div>
                         </td>
-                        <td><a href="{{ base_url }}/{{ p.slug }}/qr.png" target="_blank" rel="noopener">Baixar PNG</a></td>
-                        <td><a href="{{ base_url }}/{{ p.slug }}/painel">Editar</a></td>
+                        <td data-label="QR code"><a href="{{ base_url }}/{{ p.slug }}/qr.png" target="_blank" rel="noopener">Baixar PNG</a></td>
+                        <td data-label="Gerenciar"><button type="button" class="editar-btn" onclick="abrirModal('{{ p.id }}')">Editar</button></td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -148,9 +207,87 @@
     {% else %}
         <div class="vazio">Você ainda não criou nenhum QR code de fidelidade. Clique em "Criar novo QR code" acima.</div>
     {% endif %}
+
+    {% for p in paginas %}
+        <div class="modal-overlay" id="modal-{{ p.id }}">
+            <div class="modal-box">
+                <h3>Editar cartão — {{ p.titulo or p.slug }}</h3>
+                <form method="POST" action="/painel/pagina/{{ p.id }}/editar" enctype="multipart/form-data">
+                    <div class="modal-campo">
+                        <label for="titulo-{{ p.id }}">Título</label>
+                        <input type="text" id="titulo-{{ p.id }}" name="titulo" value="{{ p.titulo or '' }}" maxlength="120">
+                    </div>
+                    <div class="modal-campo">
+                        <label for="mensagem-{{ p.id }}">Mensagem</label>
+                        <textarea id="mensagem-{{ p.id }}" name="mensagem">{{ p.mensagem or '' }}</textarea>
+                    </div>
+                    {% for campo in p.campos_template %}
+                        {% if campo.nome and campo.nome not in ['titulo', 'mensagem', 'foto', 'timeline'] %}
+                            {% if campo.tipo == 'imagem' %}
+                                <div class="modal-campo">
+                                    <label for="foto-{{ p.id }}">{{ campo.label or 'Foto' }}</label>
+                                    {% if p.foto_url %}<div class="foto-atual">Já tem uma foto salva — escolha um arquivo só se quiser trocar.</div>{% endif %}
+                                    <input type="file" id="foto-{{ p.id }}" name="foto" accept="image/*">
+                                </div>
+                            {% elif campo.tipo == 'numero' %}
+                                <div class="modal-campo">
+                                    <label for="{{ campo.nome }}-{{ p.id }}">{{ campo.label or campo.nome }}</label>
+                                    <input type="number" id="{{ campo.nome }}-{{ p.id }}" name="{{ campo.nome }}" value="{{ p.campos_extra_dict.get(campo.nome, '') }}">
+                                </div>
+                            {% else %}
+                                <div class="modal-campo">
+                                    <label for="{{ campo.nome }}-{{ p.id }}">{{ campo.label or campo.nome }}</label>
+                                    <input type="text" id="{{ campo.nome }}-{{ p.id }}" name="{{ campo.nome }}" value="{{ p.campos_extra_dict.get(campo.nome, '') }}">
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                    <div class="modal-acoes">
+                        <button type="button" class="modal-cancelar" onclick="fecharModal('{{ p.id }}')">Cancelar</button>
+                        <button type="submit" class="modal-salvar">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endfor %}
 </div>
 
 <script>
+function compartilharLink(url, titulo) {
+    if (navigator.share) {
+        navigator.share({ title: titulo, url: url }).catch(() => {});
+        return;
+    }
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Link copiado! Cola no WhatsApp ou onde quiser mandar.');
+        }).catch(() => {
+            prompt('Copie o link abaixo:', url);
+        });
+        return;
+    }
+    prompt('Copie o link abaixo:', url);
+}
+
+function abrirModal(id) {
+    const modal = document.getElementById('modal-' + id);
+    if (modal) modal.classList.add('aberto');
+}
+function fecharModal(id) {
+    const modal = document.getElementById('modal-' + id);
+    if (modal) modal.classList.remove('aberto');
+}
+document.addEventListener('click', function (e) {
+    if (e.target.classList.contains('modal-overlay')) {
+        e.target.classList.remove('aberto');
+    }
+});
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.aberto').forEach(m => m.classList.remove('aberto'));
+    }
+});
+
 (function () {
     const btn = document.getElementById('btn-sortear');
     if (!btn) return;
