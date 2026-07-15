@@ -100,6 +100,18 @@
     gap:16px;flex-wrap:wrap;
 }
 .sorteio-box p{margin:0;color:var(--ink-soft);font-size:.92em;max-width:44ch}
+
+.bulk-template-box{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px 22px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;
+    gap:16px;flex-wrap:wrap;
+}
+.bulk-template-box p{margin:0;color:var(--ink-soft);font-size:.92em;max-width:44ch}
+.bulk-template-form{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.bulk-template-form select{
+    padding:8px 10px;border:1px solid var(--line-strong);border-radius:8px;
+    font-size:.9em;font-family:'Montserrat',sans-serif;color:var(--ink);background:var(--chrome-1);
+}
 .sorteio-resultado{
     margin-top:14px;padding:14px 18px;border-radius:10px;background:var(--chrome-1);
     border:1px solid var(--line-strong);font-weight:700;color:var(--ink-black);display:none;
@@ -156,6 +168,20 @@
             <button class="btn-nav-secondary" type="button" id="btn-sortear">🎲 Sortear um QR code</button>
         </div>
         <div class="sorteio-resultado" id="sorteio-resultado"></div>
+
+        {% if templates_gamificacao|length > 1 %}
+            <div class="bulk-template-box">
+                <p>Troca o modelo visual de <strong>todos</strong> os seus cartões de uma vez só.</p>
+                <form class="bulk-template-form" method="POST" action="/painel/aplicar-template-todos" onsubmit="return confirm('Isso vai trocar o modelo visual de TODOS os seus QR codes/cartões. Continuar?');">
+                    <select name="template">
+                        {% for t in templates_gamificacao %}
+                            <option value="{{ t.slug }}">{{ t.nome or t.slug }}</option>
+                        {% endfor %}
+                    </select>
+                    <button class="btn-nav-secondary" type="submit">Aplicar a todos</button>
+                </form>
+            </div>
+        {% endif %}
 
         <table class="tabela-paginas" id="tabela-sorteio">
             <thead>
