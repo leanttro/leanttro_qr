@@ -9,7 +9,6 @@
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'G-15CQV2LD4W');
 </script>
 <meta charset="UTF-8">
@@ -41,184 +40,221 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 30px 16px 60px;
+    justify-content: flex-start;
+    padding: 46px 16px 60px;
     position: relative;
     overflow-x: hidden;
     background:
-      radial-gradient(circle at 15% 10%, rgba(255,255,255,0.6) 0%, transparent 45%),
-      radial-gradient(circle at 85% 90%, rgba(250,187,199,0.55) 0%, transparent 55%),
-      linear-gradient(155deg, #fff0f4 0%, #ffe0e8 45%, #fabbc7 100%);
-    background-size: 200% 200%;
-    animation: gradienteVivo 14s ease infinite;
+      radial-gradient(circle at 12% 8%, rgba(255,255,255,0.65) 0%, transparent 40%),
+      radial-gradient(circle at 88% 92%, rgba(232,121,154,0.35) 0%, transparent 55%),
+      linear-gradient(160deg, #fff5f7 0%, #ffe0e8 50%, #fabbc7 100%);
+    background-size: 220% 220%;
+    animation: fundoVivo 16s ease infinite;
   }
-
-  @keyframes gradienteVivo {
+  @keyframes fundoVivo {
     0%   { background-position: 0% 0%; }
     50%  { background-position: 100% 100%; }
     100% { background-position: 0% 0%; }
   }
 
-  /* ===== brilho ambiente que cruza o fundo ===== */
-  .brilho-varredura {
+  /* bolinhas de fundo tipo confeito */
+  .confeito {
     position: fixed;
-    inset: -20% -20%;
-    background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.18) 48%, transparent 62%);
-    background-size: 250% 250%;
-    animation: varrer 7s linear infinite;
+    font-size: 15px;
+    opacity: 0;
     z-index: 0;
     pointer-events: none;
+    animation: confeitoEntra 0.6s ease forwards, confeitoBoiar 5s ease-in-out infinite;
   }
-  @keyframes varrer {
-    0%   { background-position: 0% 0%; }
-    100% { background-position: 100% 100%; }
+  @keyframes confeitoEntra {
+    to { opacity: 0.6; }
   }
-
-  /* ===== coracoezinhos espalhados pelo fundo ===== */
-  .confete-bg {
-    position: fixed;
-    font-size: 14px;
-    line-height: 1;
-    opacity: 0.7;
-    z-index: 0;
-    pointer-events: none;
-    animation: confeteCair 6s ease-in-out infinite;
-  }
-  @keyframes confeteCair {
-    0%   { transform: translateY(-12px) rotate(0deg); opacity: 0.7; }
-    50%  { transform: translateY(16px) rotate(20deg); opacity: 0.35; }
-    100% { transform: translateY(-12px) rotate(0deg); opacity: 0.7; }
+  @keyframes confeitoBoiar {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50%      { transform: translateY(14px) rotate(15deg); }
   }
 
-  .wrapper {
+  /* ===== entrada escalonada ===== */
+  @keyframes subirEntrar {
+    from { opacity: 0; transform: translateY(26px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .e1 { animation: subirEntrar 0.6s cubic-bezier(0.22,1,0.36,1) 0.05s both; }
+  .e2 { animation: subirEntrar 0.6s cubic-bezier(0.22,1,0.36,1) 0.18s both; }
+  .e3 { animation: subirEntrar 0.6s cubic-bezier(0.22,1,0.36,1) 0.30s both; }
+  .e4 { animation: subirEntrar 0.6s cubic-bezier(0.22,1,0.36,1) 0.42s both; }
+  .e5 { animation: subirEntrar 0.6s cubic-bezier(0.22,1,0.36,1) 0.54s both; }
+  .e6 { animation: subirEntrar 0.6s cubic-bezier(0.22,1,0.36,1) 0.66s both; }
+  .e7 { animation: subirEntrar 0.6s cubic-bezier(0.22,1,0.36,1) 0.78s both; }
+
+  .cena {
     width: 100%;
-    max-width: 460px;
+    max-width: 440px;
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
-    position: relative;
-    z-index: 1;
   }
 
-  /* ===== Logo topo ===== */
-  @keyframes logoFloat {
-    0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-6px); }
+  /* ===== emblema/logo entrando girando ===== */
+  @keyframes emblemaEntra {
+    0%   { opacity: 0; transform: scale(0.3) rotate(-140deg); }
+    65%  { opacity: 1; transform: scale(1.12) rotate(10deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg); }
   }
-  @keyframes logoIn {
-    from { opacity: 0; transform: translateY(-14px) scale(0.9); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
+  @keyframes emblemaAnel {
+    0%   { transform: scale(0.9); opacity: 0.8; }
+    100% { transform: scale(1.6); opacity: 0; }
   }
-  .logo-topo {
-    margin-bottom: 22px;
-    animation: logoIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  .emblema {
+    position: relative;
+    margin-bottom: -34px;
+    z-index: 3;
+    animation: emblemaEntra 0.8s cubic-bezier(0.22,1,0.36,1) both;
   }
-  .logo-topo img {
-    height: 84px;
-    width: 84px;
+  .emblema::before, .emblema::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    animation: emblemaAnel 2.4s ease-out infinite;
+  }
+  .emblema::after { animation-delay: 1.2s; }
+  .emblema img {
+    position: relative;
+    height: 92px;
+    width: 92px;
     border-radius: 50%;
     object-fit: cover;
     display: block;
-    border: 3px solid #ffffff;
-    box-shadow: 0 10px 22px rgba(232, 121, 154, 0.45);
-    animation: logoFloat 4s ease-in-out infinite;
+    border: 4px solid #ffffff;
+    box-shadow: 0 14px 26px rgba(232,121,154,0.5);
   }
 
-  @keyframes cardIn {
-    from { opacity: 0; transform: translateY(22px) scale(0.97); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
+  /* ===== etiqueta pendurada ===== */
+  @keyframes etiquetaBalanca {
+    0%, 100% { transform: rotate(-5deg); }
+    50%      { transform: rotate(5deg); }
   }
-
-  .card {
-    width: 100%;
-    background: var(--cor-card);
-    border-radius: 30px;
-    padding: 42px 28px 32px;
-    box-shadow: 0 30px 60px rgba(232, 121, 154, 0.35);
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-    animation: cardIn 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+  @keyframes etiquetaEntra {
+    from { opacity: 0; transform: translateY(-18px) rotate(0deg); }
+    to   { opacity: 1; }
   }
-
-  .card::before {
-    content: "";
+  .etiqueta-fio {
     position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 6px;
-    background: linear-gradient(90deg, var(--rosa-1), var(--rosa-3), var(--rosa-4), var(--rosa-2), var(--rosa-1));
-    background-size: 250% 100%;
-    animation: barraCorrida 3s linear infinite;
+    top: -18px;
+    right: 34px;
+    width: 2px;
+    height: 20px;
+    background: #f0a9bb;
+    z-index: 2;
   }
-  @keyframes barraCorrida {
-    0%   { background-position: 0% 0%; }
-    100% { background-position: 250% 0%; }
-  }
-
-  .selo-flash {
+  .etiqueta {
     position: absolute;
-    top: 14px;
+    top: -2px;
     right: 14px;
     background: linear-gradient(135deg, var(--rosa-2), var(--rosa-1));
     color: #fff;
     font-size: 10.5px;
     font-weight: 800;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    padding: 6px 11px;
-    border-radius: 999px;
-    box-shadow: 0 6px 16px rgba(232, 121, 154, 0.45);
-    animation: pulsarSelo 2.4s ease-in-out infinite;
+    padding: 7px 14px 7px 12px;
+    border-radius: 4px 12px 12px 4px;
+    box-shadow: 0 8px 18px rgba(232,121,154,0.5);
+    transform-origin: top center;
+    animation: etiquetaEntra 0.5s ease 0.5s both, etiquetaBalanca 2.6s ease-in-out 1.1s infinite;
   }
-  @keyframes pulsarSelo {
-    0%, 100% { transform: scale(1); }
-    50%      { transform: scale(1.07); }
+  .etiqueta::before {
+    content: "";
+    position: absolute;
+    left: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 8px;
+    background: #fff5f7;
+    border-radius: 50%;
+  }
+
+  /* ===== ticket / card ===== */
+  .ticket {
+    width: 100%;
+    background: var(--cor-card);
+    border-radius: 8px 8px 26px 26px;
+    padding: 54px 26px 34px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 30px 60px rgba(232,121,154,0.4);
+  }
+  .ticket-recorte {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 20px;
+    background:
+      radial-gradient(circle at 12px 0px, transparent 11px, var(--cor-card) 11.5px);
+    background-size: 24px 20px;
+    background-repeat: repeat-x;
   }
 
   .titulo {
-    font-size: calc({{ font_size_val }} + 9px);
+    font-size: calc({{ font_size_val }} + 8px);
     font-weight: 800;
     letter-spacing: -0.02em;
     color: var(--cor-texto);
-    margin: 0 0 14px;
-    line-height: 1.22;
+    margin: 0 0 12px;
+    line-height: 1.2;
   }
-  .titulo .ponto { color: var(--rosa-1); }
 
   .mensagem {
     font-size: {{ font_size_val }};
     font-weight: 400;
-    line-height: 1.75;
+    line-height: 1.7;
     color: #7a5568;
     white-space: pre-line;
     margin: 0;
     word-wrap: break-word;
   }
 
-  /* ===== Cartão de fidelidade (carimbos) ===== */
-  .fidelidade-bloco {
-    margin-top: 30px;
-    padding-top: 26px;
-    border-top: 1px dashed #ffd9e2;
+  /* ===== divisor com cupcake ===== */
+  .divisor {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 26px 0 22px;
+  }
+  .divisor .linha {
+    flex: 1;
+    height: 1px;
+    background: repeating-linear-gradient(90deg, #f3c4d2 0 6px, transparent 6px 11px);
+  }
+  .divisor .icone {
+    font-size: 17px;
+    flex-shrink: 0;
   }
 
-  .fidelidade-label {
+  .rotulo-cartao {
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--rosa-1);
-    margin: 0 0 16px;
+    margin: 0 0 18px;
   }
 
-  /* ===== Barra de progresso ===== */
+  /* ===== barra de progresso ===== */
+  @keyframes larguraEntra {
+    from { width: 0%; }
+  }
   .progresso-shell {
     width: 100%;
-    height: 10px;
+    height: 9px;
     background: var(--rosa-suave);
     border-radius: 999px;
     overflow: hidden;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
     position: relative;
   }
   .progresso-fill {
@@ -226,105 +262,105 @@
     border-radius: 999px;
     background: linear-gradient(90deg, var(--rosa-2), var(--rosa-3), var(--rosa-4));
     background-size: 200% 100%;
-    animation: fluxoProgresso 2.5s linear infinite;
-    transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
-    position: relative;
+    animation: larguraEntra 1.1s cubic-bezier(0.22,1,0.36,1) 0.5s both, fluxo 2.5s linear infinite 1.6s;
   }
-  @keyframes fluxoProgresso {
+  @keyframes fluxo {
     0%   { background-position: 0% 0%; }
     100% { background-position: 200% 0%; }
   }
-  .progresso-fill::after {
-    content: "";
-    position: absolute;
-    top: 0; right: 0; bottom: 0;
-    width: 14px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9));
-    animation: brilhoPonta 1.6s ease-in-out infinite;
-  }
-  @keyframes brilhoPonta {
-    0%, 100% { opacity: 0.4; }
-    50%      { opacity: 1; }
-  }
 
-  .carimbos-grid {
+  /* ===== carimbos em onda ===== */
+  .fileira-carimbos {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 10px;
-    margin-bottom: 18px;
+    align-items: flex-end;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 6px 0;
   }
-
-  @keyframes carimboPop {
-    0%   { opacity: 0; transform: scale(0.4) rotate(-25deg); }
-    60%  { transform: scale(1.15) rotate(6deg); }
-    100% { opacity: 1; transform: scale(1) rotate(0deg); }
-  }
-
   .carimbo {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     position: relative;
+    opacity: 0;
   }
+  .carimbo:nth-child(odd)  { transform: translateY(-3px); }
+  .carimbo:nth-child(even) { transform: translateY(3px); }
 
+  @keyframes carimboEntra {
+    0%   { opacity: 0; transform: scale(0.2) rotate(-60deg) translateY(0); }
+    60%  { opacity: 1; transform: scale(1.18) rotate(8deg) translateY(0); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg) translateY(0); }
+  }
   .carimbo.vazio {
     border: 2px dashed #f6c9d4;
     background: rgba(255, 240, 244, 0.6);
+    animation: carimboEntra 0.4s ease both;
   }
-
   .carimbo.cheio {
     background: linear-gradient(155deg, var(--rosa-4) 0%, var(--rosa-3) 45%, var(--rosa-1) 100%);
-    box-shadow: 0 6px 16px rgba(232, 121, 154, 0.55);
-    animation: carimboPop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+    box-shadow: 0 6px 14px rgba(232,121,154,0.55);
+    animation: carimboEntra 0.5s cubic-bezier(0.22,1,0.36,1) both;
   }
-
   .carimbo.cheio.ultimo::after {
     content: "";
     position: absolute;
-    inset: -4px;
+    inset: -5px;
     border-radius: 50%;
     border: 2px solid var(--rosa-2);
     animation: anelPulso 1.6s ease-out infinite;
   }
   @keyframes anelPulso {
-    0%   { transform: scale(0.9); opacity: 0.9; }
-    100% { transform: scale(1.5); opacity: 0; }
+    0%   { transform: scale(0.85); opacity: 0.9; }
+    100% { transform: scale(1.55); opacity: 0; }
   }
+  .carimbo.cheio svg { width: 16px; height: 16px; color: #fff; }
 
-  .carimbo.cheio svg {
-    width: 18px;
-    height: 18px;
-    color: #ffffff;
-  }
-
-  .fidelidade-status {
+  .status-carimbos {
     font-size: 13.5px;
     font-weight: 700;
     color: var(--cor-texto);
-    margin: 0 0 4px;
+    margin: 0 0 18px;
   }
-  .fidelidade-status strong { color: var(--rosa-1); }
+  .status-carimbos strong { color: var(--rosa-1); }
 
-  .fidelidade-premio {
+  /* ===== caixa do premio, estilo cupom recortado ===== */
+  .caixa-premio {
+    position: relative;
+    background: var(--rosa-suave);
+    border: 1.5px dashed var(--rosa-2);
+    border-radius: 14px;
+    padding: 14px 16px;
     font-size: 13px;
     color: #7a5568;
-    margin: 6px 0 0;
     line-height: 1.5;
   }
-  .fidelidade-premio strong { color: var(--cor-texto); font-weight: 700; }
-
-  /* ===== Estado completo / resgate liberado ===== */
-  @keyframes selBounce {
-    0%   { opacity: 0; transform: translateY(10px) scale(0.85); }
-    60%  { transform: translateY(-3px) scale(1.05); }
-    100% { opacity: 1; transform: translateY(0) scale(1); }
+  .caixa-premio::before, .caixa-premio::after {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: var(--cor-card);
+    border-radius: 50%;
+    top: 50%;
+    transform: translateY(-50%);
   }
+  .caixa-premio::before { left: -8px; }
+  .caixa-premio::after  { right: -8px; }
+  .caixa-premio strong { color: var(--cor-texto); font-weight: 700; }
 
+  /* ===== selo de completo ===== */
+  @keyframes seloCompletoEntra {
+    0%   { opacity: 0; transform: scale(0.5) rotate(-12deg); }
+    60%  { transform: scale(1.1) rotate(4deg); }
+    100% { opacity: 1; transform: scale(1) rotate(-4deg); }
+  }
   .selo-completo {
     display: inline-flex;
     align-items: center;
@@ -336,64 +372,66 @@
     border: 1px solid var(--rosa-2);
     color: var(--rosa-1);
     font-weight: 800;
-    font-size: 13.5px;
-    position: relative;
-    animation: selBounce 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+    font-size: 13px;
+    animation: seloCompletoEntra 0.6s cubic-bezier(0.22,1,0.36,1) both;
   }
 
-  .confete-selo {
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    border-radius: 2px;
-    opacity: 0.9;
-    animation: confeteFloat 2.6s ease-in-out infinite;
+  /* ===== CTA whatsapp ===== */
+  @keyframes botaoEntra {
+    from { opacity: 0; transform: translateY(20px) scale(0.9); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
   }
-  @keyframes confeteFloat {
-    0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.9; }
-    50%      { transform: translateY(-13px) rotate(180deg); opacity: 0.4; }
+  @keyframes botaoRespira {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.03); }
   }
-
-  /* ===== CTA WhatsApp ===== */
+  @keyframes brilhoPassa {
+    0%   { transform: translateX(-130%) skewX(-20deg); }
+    100% { transform: translateX(230%) skewX(-20deg); }
+  }
+  .bloco-cta { margin-top: 26px; }
   .cta-whats {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    margin-top: 24px;
-    padding: 13px 24px;
+    padding: 14px 26px;
     border-radius: 999px;
     background: var(--whats);
     color: #ffffff;
     font-weight: 700;
     font-size: 13.5px;
     text-decoration: none;
-    box-shadow: 0 10px 24px rgba(37, 211, 102, 0.45);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 12px 26px rgba(37,211,102,0.45);
     position: relative;
     overflow: hidden;
+    animation: botaoEntra 0.5s cubic-bezier(0.22,1,0.36,1) 0.9s both,
+               botaoRespira 2.4s ease-in-out 1.5s infinite;
   }
-  .cta-whats:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 14px 30px rgba(37, 211, 102, 0.55);
+  .cta-whats::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 40%; height: 100%;
+    background: linear-gradient(115deg, transparent, rgba(255,255,255,0.55), transparent);
+    animation: brilhoPassa 2.8s ease-in-out 1.5s infinite;
   }
-  .cta-whats svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .cta-whats svg { width: 16px; height: 16px; position: relative; z-index: 1; }
+  .cta-whats span { position: relative; z-index: 1; }
 
-  .rodape { margin-top: 26px; text-align: center; }
+  .rodape { margin-top: 24px; text-align: center; }
   .rodape a {
     color: var(--rosa-1);
     font-size: 12px;
     font-weight: 600;
     text-decoration: none;
-    letter-spacing: 0.02em;
-    transition: color 0.2s ease;
   }
   .rodape a:hover { color: var(--rosa-2); text-decoration: underline; }
 
   @media (max-width: 380px) {
-    .card { padding: 34px 20px 26px; border-radius: 20px; }
-    .titulo { font-size: calc({{ font_size_val }} + 6px); }
-    .carimbo { width: 36px; height: 36px; }
-    .logo-topo img { height: 68px; width: 68px; }
+    .ticket { padding: 50px 18px 26px; }
+    .titulo { font-size: calc({{ font_size_val }} + 5px); }
+    .carimbo { width: 34px; height: 34px; }
+    .emblema img { height: 76px; width: 76px; }
   }
 </style>
 </head>
@@ -405,82 +443,79 @@
   {% set completo = atual_bruto >= meta %}
   {% set percentual = ((atual / meta) * 100) if meta > 0 else 0 %}
 
-  <div class="brilho-varredura"></div>
+  <span class="confeito" style="left:8%; top:6%; color:#e8799a; animation-delay:0.1s, 0s;">♥</span>
+  <span class="confeito" style="left:80%; top:10%; color:#fabbc7; animation-delay:0.2s, 0.5s;">🧁</span>
+  <span class="confeito" style="left:12%; top:70%; color:#f193ae; animation-delay:0.3s, 1s;">♥</span>
+  <span class="confeito" style="left:85%; top:65%; color:#e8799a; animation-delay:0.4s, 1.5s;">🍰</span>
+  <span class="confeito" style="left:50%; top:4%; color:#fabbc7; animation-delay:0.15s, 0.3s;">♥</span>
+  <span class="confeito" style="left:6%; top:40%; color:#f193ae; animation-delay:0.25s, 0.8s;">🧁</span>
+  <span class="confeito" style="left:90%; top:38%; color:#e8799a; animation-delay:0.35s, 1.2s;">♥</span>
 
-  <!-- coracoezinhos espalhados pelo fundo -->
-  <span class="confete-bg" style="left:6%; top:12%; color:#e8799a; animation-delay:0s;">♥</span>
-  <span class="confete-bg" style="left:14%; top:70%; color:#fabbc7; animation-delay:0.4s;">♥</span>
-  <span class="confete-bg" style="left:22%; top:35%; color:#f193ae; animation-delay:0.8s;">♥</span>
-  <span class="confete-bg" style="left:30%; top:88%; color:#e8799a; animation-delay:1.2s;">♥</span>
-  <span class="confete-bg" style="left:8%; top:50%; color:#fabbc7; animation-delay:1.6s;">♥</span>
-  <span class="confete-bg" style="right:10%; top:8%; color:#f193ae; animation-delay:0.2s;">♥</span>
-  <span class="confete-bg" style="right:18%; top:60%; color:#e8799a; animation-delay:0.6s;">♥</span>
-  <span class="confete-bg" style="right:6%; top:30%; color:#fabbc7; animation-delay:1s;">♥</span>
-  <span class="confete-bg" style="right:26%; top:80%; color:#f193ae; animation-delay:1.4s;">♥</span>
-  <span class="confete-bg" style="right:14%; top:45%; color:#e8799a; animation-delay:1.8s;">♥</span>
-  <span class="confete-bg" style="left:48%; top:6%; color:#fabbc7; animation-delay:0.3s;">♥</span>
-  <span class="confete-bg" style="left:42%; top:92%; color:#f193ae; animation-delay:0.9s;">♥</span>
+  <div class="cena">
 
-  <div class="wrapper">
-
-    <div class="logo-topo">
+    <div class="emblema e1">
       <img src="https://res.cloudinary.com/dec2b0u1/image/upload/v1784150741/Portrait_of_a_sophisticated_female_doctor_of_diverse_background_in_a_tailored_white_coat._She_is_standing_in_a_luxury_clinic_with_a_subtle_confident_smile._Professional_skin_care_authority_vibe_h_4_1_rnhe8v.png" alt="Pedacinhoos de Amor">
     </div>
 
-    <div class="card">
-      <span class="selo-flash">Cliente Especial 💕</span>
+    <div class="ticket e2">
+      <div class="ticket-recorte"></div>
+      <div class="etiqueta-fio"></div>
+      <span class="etiqueta">Cliente Especial 💕</span>
 
       <h1 class="titulo">{{ page.titulo }}</h1>
       <p class="mensagem">{{ page.mensagem }}</p>
 
-      <div class="fidelidade-bloco">
-        <p class="fidelidade-label">Seu cartão fidelidade</p>
+      <div class="divisor">
+        <span class="linha"></span>
+        <span class="icone">🧁</span>
+        <span class="linha"></span>
+      </div>
 
-        <div class="progresso-shell">
-          <div class="progresso-fill" style="width: {{ percentual }}%;"></div>
-        </div>
+      <p class="rotulo-cartao">Seu cartão fidelidade</p>
 
-        <div class="carimbos-grid">
-          {% for i in range(meta) %}
-            {% if i < atual %}
-              <span class="carimbo cheio{% if i == atual - 1 %} ultimo{% endif %}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20 6 9 17l-5-5"/>
-                </svg>
-              </span>
-            {% else %}
-              <span class="carimbo vazio"></span>
-            {% endif %}
-          {% endfor %}
-        </div>
+      <div class="progresso-shell">
+        <div class="progresso-fill" style="width: {{ percentual }}%;"></div>
+      </div>
 
-        {% if completo %}
-          <p class="fidelidade-status"><strong>{{ meta }}/{{ meta }}</strong> carimbos completos!</p>
-        {% else %}
-          <p class="fidelidade-status"><strong>{{ atual }}/{{ meta }}</strong> carimbos — faltam {{ meta - atual }} pro prêmio</p>
-        {% endif %}
+      <div class="fileira-carimbos">
+        {% for i in range(meta) %}
+          {% if i < atual %}
+            <span class="carimbo cheio{% if i == atual - 1 %} ultimo{% endif %}" style="animation-delay: {{ 0.05 * i }}s;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 6 9 17l-5-5"/>
+              </svg>
+            </span>
+          {% else %}
+            <span class="carimbo vazio" style="animation-delay: {{ 0.05 * i }}s;"></span>
+          {% endif %}
+        {% endfor %}
+      </div>
 
-        <p class="fidelidade-premio">Prêmio: <strong>{{ page.premio }}</strong></p>
+      {% if completo %}
+        <p class="status-carimbos"><strong>{{ meta }}/{{ meta }}</strong> carimbos completos!</p>
+      {% else %}
+        <p class="status-carimbos"><strong>{{ atual }}/{{ meta }}</strong> carimbos — faltam {{ meta - atual }} pro prêmio</p>
+      {% endif %}
 
-        {% if completo %}
-          <span class="selo-completo">
-            🎉 Prêmio liberado — é só resgatar!
-            <span class="confete-selo" style="left:-4px; top:-2px; background:var(--rosa-2); animation-delay:0s;"></span>
-            <span class="confete-selo" style="right:-2px; top:2px; background:var(--rosa-1); animation-delay:0.6s;"></span>
-            <span class="confete-selo" style="right:14px; bottom:-4px; background:var(--rosa-3); animation-delay:1.2s;"></span>
-          </span>
-        {% endif %}
+      <div class="caixa-premio">
+        Prêmio: <strong>{{ page.premio }}</strong>
+      </div>
 
+      {% if completo %}
         <div>
-          <a class="cta-whats" href="https://wa.me/" target="_blank" rel="noopener">
-            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.28-1.38a9.9 9.9 0 0 0 4.76 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.86 9.86 0 0 0 12.04 2z"/></svg>
-            Falar no WhatsApp
-          </a>
+          <span class="selo-completo">🎉 Prêmio liberado — é só resgatar!</span>
         </div>
+      {% endif %}
+
+      <div class="bloco-cta">
+        <a class="cta-whats" href="https://wa.me/5511942633800" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.28-1.38a9.9 9.9 0 0 0 4.76 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.86 9.86 0 0 0 12.04 2z"/></svg>
+          <span>Falar no WhatsApp</span>
+        </a>
       </div>
     </div>
 
-    <div class="rodape">
+    <div class="rodape e7">
       <a href="https://qrcodebrindes.com.br" target="_blank" rel="noopener">Feito com QR Code Brindes &copy; {{ current_year }}</a>
     </div>
   </div>
