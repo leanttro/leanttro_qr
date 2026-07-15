@@ -1,0 +1,20 @@
+{
+  "nome": "Cartão Fidelidade — Pedacinhoos de Amor",
+  "tier": "exclusivo",
+  "exclusivo": true,
+  "preco": 0,
+  "preview_url": "",
+  "demo_carimbos_atual": 7,
+  "campos": [
+    {"tipo": "texto", "nome": "titulo", "label": "Nome da promoção/estabelecimento"},
+    {"tipo": "textarea", "nome": "mensagem", "label": "Mensagem pro cliente"},
+    {"tipo": "numero", "nome": "meta", "label": "Quantos carimbos pra ganhar o prêmio"},
+    {"tipo": "texto", "nome": "premio", "label": "Qual é o prêmio"}
+  ],
+  "demo": {
+    "titulo": "Cartão Fidelidade — Pedacinhoos de Amor",
+    "mensagem": "A cada docinho ou bolo que você pede, a gente carimba seu cartão!\nJunte os carimbos e ganhe um docinho especial da casa.",
+    "meta": 10,
+    "premio": "1 Mini Bolo grátis 🧁"
+  }
+}
