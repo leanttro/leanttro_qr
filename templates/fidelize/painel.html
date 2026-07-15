@@ -43,6 +43,16 @@
 }
 .slug-salvar:hover{background:var(--chrome-2)}
 
+.carimbo-cell{display:flex;align-items:center;gap:8px}
+.carimbo-num{font-weight:700;font-size:1.05em;min-width:1.4em;text-align:center}
+.carimbo-form{display:inline}
+.carimbo-btn{
+    font-size:.78em;font-weight:700;color:var(--ink-black);background:var(--surface);
+    border:1px solid var(--line-strong);border-radius:6px;padding:5px 9px;cursor:pointer;
+}
+.carimbo-btn:hover{background:var(--chrome-2)}
+.carimbo-btn-zerar{color:var(--ink-soft)}
+
 .sorteio-box{
     background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
     padding:18px 22px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;
@@ -98,6 +108,7 @@
                     <th>Link</th>
                     <th>Template</th>
                     <th>Scans</th>
+                    <th>Carimbos</th>
                     <th>QR code</th>
                     <th>Gerenciar</th>
                 </tr>
@@ -115,8 +126,21 @@
                         </td>
                         <td>{{ p.template }}</td>
                         <td>{{ p.total_scans }}</td>
+                        <td>
+                            <div class="carimbo-cell">
+                                <span class="carimbo-num">{{ p.carimbos_atual }}</span>
+                                <form class="carimbo-form" method="POST" action="/painel/pagina/{{ p.id }}/carimbar">
+                                    <input type="hidden" name="acao" value="somar">
+                                    <button class="carimbo-btn" type="submit" title="Adicionar carimbo">+1</button>
+                                </form>
+                                <form class="carimbo-form" method="POST" action="/painel/pagina/{{ p.id }}/carimbar" onsubmit="return confirm('Zerar os carimbos desse cartão?');">
+                                    <input type="hidden" name="acao" value="zerar">
+                                    <button class="carimbo-btn carimbo-btn-zerar" type="submit" title="Zerar carimbos">Zerar</button>
+                                </form>
+                            </div>
+                        </td>
                         <td><a href="{{ base_url }}/{{ p.slug }}/qr.png" target="_blank" rel="noopener">Baixar PNG</a></td>
-                        <td><a href="{{ base_url }}/{{ p.slug }}/painel">Editar / carimbar</a></td>
+                        <td><a href="{{ base_url }}/{{ p.slug }}/painel">Editar</a></td>
                     </tr>
                 {% endfor %}
             </tbody>
