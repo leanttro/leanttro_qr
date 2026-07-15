@@ -23,6 +23,14 @@
 }
 .criar-qr-form p{margin:0;color:var(--ink-soft);font-size:.92em;max-width:44ch}
 
+.upsell-banner{
+    background:#fff6e0;border:1px solid #f0d989;border-radius:var(--radius);
+    padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+    margin-bottom:32px;
+}
+.upsell-banner p{margin:0;color:var(--ink);font-size:.94em;max-width:48ch}
+.upsell-banner p strong{color:var(--ink-black)}
+
 .tabela-paginas{width:100%;border-collapse:collapse;background:var(--chrome-1);border:1px solid var(--line-strong);border-radius:var(--radius);overflow:hidden}
 .tabela-paginas th,.tabela-paginas td{padding:13px 16px;text-align:left;font-size:.92em;border-bottom:1px solid var(--line)}
 .tabela-paginas th{background:var(--surface);color:var(--chrome-4);text-transform:uppercase;font-size:.76em;letter-spacing:.05em}
@@ -177,7 +185,12 @@
         </div>
     </div>
 
-    {% if total_qr_codes_conta >= limite_qr_codes %}
+    {% if saldo_esgotado %}
+        <div class="upsell-banner">
+            <p>Seus QR codes grátis acabaram. Assine por <strong>R$ {{ '%.2f'|format(preco_mensalidade) }}/mês</strong> pra liberar a criação de novos, até {{ limite_qr_codes }} por conta.</p>
+            <a class="btn-nav-cta" href="/painel/assinar">Assinar agora</a>
+        </div>
+    {% elif total_qr_codes_conta >= limite_qr_codes %}
         <div class="criar-qr-form">
             <p>Você atingiu o limite de {{ limite_qr_codes }} QR codes da conta. Fale com a gente se precisar de mais.</p>
         </div>
