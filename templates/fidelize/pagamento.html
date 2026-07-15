@@ -1,0 +1,101 @@
+{% extends "fidelize/_base.html" %}
+
+{% block titulo %}Assinar mensalidade — Fidelize{% endblock %}
+
+{% block extra_css %}
+.pagamento-wrap{max-width:520px;margin:48px auto 80px;padding:0 24px}
+.pagamento-card{
+    background:var(--chrome-1);border:1px solid var(--line-strong);border-radius:var(--radius);
+    padding:32px;box-shadow:var(--shadow-sm);text-align:center;
+}
+.pagamento-eyebrow{font-size:.76em;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--chrome-4);margin-bottom:14px;display:block}
+.pagamento-card h1{font-size:1.5em;margin:0 0 10px;color:var(--ink-black)}
+.pagamento-preco{font-size:1.3em;font-weight:700;color:var(--ink-black);margin:0 0 6px}
+.pagamento-preco span{font-size:.6em;font-weight:600;color:var(--ink-soft)}
+.pagamento-card p.sub{color:var(--ink-soft);font-size:.95em;line-height:1.6;margin:0 0 22px}
+
+.qr-box{background:#fff;border:1px solid var(--line-strong);border-radius:10px;padding:18px;margin-bottom:16px}
+.qr-box img{width:220px;height:220px;max-width:100%;display:block;margin:0 auto}
+.copia-cola{display:flex;gap:8px;margin-bottom:14px}
+.copia-cola input{
+    flex:1;min-width:0;font-family:monospace;font-size:.78em;color:var(--ink-soft);
+    background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;
+    padding:10px 12px;
+}
+.btn-copiar{
+    flex-shrink:0;background:var(--ink-black);color:#fff;border:none;border-radius:8px;
+    padding:0 16px;font-weight:600;font-size:.86em;cursor:pointer;font-family:inherit;
+}
+.btn-copiar:hover{background:var(--chrome-4)}
+.btn-copiar.copiado{background:#1f9d55}
+.btn-whatsapp{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;
+    background:#25D366;color:#fff;padding:14px;border-radius:10px;font-weight:600;
+    font-size:.98em;margin-bottom:14px;
+}
+.btn-whatsapp:hover{background:#1fb959}
+.pagamento-aviso{
+    border:1px dashed var(--line-strong);border-radius:10px;padding:14px 16px;
+    font-size:.86em;color:var(--ink-soft);text-align:left;line-height:1.55;margin-bottom:8px;
+}
+.pagamento-voltar{display:inline-block;margin-top:18px;font-size:.88em;color:var(--ink-soft);text-decoration:underline}
+.pagamento-voltar:hover{color:var(--ink-black)}
+{% endblock %}
+
+{% block conteudo %}
+<div class="pagamento-wrap">
+    <div class="pagamento-card">
+        <span class="pagamento-eyebrow">Assinatura Fidelize</span>
+        <h1>Liberar até {{ limite_qr_codes }} QR codes</h1>
+        <p class="pagamento-preco">R$ {{ '%.2f'|format(preco) }} <span>/ mês</span></p>
+        <p class="sub">Sua conta <strong>{{ conta.nome_negocio }}</strong> continua com os cartões que você já criou — o pagamento só libera a criação de novos, até o teto de {{ limite_qr_codes }} por conta.</p>
+
+        {% if pix_qr_base64 %}
+        <div class="qr-box">
+            <img src="data:image/png;base64,{{ pix_qr_base64 }}" alt="QR Code Pix">
+        </div>
+
+        <div class="copia-cola">
+            <input type="text" id="pixCopiaCola" value="{{ pix_payload }}" readonly onclick="this.select()">
+            <button type="button" class="btn-copiar" id="btnCopiar" onclick="copiarPix()">Copiar</button>
+        </div>
+
+        <p class="sub" style="margin-bottom:16px">Escaneie o QR ou copie o código acima no app do seu banco.</p>
+        {% else %}
+        <p class="sub">O Pix automático ainda não está configurado. Fale com a gente pelo WhatsApp abaixo pra combinar o pagamento.</p>
+        {% endif %}
+
+        {% if whatsapp_link %}
+        <a class="btn-whatsapp" href="{{ whatsapp_link }}" target="_blank" rel="noopener">
+            Enviar comprovante no WhatsApp →
+        </a>
+        {% endif %}
+
+        <div class="pagamento-aviso">
+            Depois de pagar, manda o comprovante pelo WhatsApp que a gente libera sua mensalidade o quanto antes — normalmente no mesmo dia.
+        </div>
+
+        <a class="pagamento-voltar" href="/painel">← Voltar pro painel</a>
+    </div>
+</div>
+
+<script>
+function copiarPix(){
+    var campo = document.getElementById('pixCopiaCola');
+    var btn = document.getElementById('btnCopiar');
+    if (!campo) return;
+    campo.select();
+    campo.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(campo.value).then(function(){
+        btn.textContent = 'Copiado ✓';
+        btn.classList.add('copiado');
+        setTimeout(function(){
+            btn.textContent = 'Copiar';
+            btn.classList.remove('copiado');
+        }, 2000);
+    }).catch(function(){
+        document.execCommand('copy');
+    });
+}
+</script>
+{% endblock %}
