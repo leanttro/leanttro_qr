@@ -27,6 +27,36 @@
 .passo h3{font-size:1.05em;margin-bottom:8px}
 .passo p{color:var(--ink-soft);font-size:.92em;line-height:1.6;margin:0}
 
+.fid-tpl{padding:64px 0;border-bottom:1px solid var(--line)}
+.fid-tpl .section-head{max-width:640px;margin:0 auto 40px;text-align:center}
+.fid-tpl h2{font-size:1.7em;margin-bottom:10px}
+.fid-tpl .section-head p{color:var(--ink-soft);line-height:1.6;margin:0}
+.fid-tpl-wrap{position:relative}
+.fid-tpl-track{
+    display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;
+    padding:4px 4px 10px;margin:0 -4px;scrollbar-width:none;
+}
+.fid-tpl-track::-webkit-scrollbar{display:none}
+.fid-tpl-card{
+    flex:0 0 200px;scroll-snap-align:start;background:var(--chrome-1);
+    border:1px solid var(--line-strong);border-radius:var(--radius);overflow:hidden;
+    box-shadow:var(--shadow-sm);display:flex;flex-direction:column;
+}
+.fid-tpl-img{aspect-ratio:3/4;background:var(--surface-2);overflow:hidden;max-height:240px}
+.fid-tpl-img img{width:100%;height:100%;object-fit:cover;display:block}
+.fid-tpl-body{padding:16px;display:flex;flex-direction:column;gap:10px;flex:1}
+.fid-tpl-body h3{font-size:1em;margin:0}
+.fid-tpl-badge{align-self:flex-start;font-size:.72em;font-weight:600;padding:3px 10px;border-radius:999px}
+.fid-tpl-badge.gratis{background:var(--surface-2);color:var(--ink-soft)}
+.fid-tpl-badge.pago{background:var(--ink-black);color:#fff}
+.fid-tpl-body a{margin-top:auto;font-size:.88em;font-weight:600;color:var(--ink-black);text-decoration:underline}
+.fid-tpl-nav{display:flex;gap:10px;justify-content:center;margin-top:20px}
+.fid-tpl-nav button{
+    width:38px;height:38px;border-radius:50%;border:1px solid var(--line-strong);
+    background:var(--chrome-1);cursor:pointer;font-size:1em;color:var(--ink-black);
+}
+.fid-tpl-nav button:hover{border-color:var(--ink-black)}
+
 .modelo{padding:64px 0}
 .modelo-card{
     max-width:760px;margin:0 auto;background:var(--surface);border:1px solid var(--line);
@@ -80,6 +110,41 @@
         </div>
     </div>
 </section>
+
+{% if templates %}
+<section class="fid-tpl">
+    <div class="container">
+        <div class="section-head">
+            <h2>Modelos de Cartão Fidelidade</h2>
+            <p>Escolha o visual do seu Cartão Fidelidade — cada modelo já vem pronto pra personalizar com o nome do seu negócio, a meta de carimbos e o prêmio.</p>
+        </div>
+        <div class="fid-tpl-wrap">
+            <div class="fid-tpl-track" id="fid-tpl-track">
+                {% for tpl in templates %}
+                <div class="fid-tpl-card">
+                    <div class="fid-tpl-img">
+                        {% if tpl.preview_url %}
+                        <img src="{{ tpl.preview_url }}" alt="{{ tpl.nome }}" loading="lazy">
+                        {% endif %}
+                    </div>
+                    <div class="fid-tpl-body">
+                        <span class="fid-tpl-badge {{ 'pago' if tpl.tier == 'pago' else 'gratis' }}">{{ 'Pago' if tpl.tier == 'pago' else 'Grátis' }}</span>
+                        <h3>{{ tpl.nome }}</h3>
+                        <a href="{{ url_for('demo_template', template_slug=tpl.slug) }}" target="_blank">Ver exemplo ao vivo →</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% if templates|length > 1 %}
+            <div class="fid-tpl-nav">
+                <button type="button" onclick="document.getElementById('fid-tpl-track').scrollBy({left:-220,behavior:'smooth'})" aria-label="Anterior">&#8592;</button>
+                <button type="button" onclick="document.getElementById('fid-tpl-track').scrollBy({left:220,behavior:'smooth'})" aria-label="Próximo">&#8594;</button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}
 
 <section class="modelo">
     <div class="container">
