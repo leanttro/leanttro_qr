@@ -919,12 +919,22 @@ def _fidelize_gerar_slug_unico(nome_negocio):
 
 @app.route('/', subdomain='fidelize')
 def fidelize_home():
+    # Só os templates da família "gamificacao*" (mesmo prefixo usado no
+    # painel) — a home do Fidelize é vitrine pública, sem conta logada, então
+    # não passa por conta_pode_usar_template aqui: mostra todos os
+    # gamificacao*, inclusive os marcados como "exclusivo" (pago), só pra
+    # ela ver que existem — a restrição de uso real continua acontecendo
+    # dentro do painel, na hora de trocar de template.
+    templates_gamificacao = [
+        t for t in carregar_templates() if t['slug'].startswith('gamificacao')
+    ]
     return render_template(
         'fidelize/home.html',
         current_year=datetime.now().year,
         qr_codes_trial=FIDELIZE_QR_CODES_TRIAL,
         limite_qr_codes=FIDELIZE_LIMITE_QR_CODES_POR_CONTA,
         preco_mensalidade=FIDELIZE_PRECO_MENSALIDADE,
+        templates=templates_gamificacao,
     )
 
 
