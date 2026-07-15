@@ -9,6 +9,8 @@ import re
 import unicodedata
 import secrets
 import smtplib
+import base64
+from urllib.parse import quote
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
@@ -77,8 +79,19 @@ SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 SMTP_FROM = os.getenv("SMTP_FROM", SMTP_USER)
 
-# Link fixo de pagamento pra templates pagos (Parte 6 — defina o valor real depois).
+# Link fixo de pagamento pra templates pagos — mantido como fallback caso o
+# Pix dinâmico abaixo não esteja configurado (PIX_CHAVE vazia).
 LINK_PAGAMENTO_TEMPLATES = os.getenv("LINK_PAGAMENTO_TEMPLATES", "")
+
+# --- PIX (QR dinâmico pra templates pagos, sem gateway/taxa) ---
+PIX_CHAVE = os.getenv("PIX_CHAVE", "")
+PIX_NOME_RECEBEDOR = os.getenv("PIX_NOME_RECEBEDOR", "")
+PIX_CIDADE = os.getenv("PIX_CIDADE", "")
+WHATSAPP_COMPROVANTE = os.getenv("WHATSAPP_COMPROVANTE", "")
+
+# Quantas horas um slug fica "reservado" pra quem escolheu template pago mas
+# ainda não pagou. Depois disso, o slug é liberado de novo pra qualquer um.
+PIX_RESERVA_HORAS = 48
 
 # --- BANCO ---
 def get_db():
@@ -132,6 +145,86 @@ def execute_returning(sql, params=None):
         return result[0] if result else None
     finally:
         conn.close()
+
+
+# --- PIX ESTÁTICO COM VALOR (BR Code / EMV, padrão Banco Central) ---
+# Não depende de gateway nenhum — é só o formato padrão que qualquer app de
+# banco lê. Isso monta o "copia e cola" (e a partir dele o QR); a lógica
+# segue a especificação EMV: cada campo é ID (2 dígitos) + tamanho (2
+# dígitos) + valor, e o payload inteiro fecha com um CRC16.
+def _pix_tlv(id_campo, valor):
+    return f"{id_campo}{len(valor):02d}{valor}"
+
+
+def _pix_crc16(payload):
+    """CRC16-CCITT (poly 0x1021, init 0xFFFF) — é o checksum exigido no
+    campo final (63) do BR Code."""
+    poly = 0x1021
+    crc = 0xFFFF
+    for byte in payload.encode('utf-8'):
+        crc ^= (byte << 8)
+        for _ in range(8):
+            if crc & 0x8000:
+                crc = ((crc << 1) ^ poly) & 0xFFFF
+            else:
+                crc = (crc << 1) & 0xFFFF
+    return format(crc, '04X')
+
+
+def gerar_pix_payload(chave, nome, cidade, valor, txid):
+    """Monta o payload Pix estático com valor fixo (copia e cola / QR).
+    nome: até 25 caracteres, sem acento. cidade: até 15, sem acento.
+    txid: identificador da cobrança, só alfanumérico, até 25 caracteres."""
+    txid_limpo = re.sub(r'[^A-Za-z0-9]', '', txid or '')[:25] or 'QRCODEBRINDES'
+
+    conta = _pix_tlv('00', 'br.gov.bcb.pix') + _pix_tlv('01', chave)
+    dados_adicionais = _pix_tlv('05', txid_limpo)
+
+    payload_sem_crc = (
+        _pix_tlv('00', '01') +                       # Payload Format Indicator
+        _pix_tlv('01', '12') +                        # Point of Initiation (12 = uso único)
+        _pix_tlv('26', conta) +                        # Merchant Account Info (Pix)
+        _pix_tlv('52', '0000') +                       # Merchant Category Code
+        _pix_tlv('53', '986') +                        # Moeda (986 = BRL)
+        _pix_tlv('54', f'{valor:.2f}') +                # Valor da cobrança
+        _pix_tlv('58', 'BR') +                          # País
+        _pix_tlv('59', nome[:25]) +                     # Nome do recebedor
+        _pix_tlv('60', cidade[:15]) +                   # Cidade do recebedor
+        _pix_tlv('62', dados_adicionais) +              # TXID
+        '6304'                                          # Abre o campo do CRC (ID+tamanho)
+    )
+    return payload_sem_crc + _pix_crc16(payload_sem_crc)
+
+
+def gerar_pix_qr_base64(payload):
+    """Gera o PNG do QR a partir do payload Pix e devolve já em base64,
+    pronto pra jogar num <img src="data:image/png;base64,...">."""
+    img = qrcode.make(payload)
+    buf = io.BytesIO()
+    img.save(buf, format='PNG')
+    return base64.b64encode(buf.getvalue()).decode('ascii')
+
+
+def slug_disponivel(slug):
+    """Verifica se um slug pode ser usado agora. Diferente de
+    get_pagina_by_slug (que só enxerga ativas — usada nas rotas públicas de
+    acesso), essa função TAMBÉM considera páginas 'pendente' de pagamento,
+    pra duas pessoas não reservarem o mesmo slug ao mesmo tempo. Uma
+    pendente com mais de PIX_RESERVA_HORAS é tratada como expirada e libera
+    o slug de novo, sem precisar de job/cron separado."""
+    existente = query_one(
+        "SELECT plano, ativo, created_at FROM brindes_paginas WHERE slug = %s",
+        (slug,)
+    )
+    if not existente:
+        return True
+    if existente['ativo']:
+        return False
+    if existente['plano'] == 'pendente' and existente['created_at']:
+        limite = datetime.now() - timedelta(hours=PIX_RESERVA_HORAS)
+        if existente['created_at'].replace(tzinfo=None) >= limite:
+            return False  # ainda dentro do prazo de reserva
+    return True
 
 
 def rodar_auto_migracoes():
@@ -579,7 +672,7 @@ def gerar_qr():
             flash('Preencha o link (slug) e a senha.', 'error')
             return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year, anuncio_topo=get_anuncio('topo', contexto='funcionalidade'))
 
-        if get_pagina_by_slug(slug):
+        if not slug_disponivel(slug):
             flash('Esse link já está em uso, escolha outro.', 'error')
             return render_template('gerar_qr.html', templates=carregar_templates(), current_year=datetime.now().year, anuncio_topo=get_anuncio('topo', contexto='funcionalidade'))
 
@@ -602,11 +695,51 @@ def gerar_qr():
         if tipo_destino == 'pagina':
             tpl_escolhido = get_template_por_slug(template_slug)
             if tpl_escolhido and tpl_escolhido.get('tier') == 'pago':
-                # Template pago: não cria a Pagina agora — explica o pagamento
-                # e o pessoal libera manualmente depois de confirmar.
+                # Template pago: salva a página como 'pendente' (ativo=FALSE)
+                # em vez de criar ativada — o slug fica reservado
+                # (PIX_RESERVA_HORAS) e some do banco na prática assim que
+                # outro slug igual for tentado após expirar, sem cron.
+                # Some do público porque get_pagina_by_slug só enxerga ativo=TRUE.
+                execute_returning("""
+                    INSERT INTO brindes_paginas
+                        (slug, senha_hash, tipo_destino, destino_url, template, titulo, email, plano, ativo)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, 'pendente', FALSE)
+                    RETURNING id
+                """, (
+                    slug,
+                    generate_password_hash(senha),
+                    tipo_destino,
+                    None,
+                    template_slug,
+                    titulo,
+                    email or None,
+                ))
+
+                preco = float(tpl_escolhido.get('preco') or 0)
+                pix_payload = None
+                pix_qr_base64 = None
+                whatsapp_link = None
+
+                if PIX_CHAVE and PIX_NOME_RECEBEDOR and PIX_CIDADE and preco > 0:
+                    pix_payload = gerar_pix_payload(
+                        PIX_CHAVE, PIX_NOME_RECEBEDOR, PIX_CIDADE, preco, slug
+                    )
+                    pix_qr_base64 = gerar_pix_qr_base64(pix_payload)
+
+                if WHATSAPP_COMPROVANTE:
+                    msg = (
+                        f"Oi! Paguei o modelo \"{tpl_escolhido.get('nome')}\" "
+                        f"(R$ {preco:.2f}). Meu link escolhido foi: {slug}. Segue o comprovante:"
+                    )
+                    whatsapp_link = f"https://wa.me/{WHATSAPP_COMPROVANTE}?text={quote(msg)}"
+
                 return render_template(
                     'pagamento_pendente.html',
                     template=tpl_escolhido,
+                    slug=slug,
+                    pix_payload=pix_payload,
+                    pix_qr_base64=pix_qr_base64,
+                    whatsapp_link=whatsapp_link,
                     link_pagamento=LINK_PAGAMENTO_TEMPLATES,
                     current_year=datetime.now().year,
                 )
@@ -1877,6 +2010,7 @@ def _admin_contexto_base():
         'total_empresas': query_one("SELECT COUNT(*) as c FROM brindes_empresas WHERE ativo = TRUE")['c'],
         'empresas_pendentes': query_one("SELECT COUNT(*) as c FROM brindes_empresas WHERE ativo = FALSE")['c'],
         'leads_pendentes': query_one("SELECT COUNT(*) as c FROM brindes_leads WHERE status = 'pendente'")['c'],
+        'paginas_pendentes': query_one("SELECT COUNT(*) as c FROM brindes_paginas WHERE plano = 'pendente' AND ativo = FALSE")['c'],
         'fidelize_aguardando': query_one("""
             SELECT COUNT(*) as c FROM brindes_fidelidade_contas
             WHERE ativo = TRUE AND mensalidade_ativa = FALSE AND qr_codes_disponiveis = 0
@@ -1914,6 +2048,19 @@ def _admin_contexto_base():
         ORDER BY p.created_at DESC
     """)
     templates = carregar_templates()
+    templates_por_slug = {t['slug']: t for t in templates}
+    paginas_pendentes = query_all("""
+        SELECT id, slug, email, titulo, template, created_at
+        FROM brindes_paginas
+        WHERE plano = 'pendente' AND ativo = FALSE
+        ORDER BY created_at DESC
+    """)
+    # Anexa nome/preço do template escolhido em cada pendente (vem do .json,
+    # não do banco), pra mostrar no card do admin sem precisar de outro join.
+    for p in paginas_pendentes:
+        tpl = templates_por_slug.get(p['template'])
+        p['template_nome'] = tpl['nome'] if tpl else p['template']
+        p['template_preco'] = tpl.get('preco') if tpl else None
     # Só os marcados "exclusivo": true no .json — usados pra popular o
     # dropdown de "liberar template" na tabela de contas do Fidelize.
     templates_exclusivos = [t for t in templates if t.get('exclusivo')]
@@ -2062,6 +2209,24 @@ def admin_paginas_editar(item_id):
 @admin_required
 def admin_paginas_toggle(item_id):
     execute("UPDATE brindes_paginas SET ativo = NOT ativo WHERE id = %s", (item_id,))
+    return redirect('/admin#paginas')
+
+
+@app.route('/admin/paginas/<int:item_id>/confirmar-pagamento', methods=['POST'])
+@admin_required
+def admin_paginas_confirmar_pagamento(item_id):
+    """Confirma manualmente o pagamento de um template pago (Pix + comprovante
+    conferido no WhatsApp) e libera a página: plano vira 'pago', ativo=TRUE."""
+    pagina = query_one("SELECT id, slug FROM brindes_paginas WHERE id = %s AND plano = 'pendente'", (item_id,))
+    if not pagina:
+        flash('Página pendente não encontrada (talvez já tenha sido confirmada).', 'error')
+        return redirect('/admin#paginas')
+
+    execute(
+        "UPDATE brindes_paginas SET plano = 'pago', ativo = TRUE WHERE id = %s",
+        (item_id,)
+    )
+    flash(f'Pagamento confirmado — /{pagina["slug"]} está ativa.', 'success')
     return redirect('/admin#paginas')
 
 
