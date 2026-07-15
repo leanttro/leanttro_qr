@@ -31,6 +31,29 @@
 .tabela-paginas a:hover{text-decoration:underline}
 .vazio{text-align:center;color:var(--ink-soft);padding:40px 20px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--line)}
 
+.slug-edit-form{display:flex;align-items:center;gap:4px;margin-top:6px;flex-wrap:wrap}
+.slug-prefix{font-size:.82em;color:var(--ink-soft);white-space:nowrap}
+.slug-input{
+    width:110px;padding:5px 7px;border:1px solid var(--line-strong);border-radius:6px;
+    font-size:.82em;font-family:'Montserrat',sans-serif;color:var(--ink);
+}
+.slug-salvar{
+    font-size:.78em;font-weight:700;color:var(--ink-black);background:var(--surface);
+    border:1px solid var(--line-strong);border-radius:6px;padding:5px 9px;cursor:pointer;
+}
+.slug-salvar:hover{background:var(--chrome-2)}
+
+.sorteio-box{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px 22px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;
+    gap:16px;flex-wrap:wrap;
+}
+.sorteio-box p{margin:0;color:var(--ink-soft);font-size:.92em;max-width:44ch}
+.sorteio-resultado{
+    margin-top:14px;padding:14px 18px;border-radius:10px;background:var(--chrome-1);
+    border:1px solid var(--line-strong);font-weight:700;color:var(--ink-black);display:none;
+}
+.tabela-paginas tr.sorteio-highlight{background:#fff6e0;transition:background .15s}
 @media (max-width:700px){
     .stats-row{grid-template-columns:1fr}
     .tabela-paginas{display:block;overflow-x:auto}
@@ -63,7 +86,13 @@
     </form>
 
     {% if paginas %}
-        <table class="tabela-paginas">
+        <div class="sorteio-box">
+            <p>Sorteia um dos seus QR codes/cartões — útil pra escolher uma unidade, brinde ou destaque do mês.</p>
+            <button class="btn-nav-secondary" type="button" id="btn-sortear">🎲 Sortear um QR code</button>
+        </div>
+        <div class="sorteio-resultado" id="sorteio-resultado"></div>
+
+        <table class="tabela-paginas" id="tabela-sorteio">
             <thead>
                 <tr>
                     <th>Link</th>
@@ -75,8 +104,15 @@
             </thead>
             <tbody>
                 {% for p in paginas %}
-                    <tr>
-                        <td><a href="{{ base_url }}/{{ p.slug }}" target="_blank" rel="noopener">{{ p.titulo or p.slug }}</a></td>
+                    <tr data-titulo="{{ p.titulo or p.slug }}">
+                        <td>
+                            <a href="{{ base_url }}/{{ p.slug }}" target="_blank" rel="noopener">{{ p.titulo or p.slug }}</a>
+                            <form class="slug-edit-form" method="POST" action="/painel/pagina/{{ p.id }}/slug">
+                                <span class="slug-prefix">{{ base_url.split('://')[-1] }}/{{ prefixo_slug }}</span>
+                                <input class="slug-input" type="text" name="sufixo" value="{{ p.sufixo_atual }}" required maxlength="60">
+                                <button class="slug-salvar" type="submit">Salvar link</button>
+                            </form>
+                        </td>
                         <td>{{ p.template }}</td>
                         <td>{{ p.total_scans }}</td>
                         <td><a href="{{ base_url }}/{{ p.slug }}/qr.png" target="_blank" rel="noopener">Baixar PNG</a></td>
@@ -89,4 +125,38 @@
         <div class="vazio">Você ainda não criou nenhum QR code de fidelidade. Clique em "Criar novo QR code" acima.</div>
     {% endif %}
 </div>
+
+<script>
+(function () {
+    const btn = document.getElementById('btn-sortear');
+    if (!btn) return;
+    const resultado = document.getElementById('sorteio-resultado');
+    const linhas = Array.from(document.querySelectorAll('#tabela-sorteio tbody tr'));
+
+    btn.addEventListener('click', () => {
+        if (linhas.length === 0) return;
+        btn.disabled = true;
+        resultado.style.display = 'none';
+        linhas.forEach(l => l.classList.remove('sorteio-highlight'));
+
+        let voltas = 0;
+        const totalVoltas = 18 + Math.floor(Math.random() * 10); // desacelera de forma imprevisível
+        let atual = -1;
+        const intervalo = setInterval(() => {
+            if (atual >= 0) linhas[atual].classList.remove('sorteio-highlight');
+            atual = Math.floor(Math.random() * linhas.length);
+            linhas[atual].classList.add('sorteio-highlight');
+            linhas[atual].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            voltas++;
+            if (voltas >= totalVoltas) {
+                clearInterval(intervalo);
+                const vencedor = linhas[atual].dataset.titulo;
+                resultado.textContent = '🎉 Sorteado: ' + vencedor;
+                resultado.style.display = 'block';
+                btn.disabled = false;
+            }
+        }, 90);
+    });
+})();
+</script>
 {% endblock %}
