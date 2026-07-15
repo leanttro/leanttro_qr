@@ -263,7 +263,12 @@ header{
             <img src="https://res.cloudinary.com/dec2b0u1/image/upload/v1783897417/qr_udzbq7.png" alt="QR Code Brindes">
         </a>
     </div>
-    <a class="btn-sair" href="/{{ pagina.slug }}/logout">Sair</a>
+    <div style="display:flex; align-items:center; gap:10px;">
+        {% if pagina.conta_id %}
+            <a class="btn-sair" href="{{ fidelize_base_url }}/painel">← Painel Fidelize</a>
+        {% endif %}
+        <a class="btn-sair" href="/{{ pagina.slug }}/logout">Sair</a>
+    </div>
 </header>
 
 {% if anuncio_topo %}
