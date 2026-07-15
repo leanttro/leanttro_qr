@@ -1104,6 +1104,7 @@ def fidelize_painel():
         total_qr_codes_conta=total_qr_codes_conta,
         saldo_esgotado=saldo_esgotado,
         preco_mensalidade=FIDELIZE_PRECO_MENSALIDADE,
+        qr_codes_trial=FIDELIZE_QR_CODES_TRIAL,
     )
 
 
