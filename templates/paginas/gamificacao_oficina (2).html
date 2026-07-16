@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7617881885143728"
+     crossorigin="anonymous"></script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-15CQV2LD4W"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-15CQV2LD4W');
+</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>{{ page.titulo }}</title>
+
+<!-- Open Graph: controla o preview quando o link é compartilhado (WhatsApp, Instagram, etc) -->
+<meta property="og:title" content="{{ page.titulo }}">
+<meta property="og:description" content="{{ page.mensagem or 'Junte carimbos e ganhe prêmios especiais!' }}">
+<meta property="og:image" content="https://res.cloudinary.com/dhu1cqvrb/image/upload/v1782417827/OFICINA_EMPREENDER_SP_1000_x_1000_px_1_g2ejcc.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --roxo-1: #5c2660;
+    --roxo-2: #7a3a7f;
+    --roxo-3: #c9a8c9;
+    --roxo-4: #ecdcec;
+    --roxo-suave: #f6f0f6;
+    --cor-card: #ffffff;
+    --cor-texto: #2e1330;
+    --verde-lima: #c3d92e;
+    --whats: #25d366;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; min-height: 100%; }
+
+  body {
+    font-family: {{ font_css }}, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif !important;
+    font-weight: 500;
+    color: var(--cor-texto);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 46px 16px 60px;
+    position: relative;
+    overflow-x: hidden;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(255,255,255,0.55) 0%, transparent 40%),
+      radial-gradient(circle at 88% 92%, rgba(92,38,96,0.35) 0%, transparent 55%),
+      linear-gradient(160deg, #f8f3f8 0%, #ecdcec 50%, #c9a8c9 100%);
+    background-size: 220% 220%;
+    animation: fundoVivo 16s ease infinite;
+  }
+  @keyframes fundoVivo {
+    0%   { background-position: 0% 0%; }
+    50%  { background-position: 100% 100%; }
+    100% { background-position: 0% 0%; }
+  }
+
+  /* bolinhas de fundo tipo confeito */
+  .confeito {
+    position: fixed;
+    font-size: 15px;
+    opacity: 0;
+    z-index: 0;
+    pointer-events: none;
+    animation: confeitoEntra 0.6s ease forwards, confeitoBoiar 5s ease-in-out infinite;
+  }
+  @keyframes confeitoEntra {
+    to { opacity: 0.6; }
+  }
+  @keyframes confeitoBoiar {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50%      { transform: translateY(14px) rotate(15deg); }
+  }
+
+  /* ===== entrada escalonada ===== */
+  @keyframes subirEntrar {
+    from { opacity: 0; transform: translateY(26px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .e1 { animation: subirEntrar 0.6s cubic-bezier(0.22,1,0.36,1) 0.05s both; }
+  .e2 { animation: subirEntrar 0.6s cubic-bezier(0.22,1,0.36,1) 0.18s both; }
+  .e3 { animation: subirEntrar 0.6s cubic-bezier(0.22,1,0.36,1) 0.30s both; }
+  .e4 { animation: subirEntrar 0.6s cubic-bezier(0.22,1,0.36,1) 0.42s both; }
+  .e5 { animation: subirEntrar 0.6s cubic-bezier(0.22,1,0.36,1) 0.54s both; }
+  .e6 { animation: subirEntrar 0.6s cubic-bezier(0.22,1,0.36,1) 0.66s both; }
+  .e7 { animation: subirEntrar 0.6s cubic-bezier(0.22,1,0.36,1) 0.78s both; }
+
+  .cena {
+    width: 100%;
+    max-width: 440px;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ===== emblema/logo entrando girando ===== */
+  @keyframes emblemaEntra {
+    0%   { opacity: 0; transform: scale(0.3) rotate(-140deg); }
+    65%  { opacity: 1; transform: scale(1.12) rotate(10deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg); }
+  }
+  @keyframes emblemaAnel {
+    0%   { transform: scale(0.9); opacity: 0.8; }
+    100% { transform: scale(1.6); opacity: 0; }
+  }
+  .emblema {
+    position: relative;
+    margin-bottom: -34px;
+    z-index: 3;
+    animation: emblemaEntra 0.8s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .emblema::before, .emblema::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+    animation: emblemaAnel 2.4s ease-out infinite;
+  }
+  .emblema::after { animation-delay: 1.2s; }
+  .emblema img {
+    position: relative;
+    height: 92px;
+    width: 92px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    border: 4px solid #ffffff;
+    box-shadow: 0 14px 26px rgba(92,38,96,0.5);
+  }
+
+  /* ===== etiqueta no canto do cartao ===== */
+  @keyframes etiquetaBalanca {
+    0%, 100% { transform: rotate(3deg); }
+    50%      { transform: rotate(-2deg); }
+  }
+  @keyframes etiquetaEntra {
+    from { opacity: 0; transform: translateY(-10px) rotate(3deg); }
+    to   { opacity: 1; }
+  }
+  .etiqueta-fio { display: none; }
+  .etiqueta-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 6px;
+  }
+  .etiqueta {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    background: linear-gradient(135deg, var(--roxo-2), var(--roxo-1));
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    line-height: 1.3;
+    padding: 7px 16px;
+    border-radius: 999px;
+    box-shadow: 0 8px 18px rgba(92,38,96,0.5);
+    z-index: 2;
+    white-space: nowrap;
+    text-align: center;
+    animation: etiquetaEntra 0.5s ease 0.5s both, etiquetaBalanca 2.6s ease-in-out 1.1s infinite;
+  }
+
+  /* ===== ticket / card ===== */
+  .ticket {
+    width: 100%;
+    background: var(--cor-card);
+    border-radius: 8px 8px 26px 26px;
+    padding: 54px 26px 34px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 30px 60px rgba(92,38,96,0.4);
+  }
+  .ticket-recorte {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 20px;
+    background:
+      radial-gradient(circle at 12px 0px, transparent 11px, var(--cor-card) 11.5px);
+    background-size: 24px 20px;
+    background-repeat: repeat-x;
+  }
+
+  .titulo {
+    font-size: calc({{ font_size_val }} + 8px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--cor-texto);
+    margin: 10px 0 12px;
+    line-height: 1.2;
+  }
+
+  .mensagem {
+    font-size: {{ font_size_val }};
+    font-weight: 400;
+    line-height: 1.7;
+    color: #6b4a6f;
+    white-space: pre-line;
+    margin: 0;
+    word-wrap: break-word;
+  }
+
+  /* ===== divisor com cupcake ===== */
+  .divisor {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 26px 0 22px;
+  }
+  .divisor .linha {
+    flex: 1;
+    height: 1px;
+    background: repeating-linear-gradient(90deg, #dcc4dc 0 6px, transparent 6px 11px);
+  }
+  .divisor .icone {
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .rotulo-cartao {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--roxo-1);
+    margin: 0 0 18px;
+  }
+
+  /* ===== barra de progresso ===== */
+  @keyframes larguraEntra {
+    from { width: 0%; }
+  }
+  .progresso-shell {
+    width: 100%;
+    height: 9px;
+    background: var(--roxo-suave);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    position: relative;
+  }
+  .progresso-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--roxo-1), var(--verde-lima));
+    background-size: 200% 100%;
+    animation: larguraEntra 1.1s cubic-bezier(0.22,1,0.36,1) 0.5s both, fluxo 2.5s linear infinite 1.6s;
+  }
+  @keyframes fluxo {
+    0%   { background-position: 0% 0%; }
+    100% { background-position: 200% 0%; }
+  }
+
+  /* ===== carimbos em onda ===== */
+  .fileira-carimbos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 6px 0;
+  }
+  .carimbo {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    opacity: 0;
+  }
+  .carimbo:nth-child(odd)  { transform: translateY(-3px); }
+  .carimbo:nth-child(even) { transform: translateY(3px); }
+
+  @keyframes carimboEntra {
+    0%   { opacity: 0; transform: scale(0.2) rotate(-60deg) translateY(0); }
+    60%  { opacity: 1; transform: scale(1.18) rotate(8deg) translateY(0); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg) translateY(0); }
+  }
+  .carimbo.vazio {
+    border: 2px dashed #d9c0d9;
+    background: rgba(255, 240, 244, 0.6);
+    animation: carimboEntra 0.4s ease both;
+  }
+  .carimbo.cheio {
+    background: linear-gradient(155deg, var(--verde-lima) 0%, var(--roxo-3) 45%, var(--roxo-1) 100%);
+    box-shadow: 0 6px 14px rgba(92,38,96,0.55);
+    animation: carimboEntra 0.5s cubic-bezier(0.22,1,0.36,1) both;
+  }
+  .carimbo.cheio.ultimo::after {
+    content: "";
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    border: 2px solid var(--roxo-2);
+    animation: anelPulso 1.6s ease-out infinite;
+  }
+  @keyframes anelPulso {
+    0%   { transform: scale(0.85); opacity: 0.9; }
+    100% { transform: scale(1.55); opacity: 0; }
+  }
+  .carimbo.cheio svg { width: 16px; height: 16px; color: #fff; }
+
+  .status-carimbos {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--cor-texto);
+    margin: 0 0 18px;
+  }
+  .status-carimbos strong { color: var(--roxo-1); }
+
+  /* ===== caixa do premio, estilo cupom recortado ===== */
+  .caixa-premio {
+    position: relative;
+    background: var(--roxo-suave);
+    border: 1.5px dashed var(--roxo-2);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: #6b4a6f;
+    line-height: 1.5;
+  }
+  .caixa-premio::before, .caixa-premio::after {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: var(--cor-card);
+    border-radius: 50%;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .caixa-premio::before { left: -8px; }
+  .caixa-premio::after  { right: -8px; }
+  .caixa-premio strong { color: var(--cor-texto); font-weight: 700; }
+
+  /* ===== selo de completo ===== */
+  @keyframes seloCompletoEntra {
+    0%   { opacity: 0; transform: scale(0.5) rotate(-12deg); }
+    60%  { transform: scale(1.1) rotate(4deg); }
+    100% { opacity: 1; transform: scale(1) rotate(-4deg); }
+  }
+  .selo-completo {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 11px 20px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--roxo-suave), var(--roxo-4));
+    border: 1px solid var(--roxo-2);
+    color: var(--roxo-1);
+    font-weight: 800;
+    font-size: 13px;
+    animation: seloCompletoEntra 0.6s cubic-bezier(0.22,1,0.36,1) both;
+  }
+
+  /* ===== CTA whatsapp ===== */
+  @keyframes botaoEntra {
+    from { opacity: 0; transform: translateY(20px) scale(0.9); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes botaoRespira {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.03); }
+  }
+  @keyframes brilhoPassa {
+    0%   { transform: translateX(-130%) skewX(-20deg); }
+    100% { transform: translateX(230%) skewX(-20deg); }
+  }
+  .bloco-cta { margin-top: 26px; }
+  .cta-whats {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 26px;
+    border-radius: 999px;
+    background: var(--whats);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 13.5px;
+    text-decoration: none;
+    box-shadow: 0 12px 26px rgba(37,211,102,0.45);
+    position: relative;
+    overflow: hidden;
+    animation: botaoEntra 0.5s cubic-bezier(0.22,1,0.36,1) 0.9s both,
+               botaoRespira 2.4s ease-in-out 1.5s infinite;
+  }
+  .cta-whats::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 40%; height: 100%;
+    background: linear-gradient(115deg, transparent, rgba(255,255,255,0.55), transparent);
+    animation: brilhoPassa 2.8s ease-in-out 1.5s infinite;
+  }
+  .cta-whats svg { width: 16px; height: 16px; position: relative; z-index: 1; }
+  .cta-whats span { position: relative; z-index: 1; }
+
+  .rodape { margin-top: 24px; text-align: center; }
+  .rodape a {
+    color: var(--roxo-1);
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .rodape a:hover { color: var(--roxo-2); text-decoration: underline; }
+
+  @media (max-width: 380px) {
+    .ticket { padding: 46px 16px 26px; }
+    .titulo { font-size: calc({{ font_size_val }} + 4px); margin-top: 6px; }
+    .carimbo { width: 32px; height: 32px; }
+    .emblema img { height: 70px; width: 70px; }
+    .etiqueta { font-size: 9px; padding: 6px 14px; }
+  }
+</style>
+</head>
+<body>
+
+  {% set meta = (page.meta or 10) | int %}
+  {% set atual_bruto = (carimbos_atual or 0) | int %}
+  {% set atual = [atual_bruto, meta] | min %}
+  {% set completo = atual_bruto >= meta %}
+  {% set percentual = ((atual / meta) * 100) if meta > 0 else 0 %}
+
+  <span class="confeito" style="left:8%; top:6%; color:#5c2660; animation-delay:0.1s, 0s;">⭐</span>
+  <span class="confeito" style="left:80%; top:10%; color:#c3d92e; animation-delay:0.2s, 0.5s;">🎪</span>
+  <span class="confeito" style="left:12%; top:70%; color:#7a3a7f; animation-delay:0.3s, 1s;">⭐</span>
+  <span class="confeito" style="left:85%; top:65%; color:#5c2660; animation-delay:0.4s, 1.5s;">🎟️</span>
+  <span class="confeito" style="left:50%; top:4%; color:#c3d92e; animation-delay:0.15s, 0.3s;">⭐</span>
+  <span class="confeito" style="left:6%; top:40%; color:#7a3a7f; animation-delay:0.25s, 0.8s;">🎪</span>
+  <span class="confeito" style="left:90%; top:38%; color:#5c2660; animation-delay:0.35s, 1.2s;">✨</span>
+
+  <div class="cena">
+
+    <div class="emblema e1">
+      <img src="https://res.cloudinary.com/dhu1cqvrb/image/upload/v1782417827/OFICINA_EMPREENDER_SP_1000_x_1000_px_1_g2ejcc.png" alt="Oficina Empreender SP">
+    </div>
+
+    <div class="ticket e2">
+      <div class="ticket-recorte"></div>
+      <div class="etiqueta-fio"></div>
+      <div class="etiqueta-wrap">
+        <span class="etiqueta">Feirante Exclusivo ⭐</span>
+      </div>
+
+      <h1 class="titulo">{{ page.titulo }}</h1>
+      <p class="mensagem">{{ page.mensagem or 'Junte carimbos e ganhe prêmios especiais!' }}</p>
+
+      <div class="divisor">
+        <span class="linha"></span>
+        <span class="icone">⛺</span>
+        <span class="linha"></span>
+      </div>
+
+      <p class="rotulo-cartao">Seu cartão fidelidade</p>
+
+      <div class="progresso-shell">
+        <div class="progresso-fill" style="width: {{ percentual }}%;"></div>
+      </div>
+
+      <div class="fileira-carimbos">
+        {% for i in range(meta) %}
+          {% if i < atual %}
+            <span class="carimbo cheio{% if i == atual - 1 %} ultimo{% endif %}" style="animation-delay: {{ 0.05 * i }}s;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 6 9 17l-5-5"/>
+              </svg>
+            </span>
+          {% else %}
+            <span class="carimbo vazio" style="animation-delay: {{ 0.05 * i }}s;"></span>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      {% if completo %}
+        <p class="status-carimbos"><strong>{{ meta }}/{{ meta }}</strong> carimbos completos!</p>
+      {% else %}
+        <p class="status-carimbos"><strong>{{ atual }}/{{ meta }}</strong> carimbos — faltam {{ meta - atual }} pro prêmio</p>
+      {% endif %}
+
+      <div class="caixa-premio">
+        Prêmio: <strong>{{ page.premio or 'a definir' }}</strong>
+      </div>
+
+      {% if completo %}
+        <div>
+          <span class="selo-completo">🎉 Prêmio liberado — é só resgatar!</span>
+        </div>
+      {% endif %}
+
+      <div class="bloco-cta">
+        <a class="cta-whats" href="https://wa.me/55SEUNUMEROAQUI" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.28-1.38a9.9 9.9 0 0 0 4.76 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.86 9.86 0 0 0 12.04 2z"/></svg>
+          <span>Falar no WhatsApp</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="rodape e7">
+      <a href="https://qrcodebrindes.com.br" target="_blank" rel="noopener">Feito com QR Code Brindes &copy; {{ current_year }}</a>
+    </div>
+  </div>
+
+</body>
+</html>
