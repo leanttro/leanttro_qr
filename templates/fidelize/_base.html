@@ -156,7 +156,26 @@ footer p{color:#9a9aa4;font-size:.9em;line-height:1.6;max-width:44ch;margin:8px 
 
 @media (max-width:900px){
     .desktop-nav{display:none}
-    header{padding:12px 18px}
+    header{
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+        padding:18px 16px;
+        gap:14px;
+    }
+    .header-logo img{height:48px}
+    .header-logo span{font-size:1.35em}
+    .header-actions{
+        width:100%;
+        justify-content:center;
+        flex-wrap:wrap;
+        gap:10px;
+    }
+    .header-actions a{
+        flex:1 1 auto;
+        text-align:center;
+        min-width:140px;
+    }
     .form-wrap{margin:36px auto 56px}
     .form-card{padding:26px 20px}
 }
