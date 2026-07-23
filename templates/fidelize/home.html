@@ -78,9 +78,9 @@
 {% block conteudo %}
 <section class="hero">
     <div class="container hero-inner">
-        <div class="eyebrow">Fidelidade sem app pra baixar</div>
-        <h1>Fidelize seus clientes com um QR code — cada um ganha um cartão que evolui conforme ele volta</h1>
-        <p class="hero-sub">Seu cliente escaneia, acompanha os carimbos e sabe exatamente quanto falta pro prêmio. Sem app, sem cartão de papel pra perder.</p>
+        <div class="eyebrow">Fidelidade sem app</div>
+        <h1>Um QR code. Um cartão fidelidade pra cada cliente.</h1>
+        <p class="hero-sub">Ele escaneia, acompanha os carimbos e sabe quanto falta pro prêmio. Sem app pra baixar, sem cartão de papel pra perder.</p>
         <div class="hero-ctas">
             <a class="btn-nav-cta" href="/cadastro">Criar minha conta grátis</a>
             <a class="btn-nav-secondary" href="/login">Já tenho conta</a>
@@ -94,18 +94,18 @@
         <div class="passos">
             <div class="passo">
                 <div class="passo-num">1</div>
-                <h3>Você cria sua conta</h3>
-                <p>Cadastro rápido com o nome do seu negócio, e-mail e senha. Sem cartão de crédito.</p>
+                <h3>Crie sua conta</h3>
+                <p>Rápido e grátis, sem cartão de crédito.</p>
             </div>
             <div class="passo">
                 <div class="passo-num">2</div>
-                <h3>Gera o QR code fidelidade</h3>
-                <p>No seu painel, cria um Cartão Fidelidade digital em um clique e coloca o QR no balcão.</p>
+                <h3>Gere o QR code</h3>
+                <p>Um clique e o Cartão Fidelidade já tá pronto pra colar no balcão.</p>
             </div>
             <div class="passo">
                 <div class="passo-num">3</div>
-                <h3>Cliente escaneia e volta mais</h3>
-                <p>A cada visita, o cliente vê o progresso do cartão — e você acompanha tudo pelo painel.</p>
+                <h3>Cliente escaneia e volta</h3>
+                <p>Cada visita conta um carimbo. Ele acompanha o progresso, você acompanha os resultados.</p>
             </div>
         </div>
     </div>
@@ -116,7 +116,7 @@
     <div class="container">
         <div class="section-head">
             <h2>Modelos de Cartão Fidelidade</h2>
-            <p>Escolha o visual do seu Cartão Fidelidade — cada modelo já vem pronto pra personalizar com o nome do seu negócio, a meta de carimbos e o prêmio.</p>
+            <p>Escolha o visual e personalize com o nome do seu negócio, a meta de carimbos e o prêmio.</p>
         </div>
         <div class="fid-tpl-wrap">
             <div class="fid-tpl-track" id="fid-tpl-track">
@@ -149,14 +149,14 @@
 <section class="modelo">
     <div class="container">
         <div class="modelo-card">
-            <h2>Comece grátis, pague só se continuar usando</h2>
-            <p>Toda conta nova ganha <strong>{{ qr_codes_trial }} QR codes grátis</strong> na hora do cadastro — sem cartão, sem pagar nada, pra você testar o painel de verdade com seus próprios clientes.</p>
-            <p class="modelo-preco">R$ {{ '%.2f'|format(preco_mensalidade) }}<span>/mês</span> — libera até {{ limite_qr_codes }} QR codes na conta</p>
+            <h2>Comece grátis</h2>
+            <p>Toda conta ganha <strong>{{ qr_codes_trial }} QR codes grátis</strong> no cadastro, pra testar com seus próprios clientes.</p>
+            <p class="modelo-preco">R$ {{ '%.2f'|format(preco_mensalidade) }}<span>/mês</span> — até {{ limite_qr_codes }} QR codes</p>
             <ul class="modelo-lista">
-                <li>{{ qr_codes_trial }} QR codes grátis liberados automaticamente no cadastro</li>
-                <li>Quando acabar, é só assinar direto no painel — Pix, confirmação rápida</li>
-                <li>Cada QR code é um cartão de fidelidade completo, com progresso e prêmio</li>
-                <li>Precisa de mais de {{ limite_qr_codes }}? A gente combina um plano maior no WhatsApp</li>
+                <li>{{ qr_codes_trial }} QR codes grátis já no cadastro</li>
+                <li>Quando acabar, assine direto no painel via Pix</li>
+                <li>Cada QR code é um cartão fidelidade completo</li>
+                <li>Precisa de mais de {{ limite_qr_codes }}? Chama no WhatsApp</li>
             </ul>
             <a class="btn-nav-cta" href="/cadastro">Criar minha conta grátis</a>
         </div>
