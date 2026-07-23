@@ -873,6 +873,11 @@ tbody td { padding: 12px 16px; font-size: 13.5px; vertical-align: middle; }
                   </form>
                   <form method="POST" action="/admin/fidelize/{{ c.id }}/toggle-mensalidade"><button class="btn-link" style="color:var(--amber);">{{ 'Desativar mensal.' if c.mensalidade_ativa else 'Ativar mensal.' }}</button></form>
                   <form method="POST" action="/admin/fidelize/{{ c.id }}/toggle"><button class="btn-link" style="color:{{ 'var(--red)' if c.ativo else '#7c5cbf' }};">{{ 'Bloquear' if c.ativo else 'Reativar' }}</button></form>
+                  <form method="POST" action="/admin/fidelize/{{ c.id }}/editar-acesso" style="display:flex; flex-direction:column; gap:4px; margin-top:8px; padding-top:8px; border-top:1px dashed var(--border2); min-width:170px;">
+                    <input type="email" name="email" value="{{ c.email }}" required placeholder="E-mail de login" style="width:100%; padding:5px 6px; border:1px solid var(--border2); border-radius:6px; font-size:12px;">
+                    <input type="text" name="nova_senha" placeholder="Nova senha (opcional)" style="width:100%; padding:5px 6px; border:1px solid var(--border2); border-radius:6px; font-size:12px;">
+                    <button class="btn btn-secondary" style="font-size:12px;padding:5px 10px;" type="submit">Salvar acesso</button>
+                  </form>
                 </td>
               </tr>
               {% else %}
