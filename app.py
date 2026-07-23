@@ -1000,6 +1000,52 @@ def fidelize_login():
     return render_template('fidelize/login.html', erro=erro, current_year=datetime.now().year)
 
 
+# --- ESQUECI MINHA SENHA (conta do Fidelize) — mesmo padrão do esqueci_senha
+# de página avulsa: gera senha aleatória nova, salva o hash e manda por
+# e-mail. Mensagem na tela é sempre genérica (mesmo se o e-mail não existir),
+# pra não vazar quais e-mails têm conta.
+@app.route('/esqueci-senha', methods=['GET', 'POST'], subdomain='fidelize')
+def fidelize_esqueci_senha():
+    if request.method == 'POST':
+        if not check_limit(f"fidelize_esqueci_{get_ip()}", 5, 600):
+            flash('Muitas tentativas. Aguarde um pouco antes de tentar de novo.', 'error')
+            return render_template('fidelize/esqueci_senha.html', current_year=datetime.now().year)
+
+        email = (request.form.get('email') or '').strip().lower()
+        conta = get_conta_fidelize_by_email(email)
+
+        if conta and conta['ativo']:
+            senha_nova = gerar_senha_aleatoria()
+            execute(
+                "UPDATE brindes_fidelidade_contas SET senha_hash = %s WHERE id = %s",
+                (generate_password_hash(senha_nova), conta['id'])
+            )
+            link_login = f"{FIDELIZE_BASE_URL}/login"
+            corpo = (
+                f"Olá!\n\n"
+                f"Recebemos um pedido de redefinição de senha da sua conta Fidelize "
+                f"({email}).\n\n"
+                f"Nova senha: {senha_nova}\n"
+                f"Link de login: {link_login}\n\n"
+                f"Se você não pediu isso, ignore este e-mail — sua senha antiga "
+                f"deixou de funcionar, então é recomendável entrar e trocar por uma "
+                f"nova o quanto antes.\n\n"
+                f"— Fidelize"
+            )
+            enviar_email(email, "Nova senha do seu Fidelize", corpo)
+            # não checamos o resultado do envio aqui de propósito — a mensagem
+            # pra o usuário é a mesma em qualquer caso, por segurança
+
+        flash(
+            'Se o e-mail informado estiver correto e cadastrado, '
+            'enviamos uma nova senha para ele.',
+            'success'
+        )
+        return redirect('/login')
+
+    return render_template('fidelize/esqueci_senha.html', current_year=datetime.now().year)
+
+
 @app.route('/painel', subdomain='fidelize')
 @fidelize_login_required
 def fidelize_painel():
