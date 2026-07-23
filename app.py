@@ -2924,6 +2924,47 @@ def admin_fidelize_revogar_template(conta_id):
     return redirect('/admin#fidelize')
 
 
+@app.route('/admin/fidelize/<int:conta_id>/editar-acesso', methods=['POST'])
+@admin_required
+def admin_fidelize_editar_acesso(conta_id):
+    """Permite o admin trocar o e-mail de login e/ou definir uma senha nova
+    pra conta na mão — útil quando o cliente pede ajuda direto (WhatsApp,
+    etc.) em vez de usar o 'esqueci minha senha' sozinho."""
+    conta = query_one("SELECT * FROM brindes_fidelidade_contas WHERE id = %s", (conta_id,))
+    if not conta:
+        flash('Conta não encontrada.', 'error')
+        return redirect('/admin#fidelize')
+
+    novo_email = (request.form.get('email') or '').strip().lower()
+    nova_senha = request.form.get('nova_senha') or ''
+
+    if not novo_email:
+        flash('O e-mail não pode ficar vazio.', 'error')
+        return redirect('/admin#fidelize')
+
+    if novo_email != conta['email']:
+        existente = get_conta_fidelize_by_email(novo_email)
+        if existente and existente['id'] != conta_id:
+            flash('Já existe outra conta com esse e-mail.', 'error')
+            return redirect('/admin#fidelize')
+        execute(
+            "UPDATE brindes_fidelidade_contas SET email = %s WHERE id = %s",
+            (novo_email, conta_id)
+        )
+
+    if nova_senha:
+        if len(nova_senha) < 6:
+            flash('A senha nova precisa ter pelo menos 6 caracteres.', 'error')
+            return redirect('/admin#fidelize')
+        execute(
+            "UPDATE brindes_fidelidade_contas SET senha_hash = %s WHERE id = %s",
+            (generate_password_hash(nova_senha), conta_id)
+        )
+
+    flash('Acesso da conta atualizado com sucesso.', 'success')
+    return redirect('/admin#fidelize')
+
+
 # --- LEADS ---
 @app.route('/admin/leads/<int:item_id>/status', methods=['POST'])
 @admin_required
